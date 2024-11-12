@@ -16,46 +16,78 @@ const cardGroupRef = useRef()
 
   // Camera keyframes
   const cameraKeyframes = [
+
     {
-      fov: 54.409,
-      position: [0.885, -0.029, -0.913],
-      rotation: [3.111, 0.768, -3.12],
+      fov:80.89,
+      position:[0.067, 3.329, -4.178],
+      rotation:[-2.477, -0.004, -3.138]
     },
+
+
+ 
     {
-      fov: 60.743,
-      position: [-0.408, -0.033, -0.456],
-      rotation: [-2.747, -0.731, -2.87],
+      fov:65.115,
+      position:[-0.35, 0.372, -0.567],
+      rotation:[-2.592, -0.505, -2.853]
     },
+
+
     {
-      fov: 130.52,
-      position: [0.375, 0.304, -0.496],
+      fov: 95.743,
+      position: [-0.211, 0.073, -0.316],
+      rotation: [-2.882, -0.715, -2.969],
+    },
+
+
+    {
+      fov: 80.52,
+      position: [0.375, 0.4, -0.496],
       rotation: [-2.491, 0.521, 2.642],
     },
+
     {
-      fov: 97.52,
-      position: [0.277, 0.036, -0.346],
-      rotation: [-2.462, 0.522, 2.759],
+      fov: 16.461,
+      position: [-0.572, 0.444, 1.734],
+      rotation: [-2.698, -0.553, 3.086],
     },
     {
-      fov: 90.52,
-      position: [-0.317, 1.416, -0.442],
-      rotation: [-2.787, -0.58, -2.773],
+      fov: 16.461,
+      position: [-0.117, 0.117, 2.298],
+      rotation: [-2.698, -0.553, 3.086],
     },
     {
-      fov: 20.646,
-      position: [-0.104, 1.392, -0.264],
-      rotation: [-2.267, -0.394, -2.711],
+      fov: 16.461,
+      position: [1.446, 1.814, 1.298],
+      rotation: [-2.16, 0.672, 2.52],
     },
     {
-      fov: 130.91,
-      position: [-0.104, 1.492, -0.264],
-      rotation: [-2.283, -0.13, -2.591],
+      fov: 26.461,
+      position: [1.446, 1.814, 1.298],
+      rotation: [-2.16, 0.672, 2.52],
     },
     {
-      fov: 0.5,
-      position: [0.796, 0.721, -3.554],
-      rotation: [-2.981, 0.49, 2.695],
+      fov: 36.461,
+      position: [1.446, 1.814, 1.298],
+      rotation: [-2.16, 0.672, 2.52],
     },
+    {
+      fov: 16.461,
+      position:[-3.892, 1.218, -3.592],
+      rotation:[-2.897, -0.686, -2.861],
+    },
+    {
+      fov: 36.461,
+      position:[-3.892, 1.218, -3.592],
+      rotation:[-2.897, -0.686, -2.861],
+    },
+    {
+      fov: 80.461,
+      position:[-3.892, 1.218, -3.592],
+      rotation:[-2.897, -0.686, -2.861],
+    },
+
+
+
   ]
 
   // Easing functions
@@ -77,33 +109,35 @@ const cardGroupRef = useRef()
   const meshAnimations = {
     lid: [
       { rotation: [0, -0.002, 0], keyframe: 0 },
-      { rotation: [0, -0.002, 0], keyframe: 2 },
+      { rotation: [0, -0.002, 0], keyframe: 2.2 },
       { rotation: [1.344, 0, 0], keyframe: 3 },
-      { rotation: [1.344, 0, 0], keyframe: 7 },
+      { rotation: [0, -0.002, 0], keyframe: 3.51 },
     ],
     clip: [
       { rotation: [0, -0.002, 0], keyframe: 0 },
-      { rotation: [0, -0.002, 0], keyframe: 1.5 },
-      { rotation: [-1.37, 0, 0], keyframe: 2.5 },
-      { rotation: [-1.37, 0, 0], keyframe: 7 },
+      { rotation: [0, -0.002, 0], keyframe: 1 },
+      { rotation: [-1.37, 0, 0], keyframe: 1.5 },
+      { rotation: [0, -0.002, 0], keyframe: 4.51 },
     ],
     press: [
-      { position: [-0.0015, 1.202, 0.188], keyframe: 0 },
-      { position: [-0.0015, 1.202, 0.188], keyframe: 4.5 },
-      { position: [-0.0015, 1.199, 0.188], keyframe: 5 },
-      { position: [-0.0015, 1.201, 0.188], keyframe: 7 },
+      { position: [-0.013, 0.042, 2.743], keyframe: 0 },
+      { position: [-0.013, 0.042, 2.743], keyframe: 4 },
+      { position: [-0.013, 0.039, 2.743], keyframe:5.5 },
+      { position: [-0.013, 0.037, 2.743], keyframe:6.11 },
+     
+
     ],
     tearGroup: [
       { rotation: [0, 0, 0], keyframe: 0 },
       { rotation: [0, 0, 0], keyframe: 5 },
-      { rotation: [1.472, 0, 0], keyframe: 5.5 },
-      { rotation: [1.472, 0, 0], keyframe: 7 },
+      { rotation: [1.472, 0, 0], keyframe: 6.5 },
+      { rotation: [1.472, 0, 0], keyframe: 8 },
     ],
     cardGroup: [
-      { position: [0.005, 1.202, -0.009], keyframe: 0 },
-      { position: [0.005, 1.202, -0.009], keyframe: 5.2 },
-      { position: [0.005, 1.402, -0.009], keyframe: 5.7 }, // Adjust these coordinates as needed
-      { position: [0.005, 1.402, -0.009], keyframe: 7 },
+      { position:[-0.005, 0.042, 2.549], keyframe: 0 },
+      { position: [-0.005, 0.042, 2.549], keyframe: 6 },
+      { position: [-0.005, 0.28, 2.549], keyframe: 7.7 }, // Adjust these coordinates as needed
+      { position: [-0.005, 0.042, 2.549], keyframe: 8 },
     ],
   }
   const getInterpolatedPosition = (animations, currentKeyframe, easeFunc = easing.easeOut) => {
@@ -149,9 +183,6 @@ const cardGroupRef = useRef()
     )
   }
 
-
-
-  // Animation frame
   useFrame((state, delta) => {
     if (!cameraRef.current || !lidRef.current || !clipRef.current || 
         !pressRef.current || !tearGroupRef.current || !cardGroupRef.current) return
@@ -171,95 +202,97 @@ const cardGroupRef = useRef()
 
     const currentCameraKeyframe = cameraKeyframes[keyframeIndex]
     const nextCameraKeyframe = cameraKeyframes[Math.min(keyframeIndex + 1, numberOfKeyframes)]
-
-    // If we're at the start (scrollProgress near 0), use exact initial values
-    if (scrollProgress < 0.001) {
-      cameraRef.current.fov = cameraKeyframes[0].fov
-      cameraRef.current.position.set(...cameraKeyframes[0].position)
-      cameraRef.current.rotation.set(...cameraKeyframes[0].rotation)
-      
-      // Reset all meshes to initial positions
-      clipRef.current.rotation.set(...meshAnimations.clip[0].rotation)
-      lidRef.current.rotation.set(...meshAnimations.lid[0].rotation)
-  
-      tearGroupRef.current.rotation.set(...meshAnimations.tearGroup[0].rotation)
-      pressRef.current.position.set(...meshAnimations.press[0].position)
-      cardGroupRef.current.position.set(...meshAnimations.cardGroup[0].position)
-    } else {
-      // Camera FOV
-      cameraRef.current.fov = THREE.MathUtils.lerp(
-        currentCameraKeyframe.fov,
-        nextCameraKeyframe.fov,
-        localProgress
-      )
-
-      // Camera position
-      cameraRef.current.position.lerp(
-        new THREE.Vector3(...nextCameraKeyframe.position),
-        localProgress
-      )
-
-      // Camera rotation
-      const currentRotation = new THREE.Euler(...currentCameraKeyframe.rotation)
-      const nextRotation = new THREE.Euler(...nextCameraKeyframe.rotation)
-      const currentQuaternion = new THREE.Quaternion().setFromEuler(currentRotation)
-      const nextQuaternion = new THREE.Quaternion().setFromEuler(nextRotation)
-      const interpolatedQuaternion = new THREE.Quaternion()
-      interpolatedQuaternion.slerpQuaternions(
-        currentQuaternion,
-        nextQuaternion,
-        localProgress
-      )
-      cameraRef.current.quaternion.copy(interpolatedQuaternion)
-
-      // Mesh animations
-      // Clip animation
-      const clipRotation = getInterpolatedRotation(
-        meshAnimations.clip, 
-        currentKeyframe,
-        easing.easeOut
-      )
-      clipRef.current.rotation.set(...clipRotation)
-
-      // Lid animation
-      const lidRotation = getInterpolatedRotation(
-        meshAnimations.lid, 
-        currentKeyframe,
-        easing.bounce
-      )
-      lidRef.current.rotation.set(...lidRotation)
-
-      // Press animation
-      const pressPosition = getInterpolatedPosition(
-        meshAnimations.press, 
-        currentKeyframe,
-        easing.easeInOut // Using easeInOut instead of bounce
-      )
-      pressRef.current.position.set(...pressPosition)
     
-      // Card group animation (position)
-      const cardPosition = getInterpolatedPosition(
-        meshAnimations.cardGroup, 
-        currentKeyframe,
-        easing.easeInOut // Using easeInOut instead of bounce
-      )
-      cardGroupRef.current.position.set(...cardPosition)
-    
-      // Tear group animation (with smoother easing)
-      const tearRotation = getInterpolatedRotation(
-        meshAnimations.tearGroup, 
-        currentKeyframe,
-        easing.easeInOut // Changed from bounce to easeInOut
-      )
-      tearGroupRef.current.rotation.set(...tearRotation)
-    }
+    // Smoothly interpolate FOV
+    const targetFOV = THREE.MathUtils.lerp(
+      currentCameraKeyframe.fov,
+      nextCameraKeyframe.fov,
+      localProgress
+    )
+    cameraRef.current.fov = THREE.MathUtils.lerp(
+      cameraRef.current.fov,
+      targetFOV,
+      0.1
+    )
+
+    // Smoothly interpolate position
+    const targetPosition = new THREE.Vector3()
+    targetPosition.lerpVectors(
+      new THREE.Vector3(...currentCameraKeyframe.position),
+      new THREE.Vector3(...nextCameraKeyframe.position),
+      localProgress
+    )
+    cameraRef.current.position.lerp(targetPosition, 0.1)
+
+    // Smoothly interpolate rotation using quaternions
+    const currentRotation = new THREE.Euler(...currentCameraKeyframe.rotation)
+    const nextRotation = new THREE.Euler(...nextCameraKeyframe.rotation)
+    const currentQuaternion = new THREE.Quaternion().setFromEuler(currentRotation)
+    const nextQuaternion = new THREE.Quaternion().setFromEuler(nextRotation)
+    const targetQuaternion = new THREE.Quaternion()
+    targetQuaternion.slerpQuaternions(
+      currentQuaternion,
+      nextQuaternion,
+      localProgress
+    )
+    cameraRef.current.quaternion.slerp(targetQuaternion, 0.1)
+
+    // Mesh animations with smooth transitions
+    // Clip animation
+    const clipRotation = getInterpolatedRotation(
+      meshAnimations.clip, 
+      currentKeyframe,
+      easing.easeOut
+    )
+    const currentClipRotation = new THREE.Vector3(...clipRef.current.rotation.toArray())
+    const targetClipRotation = new THREE.Vector3(...clipRotation)
+    currentClipRotation.lerp(targetClipRotation, 0.1)
+    clipRef.current.rotation.set(currentClipRotation.x, currentClipRotation.y, currentClipRotation.z)
+
+    // Lid animation
+    const lidRotation = getInterpolatedRotation(
+      meshAnimations.lid, 
+      currentKeyframe,
+      easing.bounce
+    )
+    const currentLidRotation = new THREE.Vector3(...lidRef.current.rotation.toArray())
+    const targetLidRotation = new THREE.Vector3(...lidRotation)
+    currentLidRotation.lerp(targetLidRotation, 0.1)
+    lidRef.current.rotation.set(currentLidRotation.x, currentLidRotation.y, currentLidRotation.z)
+
+    // Press animation
+    const pressPosition = getInterpolatedPosition(
+      meshAnimations.press, 
+      currentKeyframe,
+      easing.easeInOut
+    )
+    pressRef.current.position.lerp(new THREE.Vector3(...pressPosition), 0.1)
+
+    // Card group animation
+    const cardPosition = getInterpolatedPosition(
+      meshAnimations.cardGroup, 
+      currentKeyframe,
+      easing.easeInOut
+    )
+    cardGroupRef.current.position.lerp(new THREE.Vector3(...cardPosition), 0.1)
+
+    // Tear group animation
+    const tearRotation = getInterpolatedRotation(
+      meshAnimations.tearGroup, 
+      currentKeyframe,
+      easing.easeInOut
+    )
+    const currentTearRotation = new THREE.Vector3(...tearGroupRef.current.rotation.toArray())
+    const targetTearRotation = new THREE.Vector3(...tearRotation)
+    currentTearRotation.lerp(targetTearRotation, 0.1)
+    tearGroupRef.current.rotation.set(currentTearRotation.x, currentTearRotation.y, currentTearRotation.z)
 
     cameraRef.current.updateProjectionMatrix()
-  })
-
+})
   return (
     <group {...props} dispose={null}>
-      <group position={[-0.011, 1.203, 0.158]} scale={1.002} ref={tearGroupRef}>
+           <group>
+      <group position={[-0.022, 0.044, 2.717]} scale={1.002} ref={tearGroupRef}>
         <mesh
           castShadow
           receiveShadow
@@ -279,11 +312,11 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.press.geometry}
         material={materials['Surprise ']}
-        position={[-0.0015, 1.200, 0.188]}
+        position={[-0.013, 0.040, 2.743]}
         rotation={[3.13, 0.01, -3.141]}
-        scale={[0.026, 0.025, 0.025]}
+        scale={[0.026, 0.034, 0.025]}
       />
-      <group position={[-0.001, 1.167, 0.027]} rotation={[-Math.PI, 0.01, -Math.PI]} scale={1.002}>
+      <group position={[-0.012, 0.007, 2.586]} rotation={[-Math.PI, 0.01, -Math.PI]} scale={1.002}>
         <mesh
           castShadow
           receiveShadow
@@ -298,7 +331,7 @@ const cardGroupRef = useRef()
         />
       </group>
       <group
-        position={[-0.002, 1.203, 0.185]}
+        position={[-0.012, 0.044, 2.743]}
         rotation={[3.137, -0.435, -3.134]}
         scale={[1.606, 1.198, 1.606]}>
         <mesh
@@ -319,7 +352,7 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.Plane007.geometry}
         material={materials['Surprise ']}
-        position={[0.215, 1.167, -0.339]}
+        position={[0.205, 0.007, 2.219]}
         rotation={[0, -0.01, 0]}
         scale={[1.013, 1.002, 1.002]}
       />
@@ -328,7 +361,7 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.Cube003.geometry}
         material={materials['Surprise ']}
-        position={[-0.001, 1.165, 0]}
+        position={[-0.012, 0.005, 2.559]}
         rotation={[0, -0.01, 0]}
         scale={[0.998, 1.041, 1.002]}
       />
@@ -337,7 +370,7 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.clip001.geometry}
         material={materials['Surprise ']}
-        position={[-0.004, 1.166, -0.154]}
+        position={[-0.015, 0.006, 2.405]}
         scale={[0.066, 0.052, 0.02]}
       />
       <mesh
@@ -345,11 +378,11 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.Plane001.geometry}
         material={materials['Surprise ']}
-        position={[0.002, 1.167, -0.342]}
+        position={[-0.008, 0.007, 2.217]}
         rotation={[0, -0.01, 0]}
         scale={[1.013, 1.002, 1.002]}
       />
-      <group position={[0.005, 1.202, -0.009]} rotation={[-0.005, 0.091, 3.141]} scale={0.018} ref={cardGroupRef}>
+      <group position={[-0.005, 0.042, 2.549]} ref={cardGroupRef} rotation={[-0.005, 0.091, 3.141]} scale={0.018}>
         <mesh
           castShadow
           receiveShadow
@@ -375,7 +408,8 @@ const cardGroupRef = useRef()
           material={materials['lambert2.001']}
         />
       </group>
-      <group position={[0, -0.229, 0]}>
+      </group>
+      <group position={[0, 0.005, 0]}>
         <mesh
           castShadow
           receiveShadow
@@ -395,7 +429,7 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.clip.geometry}
         material={materials['Zino classic.001']}
-        position={[0.008, -0.232, -0.153]}
+        position={[0.008, 0.002, -0.153]}
         scale={[0.06, 0.052, 0.02]}
       />
       <mesh
@@ -403,7 +437,7 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.Plane012.geometry}
         material={materials['Zino classic.001']}
-        position={[0.005, -0.229, -0.341]}
+        position={[0.005, 0.005, -0.341]}
       />
       <mesh
       ref={lidRef}
@@ -411,14 +445,14 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.lid.geometry}
         material={materials['Zino classic.001']}
-        position={[0.003, -0.193, 0.187]}
+        position={[0.003, 0.041, 0.187]}
       />
       <mesh
         castShadow
         receiveShadow
         geometry={nodes.Cube004.geometry}
         material={materials['Material.002']}
-        position={[0, -0.231, 0]}
+        position={[0, 0.002, 0]}
         scale={[1, 1.086, 1]}
       />
       <mesh
@@ -426,7 +460,7 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.Cube005.geometry}
         material={materials['White Part.001']}
-        position={[0.013, -0.207, -0.152]}
+        position={[0.013, 0.027, -0.152]}
         rotation={[0, -0.002, 0]}
         scale={[1.001, 1.052, 0.346]}
       />
@@ -435,16 +469,15 @@ const cardGroupRef = useRef()
         receiveShadow
         geometry={nodes.Plane004.geometry}
         material={materials['Zino classic.001']}
-        position={[0.208, -0.229, -0.341]}
+        position={[0.208, 0.005, -0.341]}
       />
- <PerspectiveCamera
-        ref={cameraRef}
-        makeDefault={true}
+      <PerspectiveCamera
+ref={cameraRef}        makeDefault={true}
         far={1000}
         near={0.1}
-        fov={28.409}
-        position={[0.885, -0.029, -0.913]}
-        rotation={[3.111, 0.768, -3.12]}
+        fov={22.895}
+        position={[0.067, 3.329, -4.178]}
+        rotation={[-2.477, -0.004, -3.138]}
       />
     </group>
   )

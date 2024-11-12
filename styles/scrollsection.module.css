@@ -3,15 +3,16 @@
     height: 100vh; 
     overflow: hidden; 
     font-family: var(--font-geist-sans);
+    background-color: rgb(240, 240, 240);
 }
 .sectionone{
 
     height: 100vh;
-    background-color: rgba(0, 255, 255, 0);
+ 
    
 }
 .sectionone h1{
-    color: black;
+
     max-width: 100vw;
     line-height: 60px;
   
@@ -40,16 +41,29 @@
 .sectionone p{
     font-size: 2.83rem;
     text-align: center;
-    margin-top: 5vh;
+   transform: translateY(40vh);
+   
+
+
+   /* Standard property for Firefox */
+/* Ensures the text is transparent for Firefox */
+
+
+  
+
+
 }
+
+
 .toppart{
     display: flex;
     flex-direction: column;
 
 }
 .sectiontwo{
-    height: 100vh;
-    transform: translateY(-20vh);
+    height: 80vh;
+    transform: translateY(-15vh);
+
     display: flex;
     flex-direction: column;
     text-align: center;
@@ -58,6 +72,9 @@
 .secondparagraph{
     font-size: 1.94rem;
     text-align: center;
+    opacity: .46;
+    max-width: 85vw;
+    
 
 
 }
@@ -66,7 +83,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    transform: translateY(-45vh);
+    transform: translateY(15vh);
 
 }
 .classicboxheader{
@@ -74,28 +91,54 @@
 }
 .classicinfo{
     transform: translateY(.75vh);
+    opacity: .46;
 
+
+}
+.classicsmallheader{
+    letter-spacing: 3px;
+    color: rgb(52, 140, 17);
+
+   
+}
+.classicsmallheader2{
+    letter-spacing: 3px;
+    font-size: 2.3rem;
+
+    color: red;
+
+   
 }
 .zinosurprise{
     height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    transform: translateY(40vh);
+    transform: translateY(180vh);
+    text-align: center;
 }
 .goodies{
-    color: red;
+    color: rgb(233, 233, 233);
     display: flex;
     flex-direction: column;
     font-size: 2rem;
-    display: none;
+    /* display: none; */
     text-align: center;
-    /* transform: translateY(80vh); */
+    scale: .7;
+    transform: translate(20vw,-140vh);
+}
+.goodies li{
+    background-color: black;
+    border-radius: 19px;
+    width: 60vw;
+    height: 5vh;
 }
 .surpriseinfo{
     text-align: center;
     font-size: 2.16rem;
-    transform: translateY(.75vh);
+    transform: translateY(105vh);
+    color: rgb(0, 0, 0);
+    opacity: .67;
 
 }
 .products{
@@ -108,26 +151,79 @@
 
 }
 .card{
-    height: 40vh;
-    width: 45vw;
+    height: 50vh;
+    border-radius: 19px;
+    width: 85vw;
     background-color: blanchedalmond;
 }
+.card2{
+    height: 50vh;
+    border-radius: 19px;
+    width: 85vw;
+    background-color: blanchedalmond;
+}
+/* .card::after{
+    content:'';
+    width: 30vw;
+    position: absolute;
+    z-index: 3;
+    height: 30vw;
+    border-radius: 100px;
+    background-color: rgb(5, 134, 41);
+    transform: translate(25vw, 30vh);
+}
+.card2::after{
+    content:'';
+    width: 30vw;
+    position: absolute;
+    z-index: 3;
+    height: 30vw;
+    border-radius: 100px;
+    background-color: rgb(255, 51, 0);
+    transform: translate(25vw, 30vh);
+} */
+.cta{
+    width: 85vw;
+    height: 10vh;
+ background-color: RED;
+
+    margin-top: 5vh;
+    font-size: 1.64rem;
+    border-radius: 9px;
+    color: wheat;
+} 
 .cards{
     display: flex;
     margin-top:5vh;
-    height: 40vh;
-    gap: 10px;
+    height: 90vh;
+    gap: 10vh;
+   
     justify-content: space-around;
-    flex-direction: row;
+    flex-direction: column;
 }
 .cta3{
     width: 85vw;
-    height: 7vh;
-    background-color: red;
+    height: 10vh;
+    filter: drop-shadow(0px , 5px , 2px black);
+
     margin-top: 5vh;
-    font-size: 1.4rem;
+    font-size: 1.64rem;
     border-radius: 9px;
     color: wheat;
+    background-color: rgb(52, 140, 17);
+
+    transform: translateY(123.5vh);
+}
+.cta4{
+    width: 85vw;
+    height: 10vh;
+    background-color: red;
+    margin-top: 5vh;
+    font-size: 1.64rem;
+    border-radius: 9px;
+    color: wheat;
+    transform: translateY(280vh);
+
 }
 .cta2details{
     font-size: 2rem;
@@ -136,40 +232,92 @@
 
 }
 .sectionthree{
-    height: 130vh;
-    transform: translateY(285vh);
+    height: 200vh;
+    transform: translateY(445vh);
 
     flex-direction: column;
     display: flex;
     align-items: center;
 
 }
-.sliderr{
-    height: 70vh;
+.cta5{
+    width: 85vw;
+    height: 10vh;
+    background-color: red;
     margin-top: 5vh;
+    font-size: 1.64rem;
+    border-radius: 9px;
+    color: wheat;
+}
+.sliderr{
+    height: 200vh;
+
     text-align: center;
-    transform: translateY(240vh);
+    transform: translateY(420vh);
+    background: rgb(0,0,0);
+    background: -moz-linear-gradient(230deg, rgba(0,0,0,1) 0%, rgba(44,0,0,1) 18%, rgba(49,0,0,1) 56%, rgba(131,1,1,1) 100%, rgba(192,1,1,1) 100%);
+    background: -webkit-linear-gradient(230deg, rgba(0,0,0,1) 0%, rgba(44,0,0,1) 18%, rgba(49,0,0,1) 56%, rgba(131,1,1,1) 100%, rgba(192,1,1,1) 100%);
+    background: linear-gradient(230deg, rgba(0,0,0,1) 0%, rgba(44,0,0,1) 18%, rgba(49,0,0,1) 56%, rgba(131,1,1,1) 100%, rgba(192,1,1,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#000000",endColorstr="#c00101",GradientType=1); 
+    padding-top: 20vh;
 
 }
 .sliderr h1{
     text-align: center;
     font-size: 4.4rem;
     transform: translateY(-5vh);
+    color: white;
+
+}
+.footer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+   
+    height: 40vh;
+    color: white;
+    font-size: 3rem;;
 
 }
 .sliderr span{
-    font-size: 1.82rem;;
+    font-size: 1.82rem;
+ 
+
 }
 .sld{
     height: 40vh;
     background-image: url('/as.jpg');
     width: 100vw;
     background-size: cover;
+    scale: .8;
+    filter: drop-shadow(0px 13px 33px rgba(255, 0, 0, 0.524));
 }
-.greaterinfo{
-    height: 80vh;
-    transform: translateY(200vh);
-    background-color: brown;
+
+.greaterinfoheader{
+    font-size: 3.6rem;
+    max-width: 100vw;
+
+}.greaterinfosmall{
+    font-size: 2.4rem;
+
+
+}
+.greaterinfoheader2{
+    font-size: 2.4rem;
+
+}
+.greaterinfosmall2{
+    font-size: 2.4rem;
+    color:white;
+
+
+
+}
+.classicinfo2{
+    font-size: 2.4rem;
+    color:white;
+    margin-top: 5vh;
 
 }
 .classicboxheader{
@@ -186,13 +334,13 @@
     text-align: center;
     font-size: 2.16rem;
 }
-.cta{
+/* .cta{
     width: 85vw;
     height: 7vh;
     background-color: red;
-    margin-top: 5vh;
+    margin-top: 15vh;
     font-size: 1.4rem;
     border-radius: 9px;
     color: wheat;
    
-}
+} */

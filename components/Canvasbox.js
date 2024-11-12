@@ -13,16 +13,17 @@ const Canvasbox = () => {
 
 
   
-   <ScrollControls pages={8.4} damping={.30}>
-   
+   <ScrollControls pages={12} damping={.3}>
    <Scene/>
+
+
 
 <Scroll html>
     {/* <Navbar/> */}
     <section className={styles.sectionone}>
         <div className={styles.toppart}>
         <h1 className={styles.intro}>Die zinofresh Box. The box that <span className={styles.lock}>locks.</span></h1>
-        <p className={styles.introparagraph}>Wir sind die zino box GmbH und haben mal eben die Pizza Box für dich revolutioniert!</p>
+        <p className={styles.introparagraph}>Wir sind die zino box GmbH und  haben mal eben die Pizza Box für dich revolutioniert!</p>
         </div>
 
     </section>
@@ -54,14 +55,14 @@ Denn wir haben den Frische Siegel entwickelt, der auf jeder zinofresh Box integr
   
     <section className={styles.zinosurprise}>
 <h1 className={styles.classicboxheader}>zinofresh  <span className={styles.srp}>Surprise</span> Box</h1>
-<h4 className={styles.classicsmallheader}>Die Box voller Übrraschungen</h4>
+<h4 className={styles.classicsmallheader2}>Die Box voller Übrraschungen</h4>
 
 
 <p className={styles.surpriseinfo}>
 Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizzabox hat zu unserer zweiten Innovation der ZinoBox 2.0 geführt. Die erste Pizza Box mit integriertem SURPRISE FACH. Dieses Vorzeigeprojekt ist ein Meilenstein in der Geschichte der Pizzaschachtel und vereint packende Kommunikationsmöglichkeiten mit einer lebensmittelechten Verpackung. Mehrwerte, von denen Pizzerien, werbende Unternehmen und nicht zuletzt jeder einzelne Endkunde profitiert. Sorgen Sie für ganz besondere Überraschungsmomente …
 </p>
 
-<button className={styles.cta3}>Mehr</button>
+<button className={styles.cta4}>Mehr</button>
     </section>
 
 
@@ -85,37 +86,41 @@ Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizza
 <p className={styles.productinfo}>2 Verpackungslösungen, die Dein Geschäft voranbringen</p>
 <div className={styles.cards}>
 <div className={styles.card}>A</div>
-<div className={styles.card}>A</div>
+<div className={styles.card2}>A</div>
 
 </div>
 {/* <p className={styles.cta2details}>Wir vereinen neue Hygienestandards mit packenden Kommunikationsmöglichkeiten in einer lebensmittelechten Verpackung. Verpackungslösungen, die entwickelt wurden um Mehrwerte zu schaffen, von denen Pizzerien, werbende Unternehmen und nicht zuletzt jeder einzelne Endkunde profitieren soll. In Österreich entwickelt und mehrfach international ausgezeichnet! Bestellt heute noch ein Muster und überzeugt Euch selbst von der Innovationskraft, die Dich von der Masse abheben lässt.</p> */}
-<button className={styles.cta}>Muster anfordern</button>
+<button className={styles.cta5}>Muster anfordern</button>
     </section>
 
-    {/* <section className={styles.greaterinfo}>
 
-<h1 className={styles.greaterinfoheader}>Vorteile der zinofresh Box</h1>
-<h4 className={styles.greaterinfosmall}>Innovation trifft Qualität</h4>
-<h1 className={styles.greaterinfoheader2}>Preisgekrönte Innovation</h1>
+    <section className={styles.sliderr} >
+    <h1 className={styles.greaterinfoheader}>Vorteile der zinofresh Box</h1>
+{/* <h4 className={styles.greaterinfosmall}>Innovation trifft Qualität</h4>
+<h1 className={styles.greaterinfoheader2}>Preisgekrönte Innovation</h1> */}
 <h4 className={styles.greaterinfosmall2}>Mehrfach international ausgezeichnet</h4>
 
 
 
-<p className={styles.classicinfo}>
+<p className={styles.classicinfo2}>
 Das Resultat kann sich sehen lassen, denn die zino box GmbH ist über die Jahre mehrfach für seine innovativen Verpackungslösungen ausgezeichnet worden.
 
 Der World Star Packaging Award ist die Krönung dieser Entwicklungen. Gepaart mit den höchsten Qualitätsstandards können wir auf viele erfolgreiche Partnerschaften zurückblicken.
 </p>
 
 
-    </section> */}
-    <section className={styles.sliderr} >
-<h1>Die zinofresh Box. The box that locks.</h1>
 <div className={styles.sld}></div>
-<span>All rights reserved 2024@ZinoBox
-Developed By: NUhash</span>
+<div className={styles.footer}>
+            <div>Home</div>
+            <div>Products</div>
+            <div>About Us</div>
+            <div>Contact</div>
+        </div>
+    <span>All rights reserved 2024@ZinoBox
+    Developed By: NUhash</span>
 
     </section>
+
  
 </Scroll>
 
