@@ -27,6 +27,7 @@
 }
 .lock {
     color: red;
+    text-decoration: wavy;
   }
   .cls{
     color: rgb(52, 140, 17);
@@ -333,6 +334,7 @@
 .classicinfo{
     text-align: center;
     font-size: 2.16rem;
+    margin-top: 3vh;
 }
 /* .cta{
     width: 85vw;
