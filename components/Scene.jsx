@@ -18,9 +18,9 @@ const cardGroupRef = useRef()
   const cameraKeyframes = [
 
     {
-      fov:80.89,
-      position:[0.067, 3.329, -4.178],
-      rotation:[-2.477, -0.004, -3.138]
+      fov:50.89,
+      position:[-2.981, 2.984, -3.555],
+      rotation:[-2.573, -0.505, -2.727]
     },
 
 

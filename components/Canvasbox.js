@@ -54,7 +54,7 @@ Denn wir haben den Frische Siegel entwickelt, der auf jeder zinofresh Box integr
 
   
     <section className={styles.zinosurprise}>
-<h1 className={styles.classicboxheader}>zinofresh  <span className={styles.srp}>Surprise</span> Box</h1>
+<h1 className={styles.surpriseboxheader}>zinofresh  <span className={styles.srp}>Surprise</span> Box</h1>
 <h4 className={styles.classicsmallheader2}>Die Box voller Übrraschungen</h4>
 
 
@@ -82,6 +82,7 @@ Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizza
 
 
 </div>
+<div className={styles.three}>
 <h1 className={styles.products}>Innovationen für das Take-Away Business</h1>
 <p className={styles.productinfo}>2 Verpackungslösungen, die Dein Geschäft voranbringen</p>
 <div className={styles.cards}>
@@ -89,8 +90,10 @@ Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizza
 <div className={styles.card2}>A</div>
 
 </div>
-{/* <p className={styles.cta2details}>Wir vereinen neue Hygienestandards mit packenden Kommunikationsmöglichkeiten in einer lebensmittelechten Verpackung. Verpackungslösungen, die entwickelt wurden um Mehrwerte zu schaffen, von denen Pizzerien, werbende Unternehmen und nicht zuletzt jeder einzelne Endkunde profitieren soll. In Österreich entwickelt und mehrfach international ausgezeichnet! Bestellt heute noch ein Muster und überzeugt Euch selbst von der Innovationskraft, die Dich von der Masse abheben lässt.</p> */}
 <button className={styles.cta5}>Muster anfordern</button>
+</div>
+{/* <p className={styles.cta2details}>Wir vereinen neue Hygienestandards mit packenden Kommunikationsmöglichkeiten in einer lebensmittelechten Verpackung. Verpackungslösungen, die entwickelt wurden um Mehrwerte zu schaffen, von denen Pizzerien, werbende Unternehmen und nicht zuletzt jeder einzelne Endkunde profitieren soll. In Österreich entwickelt und mehrfach international ausgezeichnet! Bestellt heute noch ein Muster und überzeugt Euch selbst von der Innovationskraft, die Dich von der Masse abheben lässt.</p> */}
+
     </section>
 
 
@@ -111,13 +114,14 @@ Der World Star Packaging Award ist die Krönung dieser Entwicklungen. Gepaart mi
 
 <div className={styles.sld}></div>
 <div className={styles.footer}>
-            <div>Home</div>
-            <div>Products</div>
-            <div>About Us</div>
-            <div>Contact</div>
+            <li>Home</li>
+            <li>Products</li>
+            <li>About Us</li>
+            <li>Contact</li>
+            <span>All rights reserved 2024@ZinoBox
+            Developed By: NUhash</span>
         </div>
-    <span>All rights reserved 2024@ZinoBox
-    Developed By: NUhash</span>
+
 
     </section>
 
