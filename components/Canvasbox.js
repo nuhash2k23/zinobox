@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import styles from "@/styles/scrollsection.module.css";
 import { Environment, OrbitControls, RoundedBox, Scroll, ScrollControls, Stage } from '@react-three/drei';
 import { Classic } from './Classic';
@@ -8,6 +8,9 @@ import { useInView } from 'react-intersection-observer';
 // import Navbar from './Navbar';
 
 const FadeInElement = ({ children, threshold = 0 }) => {
+
+ 
+  
     const { ref, inView } = useInView({
       threshold,
       triggerOnce: false,
@@ -65,6 +68,23 @@ const FadeInElement = ({ children, threshold = 0 }) => {
     );
   };
 const Canvasbox = () => {
+
+  const [pages, setPages] = useState(12.1);
+  // Add useEffect to handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setPages(window.innerWidth > 321 ? 12 : 12.1);
+    };
+
+    // Set initial value
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   return (
    <>
    <div className={styles.canvas}>
@@ -72,7 +92,7 @@ const Canvasbox = () => {
 
 
   
-   <ScrollControls pages={12} damping={.3}>
+   <ScrollControls pages={pages} damping={.3}>
    <Scene/>
 
 
@@ -174,12 +194,12 @@ Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizza
 </div>
 
 <div className={styles.three}>
-<FadeInElement><h1 className={styles.products}>Innovationen für das Take-Away Business</h1>
+<FadeInElement><h1 className={styles.products}>Innovationen für das Take-Away <span>Business </span> 🍕</h1>
 <p className={styles.productinfo}>2 Verpackungslösungen, die Dein Geschäft voranbringen</p></FadeInElement>
 <FadeOutElement>
 <div className={styles.cards}>
-<div className={styles.card}>A</div>
-<div className={styles.card2}>A</div>
+<div className={styles.card}>Classic</div>
+<div className={styles.card2}>Zurprise</div>
 
 
 </div>
@@ -194,7 +214,7 @@ Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizza
 
     <section className={styles.sliderr} >
         <FadeInElement>
-        <h1 className={styles.greaterinfoheader}>Vorteile der zinofresh Box</h1>        </FadeInElement>
+        <h1 className={styles.greaterinfoheader}>Vorteile der <span>zinofresh</span> Box</h1>        </FadeInElement>
 {/* <h4 className={styles.greaterinfosmall}>Innovation trifft Qualität</h4>
 
 <h1 className={styles.greaterinfoheader2}>Preisgekrönte Innovation</h1> */}
