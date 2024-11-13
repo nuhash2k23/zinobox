@@ -5,6 +5,7 @@
     font-family: var(--font-geist-sans);
     background-color: rgb(240, 240, 240);
 }
+
 .sectionone{
 
     height: 100vh;
@@ -24,6 +25,10 @@
 .canvas button{
     font-family: var(--font-geist-sans);
 
+}
+.goodies li {
+    margin-top: .45vh;
+    font-family: var(--font-geist-mono);
 }
 .lock {
     color: red;
@@ -82,6 +87,7 @@
     font-size: 1.94rem;
     text-align: center;
     opacity: .46;
+    font-family: var(--font-geist-mono);
 
     max-width: 85vw;
     
@@ -99,7 +105,7 @@
 .surpriseboxheader{
     font-size: 6rem;
     text-align: center;
-    transform: translateY(-90vh);
+    transform: translateY(-80vh);
     line-height: 80px;
 }
 .classicboxheader{
@@ -109,6 +115,7 @@
 .classicinfo{
     transform: translateY(.75vh);
     opacity: .46;
+    font-family: var(--font-geist-mono);
 
 
 }
@@ -116,10 +123,11 @@
 .classicsmallheader2{
     letter-spacing: 3px;
     font-size: 1.8rem;
-    transform: translateY(-85vh);
+    transform: translateY(-50vh);
     color:#ff0202;
-    max-width: 60vw;
+    max-width: 90vw;
 
+    font-family: var(--font-geist-mono);
 
    
 }
@@ -149,7 +157,7 @@ align-items: center;
     transform: translate(20vw,-140vh);
 }
 .goodies li{
-    background-color: black;
+    background-color: rgb(221, 0, 0);
     border-radius: 19px;
     width: 60vw;
     height: 5vh;
@@ -161,6 +169,8 @@ align-items: center;
     color: rgb(0, 0, 0);
     opacity: .67;
     scale: .9;
+    
+    font-family: var(--font-geist-mono);
 
 }
 .products{
@@ -173,6 +183,8 @@ align-items: center;
     font-size: 1.8rem;
     text-align: center;
     margin-top: 3vh;
+    
+    font-family: var(--font-geist-mono);
     color: white;
 
 
@@ -356,6 +368,7 @@ scale: .5;
 
 }.greaterinfosmall{
     font-size: 2.4rem;
+    
 
 
 }
@@ -367,7 +380,7 @@ scale: .5;
     font-size: 1.8rem;
     color:white;
 
-
+    font-family:  var(--font-geist-mono);
 
 }
 .classicinfo2{
@@ -375,6 +388,7 @@ scale: .5;
     color:white;
     margin-top: 5vh;
     scale: .9;
+    font-family:  var(--font-geist-mono);
 
 }
 .classicboxheader{
@@ -387,6 +401,7 @@ scale: .5;
     text-align: center;
     font-size: 1.8rem;
     color: rgb(52, 140, 17);
+    font-family:  var(--font-geist-mono);
 
 }
 .classicinfo{
@@ -394,6 +409,7 @@ scale: .5;
     font-size: 2rem;
     margin-top: 3vh;
     scale: .9;
+    font-family:var(--font-geist-mono);
 }
 /* .cta{
     width: 85vw;

@@ -46,7 +46,7 @@ const cardGroupRef = useRef()
     },
 
     {
-      fov: 16.461,
+      fov: 45.461,
       position: [-0.572, 0.444, 1.734],
       rotation: [-2.698, -0.553, 3.086],
     },
