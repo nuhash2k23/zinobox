@@ -136,7 +136,7 @@ max-width: max-content !important;
 }
 .sectiontwo{
     height: 100vh;
-    transform: translateY(-15vh);
+    MARGIN-TOP: 130VH;
 
     display: flex;
     flex-direction: column;
@@ -159,13 +159,13 @@ max-width: max-content !important;
     display: flex;
     flex-direction: column;
     align-items: center;
-    transform: translateY(15vh);
+   margin-top: 60VH;
 
 }
 .surpriseboxheader{
     font-size: 6rem;
     text-align: center;
-    transform: translateY(-80vh);
+
     line-height: 80px;
 }
 .classicboxheader{
@@ -183,7 +183,7 @@ max-width: max-content !important;
 .classicsmallheader2{
     letter-spacing: 3px;
     font-size: 1.8rem;
-    transform: translateY(-50vh);
+
     color:#ff0202;
     max-width: 90vw;
 
@@ -196,13 +196,14 @@ max-width: max-content !important;
     display: flex;
     flex-direction: column;
     align-items: center;
-    transform: translateY(180vh);
+transform: translateY(460vh);
+ 
     text-align: center;
 }
 .three{
 display: flex;
 flex-direction: column;
-transform: translateY(-20vh);
+transform: translateY(570vh);
 justify-content: center;
 align-items: center;
 }
@@ -214,7 +215,7 @@ align-items: center;
     /* display: none; */
     text-align: center;
     scale: .7;
-    transform: translate(20vw,-140vh);
+    transform: translate(20vw,550vh);
 }
 .goodies li{
     background-color: rgb(221, 0, 0);
@@ -225,7 +226,7 @@ align-items: center;
 .surpriseinfo{
     text-align: center;
     font-size: 2rem;
-    transform: translateY(90vh);
+ margin-top: 50vh;
     color: rgb(0, 0, 0);
     opacity: .67;
     scale: .9;
@@ -346,7 +347,7 @@ align-items: center;
     color: white;
     background-color: rgb(52, 140, 17);
 
-    transform: translateY(63.5vh);
+    /* transform: translateY(63.5vh); */
 }
 .cta4{
     width: 85vw;
@@ -356,7 +357,7 @@ align-items: center;
     font-size: 1.64rem;
     border-radius: 9px;
     color: white;
-    transform: translateY(240vh);
+    /* transform: translateY(240vh); */
 
 }
 .cta2details{
@@ -367,7 +368,7 @@ align-items: center;
 }
 .sectionthree{
     height: 160vh;
-    transform: translateY(420vh);
+    transform: translateY(720vh);
 
     flex-direction: column;
     display: flex;
@@ -392,7 +393,7 @@ align-items: center;
     height: 200vh;
 
     text-align: center;
-    transform: translateY(420vh);
+    transform: translateY(1200vh);
   
  
     padding-top: 20vh;

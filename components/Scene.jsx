@@ -1,8 +1,47 @@
 
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useGLTF, PerspectiveCamera, useScroll } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+
+
+const createPulsingShaderMaterial = () => {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color('#ff0000') }, // More intense red
+      uPulseIntensity: { value: 0.0 },
+      baseTexture: { value: null }
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vPosition;
+      void main() {
+        vUv = uv;
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uColor;
+      uniform float uPulseIntensity;
+      uniform sampler2D baseTexture;
+      varying vec2 vUv;
+      varying vec3 vPosition;
+      
+      void main() {
+        vec4 baseColor = texture2D(baseTexture, vUv);
+        float pulse = (sin(uTime * 2.0) * .25 + 0.25) * uPulseIntensity;
+        vec3 glowColor = mix(baseColor.rgb, uColor, pulse);
+        float glow = pulse * 1.5; // Increased glow intensity
+        vec3 finalColor = mix(baseColor.rgb, glowColor, glow);
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `,
+    transparent: true
+  });
+}
 
 export function Scene(props) {
   const { nodes, materials } = useGLTF('/stage.glb')
@@ -11,25 +50,37 @@ export function Scene(props) {
   const lidRef = useRef()
   const clipRef = useRef()
   const pressRef = useRef()
-const tearGroupRef = useRef()
-const cardGroupRef = useRef()
+  const tearGroupRef = useRef()
+  const cardGroupRef = useRef()
+  const pulsingMaterial = useRef()
+  const originalMaterials = useRef({})
 
   // Camera keyframes
   const cameraKeyframes = [
-
+    // {
+    //   fov:50.89,
+    //   position:[-2.981, 2.984, -3.555],
+    //   rotation:[-2.573, -0.505, -2.727]
+    // },
     {
-      fov:50.89,
-      position:[-2.981, 2.984, -3.555],
-      rotation:[-2.573, -0.505, -2.727]
-    },
+        fov:75.89,
+        position:[2.179, 1.46, -1.188],
+        rotation:[-2.528, 0.709, 2.711]
+      },
+    
 
+      {
+        fov:90.89,
+        position:[-2.501, 1.265, -1.004],
+        rotation:[-2.148, -0.64, -2.399]
+      },
+      
+      {
+        fov:90.89,
+        position:[-2.501, 1.265, -1.004],
+        rotation:[-2.148, -0.64, -2.399]
+      },
 
- 
-    {
-      fov:65.115,
-      position:[-0.35, 0.372, -0.567],
-      rotation:[-2.592, -0.505, -2.853]
-    },
 
 
     {
@@ -44,49 +95,90 @@ const cardGroupRef = useRef()
       position: [0.375, 0.4, -0.496],
       rotation: [-2.491, 0.521, 2.642],
     },
+    {
+      fov: 90.52,
+      position: [0.375, 0.4, -0.496],
+      rotation: [-2.491, 0.521, 2.642],
+    },
+    {
+      fov: 70.52,
+      position: [0.375, 0.4, -0.496],
+      rotation: [-2.491, 0.521, 2.642],
+    },
 
     {
-      fov: 45.461,
+      fov: 65.461,
       position: [-0.572, 0.444, 1.734],
       rotation: [-2.698, -0.553, 3.086],
     },
-    {
-      fov: 16.461,
-      position: [-0.117, 0.117, 2.298],
+       {
+      fov: 55.461,
+      position: [-0.572, 0.444, 1.734],
       rotation: [-2.698, -0.553, 3.086],
     },
+       {
+      fov: 45.461,
+      position: [0.574, 0.552, 2.032],
+      rotation: [-2.314, 0.723, 2.681],
+    },
     {
-      fov: 16.461,
+      fov: 25.461,
+      position: [0.574, 0.552, 2.032],
+      rotation: [-2.314, 0.723, 2.681],
+    },
+    {
+      fov: 25.461,
+      position: [0.574, 0.552, 2.032],
+      rotation: [-2.314, 0.723, 2.681],
+    },
+    // {
+    //   fov: 86.461,
+    //   position: [-0.117, 0.117, 2.298],
+    //   rotation: [-2.698, -0.553, 3.086],
+    // },
+    // {
+    //   fov: 106.461,
+    //   position: [-0.117, 0.117, 2.298],
+    //   rotation: [-2.698, -0.553, 3.086],
+    // },
+    {
+      fov: 26.461,
       position: [1.446, 1.814, 1.298],
       rotation: [-2.16, 0.672, 2.52],
     },
     {
-      fov: 36.461,
+      fov: 26.461,
       position: [1.446, 1.814, 1.298],
       rotation: [-2.16, 0.672, 2.52],
     },
     {
-      fov: 36.461,
-      position: [1.446, 1.814, 1.298],
-      rotation: [-2.16, 0.672, 2.52],
+      fov:90.89,
+      position:[-2.501, 1.265, -1.004],
+      rotation:[-2.148, -0.64, -2.399]
     },
     {
-      fov: 16.461,
-      position:[-3.892, 1.218, -3.592],
-      rotation:[-2.897, -0.686, -2.861],
+      fov:75.89,
+      position:[2.179, 1.46, -1.188],
+      rotation:[-2.528, 0.709, 2.711]
     },
-    {
-      fov: 36.461,
-      position:[-3.892, 1.218, -3.592],
-      rotation:[-2.897, -0.686, -2.861],
-    },
-    {
-      fov: 80.461,
-      position:[-3.892, 1.218, -3.592],
-      rotation:[-2.897, -0.686, -2.861],
-    },
+  
 
 
+    // {
+    //   fov: 33.461,
+    //   position:[-3.892, 1.218, -3.592],
+    //   rotation:[-2.897, -0.686, -2.861],
+    // },
+    // {
+    //   fov: 36.461,
+    //   position:[-3.892, 1.218, -3.592],
+    //   rotation:[-2.897, -0.686, -2.861],
+    // },
+    // {
+    //   fov: 80.461,
+    //   position:[-3.892, 1.218, -3.592],
+    //   rotation:[-2.897, -0.686, -2.861],
+    // },
 
   ]
 
@@ -110,34 +202,41 @@ const cardGroupRef = useRef()
     lid: [
       { rotation: [0, -0.002, 0], keyframe: 0 },
       { rotation: [0, -0.002, 0], keyframe: 2.2 },
-      { rotation: [1.344, 0, 0], keyframe: 3 },
-      { rotation: [0, -0.002, 0], keyframe: 3.51 },
+      { rotation: [0, -0.002, 0], keyframe: 5.3 },
+      { rotation: [1.344, -0.002, 0], keyframe: 6.6 },
+      
     ],
     clip: [
       { rotation: [0, -0.002, 0], keyframe: 0 },
-      { rotation: [0, -0.002, 0], keyframe: 1 },
-      { rotation: [-1.37, 0, 0], keyframe: 1.5 },
-      { rotation: [0, -0.002, 0], keyframe: 4.51 },
+      { rotation: [0, -0.002, 0], keyframe: 3 },
+      { rotation: [0, -0.002, 0], keyframe: 4 },
+
+      { rotation: [-1.37, -0.002, 0], keyframe:6.21},
+      { rotation: [0, -0.002, 0], keyframe:8.1},
+     
+ 
     ],
     press: [
-      { position: [-0.013, 0.042, 2.743], keyframe: 0 },
-      { position: [-0.013, 0.042, 2.743], keyframe: 4 },
-      { position: [-0.013, 0.039, 2.743], keyframe:5.5 },
-      { position: [-0.013, 0.037, 2.743], keyframe:6.11 },
+      { position: [-0.013, 0.045, 2.743], keyframe: 0 },
+      { position: [-0.013, 0.045, 2.743], keyframe: 9.1 },
+      { position: [-0.013, 0.042, 2.743], keyframe:9.11 },
+      { position: [-0.013, 0.042, 2.743], keyframe:9.81 },
+      { position: [-0.013, 0.042, 2.743], keyframe:12.81 },
+      { position: [-0.013, 0.045, 2.743], keyframe:12.91 },
      
 
     ],
     tearGroup: [
       { rotation: [0, 0, 0], keyframe: 0 },
-      { rotation: [0, 0, 0], keyframe: 5 },
-      { rotation: [1.472, 0, 0], keyframe: 6.5 },
-      { rotation: [1.472, 0, 0], keyframe: 8 },
+      { rotation: [0, 0, 0], keyframe: 9 },
+      { rotation: [1.472, 0, 0], keyframe: 12.95 },
+      { rotation: [0, 0, 0], keyframe: 13.12 },
     ],
     cardGroup: [
       { position:[-0.005, 0.042, 2.549], keyframe: 0 },
-      { position: [-0.005, 0.042, 2.549], keyframe: 6 },
-      { position: [-0.005, 0.28, 2.549], keyframe: 7.7 }, // Adjust these coordinates as needed
-      { position: [-0.005, 0.042, 2.549], keyframe: 8 },
+      { position: [-0.005, 0.042, 2.549], keyframe: 11 },
+      { position: [-0.005, 0.28, 2.549], keyframe: 12 }, // Adjust these coordinates as needed
+      { position: [-0.005, 0.042, 2.549], keyframe: 13 },
     ],
   }
   const getInterpolatedPosition = (animations, currentKeyframe, easeFunc = easing.easeOut) => {
@@ -182,6 +281,24 @@ const cardGroupRef = useRef()
       THREE.MathUtils.lerp(start, nextAnim.rotation[index], easedProgress)
     )
   }
+  useEffect(() => {
+    // Create pulsing shader material
+    const shader = createPulsingShaderMaterial();
+    if (materials['Surprise ']) {
+      shader.uniforms.baseTexture.value = materials['Surprise '].map;
+    }
+    pulsingMaterial.current = shader;
+
+    // Store original material for press mesh
+    if (materials['Surprise ']) {
+      originalMaterials.current['press'] = materials['Surprise '].clone();
+    }
+
+    return () => {
+      shader.dispose();
+      Object.values(originalMaterials.current).forEach(material => material.dispose());
+    };
+  }, [materials]);
 
   useFrame((state, delta) => {
     if (!cameraRef.current || !lidRef.current || !clipRef.current || 
@@ -197,6 +314,104 @@ const cardGroupRef = useRef()
       numberOfKeyframes - 1
     )
     
+    // First fade sequence
+    const fadeStartKeyframe = 1;
+    const fadeEndKeyframe = 2.6;
+    const fadeInStartKeyframe = fadeEndKeyframe + 0.1;
+    const fadeInEndKeyframe = fadeInStartKeyframe + 1.0;
+    
+    // Second fade sequence
+    const fadeStartKeyframe2 = 6.9;
+    const fadeEndKeyframe2 = 7.28;
+    const fadeInStartKeyframe2 = fadeEndKeyframe2 + 0.1;
+    const fadeInEndKeyframe2 = fadeInStartKeyframe2 + 1.0;
+    
+    // Calculate fade progress for both sequences
+    const fadeOutProgress = (currentKeyframe - fadeStartKeyframe) / 
+                          (fadeEndKeyframe - fadeStartKeyframe);
+    
+    const fadeInProgress = (currentKeyframe - fadeInStartKeyframe) / 
+                         (fadeInEndKeyframe - fadeInStartKeyframe);
+                         
+    const fadeOutProgress2 = (currentKeyframe - fadeStartKeyframe2) / 
+                           (fadeEndKeyframe2 - fadeStartKeyframe2);
+    
+    const fadeInProgress2 = (currentKeyframe - fadeInStartKeyframe2) / 
+                          (fadeInEndKeyframe2 - fadeInStartKeyframe2);
+    
+    // Apply fade effects for both sequences
+    if (currentKeyframe >= fadeStartKeyframe && currentKeyframe <= fadeEndKeyframe) {
+        // First sequence fade out
+        Object.values(materials).forEach(material => {
+            material.transparent = true;
+            material.opacity = Math.max(0, 1 - fadeOutProgress * 5);
+        });
+    } else if (currentKeyframe > fadeEndKeyframe && currentKeyframe <= fadeInStartKeyframe) {
+        // First sequence complete transparency
+        Object.values(materials).forEach(material => {
+            material.transparent = true;
+            material.opacity = 0;
+        });
+    } else if (currentKeyframe > fadeInStartKeyframe && currentKeyframe <= fadeInEndKeyframe) {
+        // First sequence fade in
+        Object.values(materials).forEach(material => {
+            material.transparent = true;
+            material.opacity = Math.min(1, fadeInProgress * 2);
+        });
+    } else if (currentKeyframe >= fadeStartKeyframe2 && currentKeyframe <= fadeEndKeyframe2) {
+        // Second sequence fade out
+        Object.values(materials).forEach(material => {
+            material.transparent = true;
+            material.opacity = Math.max(0, 1 - fadeOutProgress2 * 5);
+        });
+    } else if (currentKeyframe > fadeEndKeyframe2 && currentKeyframe <= fadeInStartKeyframe2) {
+        // Second sequence complete transparency
+        Object.values(materials).forEach(material => {
+            material.transparent = true;
+            material.opacity = 0;
+        });
+    } else if (currentKeyframe > fadeInStartKeyframe2 && currentKeyframe <= fadeInEndKeyframe2) {
+        // Second sequence fade in
+        Object.values(materials).forEach(material => {
+            material.transparent = true;
+            material.opacity = Math.min(1, fadeInProgress2 * 2);
+        });
+    } else {
+        // Normal state
+        Object.values(materials).forEach(material => {
+            material.transparent = true;
+            material.opacity = 1;
+        });
+    }
+    // Update pulsing effect for press mesh
+    if (pulsingMaterial.current && pressRef.current) {
+      pulsingMaterial.current.uniforms.uTime.value += delta * 2; // Increased speed
+
+      // Adjusted pulse timing
+      const pulseStartKeyframe = 8.5;
+      const pulseEndKeyframe = 9.5;
+      
+      if (currentKeyframe >= pulseStartKeyframe && currentKeyframe <= pulseEndKeyframe) {
+        const pulseProgress = (currentKeyframe - pulseStartKeyframe) / 
+                            (pulseEndKeyframe - pulseStartKeyframe);
+        
+        // Enhanced pulse intensity
+        pulsingMaterial.current.uniforms.uPulseIntensity.value = 
+          Math.sin(pulseProgress * Math.PI) * 1.5; // Increased intensity
+        
+        // Ensure press mesh is using pulsing material
+        if (pressRef.current.material !== pulsingMaterial.current) {
+          pressRef.current.material = pulsingMaterial.current;
+        }
+      } else {
+        pulsingMaterial.current.uniforms.uPulseIntensity.value = 0;
+        // Reset to original material when not pulsing
+        if (pressRef.current.material !== materials['Surprise ']) {
+          pressRef.current.material = materials['Surprise '];
+        }
+      }
+    }
+
     let localProgress = (scrollProgress * numberOfKeyframes) % 1
     localProgress = easing.easeInOut(localProgress)
 

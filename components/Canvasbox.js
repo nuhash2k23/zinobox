@@ -5,6 +5,7 @@ import { Environment, OrbitControls, RoundedBox, Scroll, ScrollControls, Stage }
 import { Classic } from './Classic';
 import { Scene } from './Scene';
 import { useInView } from 'react-intersection-observer';
+import { Euler } from 'three';
 // import Navbar from './Navbar';
 
 const FadeInElement = ({ children, threshold = 0 }) => {
@@ -48,7 +49,7 @@ const FadeInElement = ({ children, threshold = 0 }) => {
       </div>
     );
   };
-  const FadeOutElement = ({ children, threshold = 0.2 }) => {
+  const FadeOutElement = ({ children, threshold = 0 }) => {
     const { ref, inView } = useInView({
       threshold,
       triggerOnce: false,
@@ -69,11 +70,11 @@ const FadeInElement = ({ children, threshold = 0 }) => {
   };
 const Canvasbox = () => {
 
-  const [pages, setPages] = useState(12.1);
+  const [pages, setPages] = useState(19.5);
   // Add useEffect to handle window resize
   useEffect(() => {
     const handleResize = () => {
-      setPages(window.innerWidth > 321 ? 12 : 12.1);
+      setPages(window.innerWidth > 321 ? 22 : 19.5);
     };
 
     // Set initial value
@@ -92,7 +93,7 @@ const Canvasbox = () => {
 
 
   
-   <ScrollControls pages={pages} damping={.3}>
+   <ScrollControls pages={pages} damping={.35}>
    <Scene/>
 
 
@@ -112,17 +113,17 @@ const Canvasbox = () => {
 
     </section>
 
-
+    <FadeOutElement>
     <section className={styles.sectiontwo}>
     <FadeInElement><p className={styles.secondparagraph}>
-Der Lieferservice boomt. Immer mehr Menschen lassen ihr Essen nach Hause bringen. Aber die alten Verpackungen werden den gestiegenen Anforderungen der modernen Zeit nicht mehr gerecht! Stichwort: HYGIENESICHERHEIT. Deswegen haben wir die neuen zinofresh Boxen entwickelt. Mehrfach international preisgekrönte Verpackungslösungen, speziell für den professionellen Lieferdienst entwickelt. Take-Away war noch nie so innovativ.
+Der Lieferservice boomt. Immer mehr Menschen lassen ihr Essen nach Hause bringen. Aber die alten Verpackungen werden den gestiegenen Anforderungen der modernen Zeit nicht mehr gerecht! Stichwort: HYGIENESICHERHEIT.<br></br> <br></br>Deswegen haben wir die neuen zinofresh Boxen entwickelt. Mehrfach international preisgekrönte Verpackungslösungen, speziell für den professionellen Lieferdienst entwickelt. Take-Away war noch nie so innovativ.
 </p></FadeInElement>
 
 <FadeInElement><button className={styles.cta}>
 Heute noch ein Muster anfordern</button></FadeInElement>
 
     </section>
-
+</FadeOutElement>
     
     <section className={styles.zinoclassic}>
         <ScaleElement>
@@ -161,7 +162,7 @@ Denn wir haben den Frische Siegel entwickelt, der auf jeder zinofresh Box integr
 
 <FadeInElement>
 <p className={styles.surpriseinfo}>
-Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizzabox hat zu unserer zweiten Innovation der ZinoBox 2.0 geführt. Die erste Pizza Box mit integriertem SURPRISE FACH. Dieses Vorzeigeprojekt ist ein Meilenstein in der Geschichte der Pizzaschachtel und vereint packende Kommunikationsmöglichkeiten mit einer lebensmittelechten Verpackung. Mehrwerte, von denen Pizzerien, werbende Unternehmen und nicht zuletzt jeder einzelne Endkunde profitiert. Sorgen Sie für ganz besondere Überraschungsmomente …
+Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizzabox hat zu unserer zweiten Innovation der ZinoBox 2.0 geführt. Die erste Pizza Box mit integriertem SURPRISE FACH.. <br></br> <br></br> Dieses Vorzeigeprojekt ist ein Meilenstein in der Geschichte der Pizzaschachtel und vereint packende Kommunikationsmöglichkeiten mit einer lebensmittelechten Verpackung. Mehrwerte, von denen Pizzerien, werbende Unternehmen und nicht zuletzt jeder einzelne Endkunde profitiert. Sorgen Sie für ganz besondere Überraschungsmomente …
 </p>
 
 </FadeInElement>
@@ -197,12 +198,12 @@ Wir stehen für kreatives Design und die konsequente Weiterentwicklung der Pizza
 <FadeInElement><h1 className={styles.products}>Innovationen für das Take-Away <span>Business </span> 🍕</h1>
 <p className={styles.productinfo}>2 Verpackungslösungen, die Dein Geschäft voranbringen</p></FadeInElement>
 <FadeOutElement>
-<div className={styles.cards}>
+{/* <div className={styles.cards}>
 <div className={styles.card}>Classic</div>
 <div className={styles.card2}>Zurprise</div>
 
 
-</div>
+</div> */}
 <button className={styles.cta5}>Muster anfordern</button>
 
 </FadeOutElement>
@@ -250,8 +251,9 @@ Der World Star Packaging Award ist die Krönung dieser Entwicklungen. Gepaart mi
 </Scroll>
 
    </ScrollControls>
+   <ambientLight color={'white'} intensity={1.0}/>
    {/* <OrbitControls/> */}
-    <Environment preset='studio' environmentIntensity={.32}></Environment>
+    <Environment files={"/derelict_highway_midday_2k.hdr"} environmentIntensity={1.04} environmentRotation={[.92,.84,.2]}></Environment>
    </Canvas>
    </div>
   

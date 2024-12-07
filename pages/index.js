@@ -4,6 +4,8 @@ import localFont from "next/font/local";
 import styles from "@/styles/Home.module.css";
 import Canvasbox from "@/components/Canvasbox";
 import Navbar from "@/components/Navbar";
+import Canvasboxeng from "@/components/Canvasboxeng";
+
 
 const GravitasBold = localFont({
   src: "./fonts/Studio K - Gravitas Bold.otf",
@@ -28,8 +30,8 @@ export default function Home() {
    
       <>
       <main className={ ` ${styles.main} ${Gravitas.variable} ${GravitasBold.variable}`}>
-
-     <Canvasbox/>
+      <Canvasbox/>
+     {/* <Canvasboxeng/> */}
      </main>
       </>
     </>
