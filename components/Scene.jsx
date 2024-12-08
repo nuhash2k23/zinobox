@@ -322,7 +322,7 @@ export function Scene(props) {
     const fadeInEndKeyframe = fadeInStartKeyframe + 1.0;
     
     // Second fade sequence
-    const fadeStartKeyframe2 = 6.9;
+    const fadeStartKeyframe2 = 6.19;
     const fadeEndKeyframe2 = 7.28;
     const fadeInStartKeyframe2 = fadeEndKeyframe2 + 0.1;
     const fadeInEndKeyframe2 = fadeInStartKeyframe2 + 1.0;

@@ -1,4 +1,54 @@
+.sliderContainer {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
 
+.sliderTrack {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.slide {
+    min-width: 100%;
+    height: 400px;
+}
+
+.slideImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.activeIndicator {
+    background: white;
+}
+
+@media (max-width: 768px) {
+    .slide {
+        height: 300px;
+    }
+}
 
 @media (max-width:321px){
     .sectionone p{
@@ -413,7 +463,7 @@ align-items: center;
     flex-direction: column;
     background-color: black;
    
-    height: 40vh;
+    height: 50vh;
     color: rgb(213, 0, 0);
 
 

@@ -6,6 +6,7 @@ import { Classic } from './Classic';
 import { Scene } from './Scene';
 import { useInView } from 'react-intersection-observer';
 import { Euler } from 'three';
+import ImageSlider from './ImageSlider';
 // import Navbar from './Navbar';
 
 const FadeInElement = ({ children, threshold = 0 }) => {
@@ -74,7 +75,7 @@ const Canvasbox = () => {
   // Add useEffect to handle window resize
   useEffect(() => {
     const handleResize = () => {
-      setPages(window.innerWidth > 321 ? 22 : 19.5);
+      setPages(window.innerWidth > 321 ? 21.25 : 19.5);
     };
 
     // Set initial value
@@ -235,7 +236,9 @@ The World Star Packaging Award is the crowning achievement of these developments
 
    
 
-<div className={styles.sld}></div>
+
+  <ImageSlider/>
+
 <div className={styles.footer}>
             <li>Home</li>
             <li>Products</li>
