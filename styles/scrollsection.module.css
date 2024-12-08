@@ -215,7 +215,7 @@ max-width: max-content !important;
 .surpriseboxheader{
     font-size: 6rem;
     text-align: center;
-
+margin-top: 20vh;
     line-height: 80px;
 }
 .classicboxheader{
@@ -233,7 +233,8 @@ max-width: max-content !important;
 .classicsmallheader2{
     letter-spacing: 3px;
     font-size: 1.8rem;
-
+    transform: translateY(-4.5vh);
+    
     color:#ff0202;
     max-width: 90vw;
 
@@ -280,9 +281,12 @@ align-items: center;
     color: rgb(0, 0, 0);
     opacity: .67;
     scale: .9;
-    
+    transform: translateY(-58vh);
     font-family: var(--font-geist-mono);
 
+}
+.cta4{
+    transform: translateY(-55vh);
 }
 .products{
     font-size: 3.65rem;
