@@ -116,7 +116,7 @@ const Canvasbox = () => {
     <FadeOutElement>
     <section className={styles.sectiontwo}>
     <FadeInElement><p className={styles.secondparagraph}>
-    The delivery service is booming. More and more people are having their food delivered to their homes. But the old packaging no longer meets the increased demands of modern times! Key word: HYGIENE SAFETY.<br></br> <br></br>That's why we developed the new Zinofresh boxes. Multiple internationally awarded packaging solutions, specifically designed for professional delivery services. Take-away has never been so innovative.
+    The delivery service is booming. More and more people are having their food delivered to their homes. But the old packaging no longer meets the increased demands of modern times! Key word: HYGIENE SAFETY.<br></br> <br></br>Thats why we developed the new Zinofresh boxes. Multiple internationally awarded packaging solutions, specifically designed for professional delivery services. Take-away has never been so innovative.
 </p></FadeInElement>
 
 <FadeInElement><button className={styles.cta}>
@@ -139,7 +139,7 @@ Request a sample today.</button></FadeInElement>
 <p className={styles.classicinfo}>
 What would you say if you could seal your deliveries with a security lock? This would ensure to every customer that nothing has touched their food and that only they can open the box upon receipt.
 
-That's because we've developed the Freshness Seal, which is integrated into every Zinofresh box. Thanks to the unique and multiple award-winning locking mechanism, the box is sealed directly at the restaurant.
+Thats because weve developed the Freshness Seal, which is integrated into every Zinofresh box. Thanks to the unique and multiple award-winning locking mechanism, the box is sealed directly at the restaurant.
 </p>
 </FadeInElement>
 <FadeOutElement>
@@ -252,9 +252,9 @@ The World Star Packaging Award is the crowning achievement of these developments
 </Scroll>
 
    </ScrollControls>
-   <ambientLight color={'white'} intensity={1.0}/>
+   <ambientLight color={'white'} intensity={0.5}/>
    {/* <OrbitControls/> */}
-    <Environment files={"/derelict_highway_midday_2k.hdr"} environmentIntensity={1.04} environmentRotation={[.92,.84,.2]}></Environment>
+    <Environment files={'/derelict_highway_midday_2k.hdr'} environmentIntensity={.79} environmentRotation={[.42,.84,.2]}></Environment>
    </Canvas>
    </div>
   

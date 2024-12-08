@@ -251,7 +251,7 @@ Der World Star Packaging Award ist die Krönung dieser Entwicklungen. Gepaart mi
 </Scroll>
 
    </ScrollControls>
-   <ambientLight color={'white'} intensity={1.10}/>
+   <ambientLight color={'white'} intensity={1.50}/>
    {/* <OrbitControls/> */}
     <Environment files={"/derelict_highway_midday_2k.hdr"} environmentIntensity={1.04} environmentRotation={[.92,.84,.2]}></Environment>
    </Canvas>

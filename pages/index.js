@@ -30,8 +30,8 @@ export default function Home() {
    
       <>
       <main className={ ` ${styles.main} ${Gravitas.variable} ${GravitasBold.variable}`}>
-      <Canvasbox/>
-     {/* <Canvasboxeng/> */}
+      {/* <Canvasbox/> */}
+     <Canvasboxeng/>
      </main>
       </>
     </>
