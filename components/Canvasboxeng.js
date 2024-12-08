@@ -75,8 +75,7 @@ const Canvasbox = () => {
   // Add useEffect to handle window resize
   useEffect(() => {
     const handleResize = () => {
-      setPages(window.innerWidth <= 360 ? 21.5 : 19.5);
-      
+      setPages(window.innerWidth <= 767 ? 21.4 : 19.5);
     };
 
     // Set initial value
