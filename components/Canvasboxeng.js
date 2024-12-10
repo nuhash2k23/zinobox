@@ -7,9 +7,10 @@ import { Scene } from './Scene';
 import { useInView } from 'react-intersection-observer';
 import { Euler } from 'three';
 import ImageSlider from './ImageSlider';
+import { Pizza } from './Pizza';
 // import Navbar from './Navbar';
 
-const FadeInElement = ({ children, threshold = 0 }) => {
+const FadeInElement = ({ children, threshold = 0.9 }) => {
 
  
   
@@ -24,13 +25,14 @@ const FadeInElement = ({ children, threshold = 0 }) => {
         style={{
           transform: `translateY(${inView ? 0 : '40px'})`,
           opacity: inView ? 1 : 0,
-          transition: 'transform 0.9s ease-out, opacity 0.9s ease-out',
+          transition: 'transform 0.4s ease-out, opacity 0.4s ease-out',
         }}
       >
         {children}
       </div>
     );
   };
+  
   const ScaleElement = ({ children, threshold = 0.05 }) => {
     const { ref, inView } = useInView({
       threshold,
@@ -41,9 +43,9 @@ const FadeInElement = ({ children, threshold = 0 }) => {
       <div
         ref={ref}
         style={{
-          transform: `scale(${inView ? 0.64 : 2})`,
+          transform: `scale(${inView ? 1.44 : 2})`,
           opacity: inView ? 1 : 0,
-          transition: 'transform 0.6s ease-out, opacity 0.6s ease-out',
+          transition: 'transform 0.4s ease-out, opacity 0.4s ease-out',
         }}
       >
         {children}
@@ -62,7 +64,7 @@ const FadeInElement = ({ children, threshold = 0 }) => {
         style={{
           transform: `translateY(${inView ? 0 : '-40px'})`,
           opacity: inView ? 1 : 0,
-          transition: 'transform 0.9s ease-out, opacity 0.9s ease-out',
+          transition: 'transform 0.4s ease-out, opacity 0.4s ease-out',
         }}
       >
         {children}
@@ -71,22 +73,7 @@ const FadeInElement = ({ children, threshold = 0 }) => {
   };
 const Canvasbox = () => {
 
-  const [pages, setPages] = useState(19.5);
-  // Add useEffect to handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setPages(window.innerWidth <= 767 ? 21.4 : 19.5);
-    };
-
-    // Set initial value
-    handleResize();
-
-    // Add event listener
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  
   return (
    <>
    <div className={styles.canvas}>
@@ -94,8 +81,12 @@ const Canvasbox = () => {
 
 
   
-   <ScrollControls pages={pages} damping={.35}>
+   <ScrollControls pages={12} damping={.35}>
+
    <Scene/>
+
+
+
 
 
 
@@ -117,7 +108,7 @@ const Canvasbox = () => {
     <FadeOutElement>
     <section className={styles.sectiontwo}>
     <FadeInElement><p className={styles.secondparagraph}>
-    The delivery service is booming. More and more people are having their food delivered to their homes. But the old packaging no longer meets the increased demands of modern times! Key word: HYGIENE SAFETY.<br></br> <br></br>Thats why we developed the new Zinofresh boxes. Multiple internationally awarded packaging solutions, specifically designed for professional delivery services. Take-away has never been so innovative.
+    The delivery service is booming. More and more people are having their food delivered to their homes. But the old packaging no longer meets the increased demands of modern times! Key word: HYGIENE SAFETY.<br className={styles.br}></br>Thats why we developed the new Zinofresh boxes. Multiple internationally awarded packaging solutions, specifically designed for professional delivery services. Take-away has never been so innovative.
 </p></FadeInElement>
 
 <FadeInElement><button className={styles.cta}>
@@ -128,9 +119,9 @@ Request a sample today.</button></FadeInElement>
 </FadeOutElement>
     
     <section className={styles.zinoclassic}>
-        <ScaleElement>
+        <FadeInElement>
 <h1 className={styles.classicboxheader}>zinofresh <span className={styles.cls}>Classic</span> Box</h1>
-</ScaleElement>
+</FadeInElement>
 <FadeInElement>
 
 <h4 className={styles.classicsmallheader}>Opening guarantee thanks to the freshness seal.</h4>
@@ -145,17 +136,23 @@ Thats because weve developed the Freshness Seal, which is integrated into every 
 </FadeInElement>
 <FadeOutElement>
 <button className={styles.cta3}>More</button>
+
 </FadeOutElement>
     </section>
+
+
+
+    <h3 className={styles.pull}>PULL TO OPEN</h3>
+
 
 
 
 
   
     <section className={styles.zinosurprise}>
-        <ScaleElement>
+        <FadeInElement>
 <h1 className={styles.surpriseboxheader}>zinofresh  <span className={styles.srp}>Surprise</span> Box</h1>
-</ScaleElement>
+</FadeInElement>
 <FadeOutElement>
 
 <h4 className={styles.classicsmallheader2}>The Box Full of Surprises</h4>
@@ -170,25 +167,28 @@ We stand for creative design, and the consistent development of the pizza box ha
 </FadeInElement>
 <FadeOutElement>
 <button className={styles.cta4}>More</button>
+
+
 </FadeOutElement>
 
     </section>
+    <h3 className={styles.push}>PUSH 4 SURPRISE</h3>
 
 
     <section className={styles.sectionthree}>
     <div className={styles.goodies}>
-<FadeInElement>     <li>Give-aways</li></FadeInElement>
+<ScaleElement>     <li>Give-aways</li></ScaleElement>
    
-<FadeOutElement>     
-<li>Gewinnspiele</li></FadeOutElement>
-<FadeInElement>  <li>Flyer & Kataloge</li></FadeInElement>
-<FadeOutElement>     
-<li>Producktproben</li></FadeOutElement>
+<ScaleElement>     
+<li>Gewinnspiele</li></ScaleElement>
+<ScaleElement>  <li>Flyer & Kataloge</li></ScaleElement>
+<ScaleElement>     
+<li>Producktproben</li></ScaleElement>
 
-<FadeInElement>  <li>Vouchers </li></FadeInElement>
+<ScaleElement>  <li>Vouchers </li></ScaleElement>
       
-<FadeOutElement>     
-<li> Hospitality Product</li></FadeOutElement> 
+<ScaleElement>     
+<li> Hospitality Product</li></ScaleElement> 
      
 
 
@@ -238,14 +238,28 @@ The World Star Packaging Award is the crowning achievement of these developments
 
 
   <ImageSlider/>
+  <FadeInElement>
+  <div className={styles.video}>
+  <iframe
+ 
+    height="500"
+    src="https://www.youtube.com/embed/FbacS7AqYpQ"
+    frameBorder="0"
+    allow="encrypted-media"
+    allowFullScreen
+  ></iframe>
+  </div>
 
+  </FadeInElement>
+ 
 <div className={styles.footer}>
             <li>Home</li>
             <li>Products</li>
             <li>About Us</li>
             <li>Contact</li>
+
             <span>All rights reserved 2024@ZinoBox
-            Developed By: NUhash</span>
+            Developed By: Nuhash</span>
         </div>
 
 
@@ -256,8 +270,9 @@ The World Star Packaging Award is the crowning achievement of these developments
 
    </ScrollControls>
    <ambientLight color={'white'} intensity={0.5}/>
+
    {/* <OrbitControls/> */}
-    <Environment files={'/derelict_highway_midday_2k.hdr'} environmentIntensity={.79} environmentRotation={[.42,.84,.2]}></Environment>
+    <Environment files={'/studio_small_08_1k.hdr'} environmentIntensity={1.19} environmentRotation={[.42,-.4,.2]}></Environment>
    </Canvas>
    </div>
   

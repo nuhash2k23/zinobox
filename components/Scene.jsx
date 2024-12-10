@@ -6,11 +6,13 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 
+
+
 const createPulsingShaderMaterial = () => {
   return new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
-      uColor: { value: new THREE.Color('#ff0000') }, // More intense red
+      uColor: { value: new THREE.Color('#ff0000') }, // Red color
       uPulseIntensity: { value: 0.0 },
       baseTexture: { value: null }
     },
@@ -30,19 +32,24 @@ const createPulsingShaderMaterial = () => {
       uniform sampler2D baseTexture;
       varying vec2 vUv;
       varying vec3 vPosition;
-      
+
       void main() {
         vec4 baseColor = texture2D(baseTexture, vUv);
-        float pulse = (sin(uTime * 2.0) * .25 + 0.25) * uPulseIntensity;
+        float pulse = (sin(uTime * 2.0) * 0.25 + 0.25) * uPulseIntensity;
         vec3 glowColor = mix(baseColor.rgb, uColor, pulse);
         float glow = pulse * 1.5; // Increased glow intensity
         vec3 finalColor = mix(baseColor.rgb, glowColor, glow);
-        gl_FragColor = vec4(finalColor, 1.0);
+        
+        // Set the alpha value based on pulse intensity, you can adjust this logic for different effects
+        float finalAlpha = mix(1.0, 0.5, pulse);  // Reduces opacity as pulse increases
+        
+        gl_FragColor = vec4(finalColor, finalAlpha); // Set the final color with dynamic alpha
       }
     `,
     transparent: true
   });
 }
+
 
 export function Scene(props) {
   const { nodes, materials } = useGLTF('/stage.glb')
@@ -55,45 +62,54 @@ export function Scene(props) {
   const cardGroupRef = useRef()
   const pulsingMaterial = useRef()
   const originalMaterials = useRef({})
+  const surprise = useRef();
+  const classic = useRef()
 
   // Camera keyframes
   const cameraKeyframes = [
-    // {
-    //   fov:50.89,
-    //   position:[-2.981, 2.984, -3.555],
-    //   rotation:[-2.573, -0.505, -2.727]
-    // },
+ //1STVIEW
     {
-        fov:75.89,
-        position:[2.179, 1.46, -1.188],
-        rotation:[-2.528, 0.709, 2.711]
+        fov:90.89,
+        position:[0.85, 0.9, -0.599],
+        rotation:[-2.259, 0.46, 2.75]
       },
     
-
+//ROATEVIEW
       {
-        fov:90.89,
-        position:[-2.501, 1.265, -1.004],
-        rotation:[-2.148, -0.64, -2.399]
+        fov:60.89,
+        position:[-0.602, 0.385, -0.841],
+        rotation:[-2.807, -0.712, -2.918]
       },
-      
+      //FADES
       {
-        fov:90.89,
-        position:[-2.501, 1.265, -1.004],
-        rotation:[-2.148, -0.64, -2.399]
+        fov:40.89,
+        position:[-0.602, 0.385, -0.841],
+        rotation:[-2.807, -0.712, -2.918]
+      },
+      {
+        fov:40.89,
+        position:[-0.602, 0.385, -0.841],
+        rotation:[-2.807, -0.712, -2.918]
       },
 
-
+//CLASSICOPEN
 
     {
-      fov: 95.743,
+      fov: 105.743,
       position: [-0.211, 0.073, -0.316],
       rotation: [-2.882, -0.715, -2.969],
     },
 
-
+//lockzoombefore
     {
-      fov: 80.52,
-      position: [0.375, 0.4, -0.496],
+      fov: 48.52,
+      position: [0.25, 0.4, -0.496],
+      rotation: [-2.491, 0.521, 2.642],
+    },
+    //lockzoombeforeoriginal
+    {
+      fov: 28.52,
+      position: [0.25, 0.3, -0.496],
       rotation: [-2.491, 0.521, 2.642],
     },
     {
@@ -106,62 +122,147 @@ export function Scene(props) {
       position: [0.375, 0.4, -0.496],
       rotation: [-2.491, 0.521, 2.642],
     },
-
+//srpsvisible
     {
       fov: 65.461,
-      position: [-0.572, 0.444, 1.734],
-      rotation: [-2.698, -0.553, 3.086],
+      // position:[1.117, 0.549, -0.332],
+      // rotation:[-2.364, 0.583, 2.645]
+      position:[0.299, 0.448, -0.268],
+      rotation:[-2.569, -0.471, -2.857]
+    
     },
-       {
-      fov: 55.461,
-      position: [-0.572, 0.444, 1.734],
-      rotation: [-2.698, -0.553, 3.086],
+    {
+      fov: 65.461,
+      // position:[1.117, 0.549, -0.332],
+      // rotation:[-2.364, 0.583, 2.645]
+      position:[0.299, 0.448, -0.268],
+      rotation:[-2.569, -0.471, -2.857]
+    
     },
-       {
+    
+    //srpspressrot
+    {
+      fov: 25.461,
+      // position:[1.117, 0.549, -0.332],
+      // rotation:[-2.364, 0.583, 2.645]
+      position:[0.330, 0.328, -0.268],
+      rotation:[-2.569, -0.471, -2.857]
+    
+    },
+    {
+      fov: 15.461,
+      // position:[1.117, 0.549, -0.332],
+      // rotation:[-2.364, 0.583, 2.645]
+      position:[0.330, 0.328, -0.268],
+      rotation:[-2.569, -0.471, -2.857]
+    
+    },
+        //srpspressrot2
+    // {
+    //   fov: 28.461,
+    //   // position:[1.117, 0.549, -0.332],
+    //   // rotation:[-2.364, 0.583, 2.645]
+    //   position:[0.299, 0.348, -0.268],
+    //   rotation:[-2.569, -0.471, -2.857]
+    
+    // },
+    //srppresszoom
+    {
+      fov: 35.461,
+      position:[1.117, 0.9, -0.332],
+      rotation:[-2.364, 0.583, 2.645]
+    
+    },
+    {
       fov: 45.461,
-      position: [0.574, 0.552, 2.032],
-      rotation: [-2.314, 0.723, 2.681],
+      position:[0.97, .549, -0.29],
+      rotation:[-2.364, 0.583, 2.645]
+    
     },
     {
-      fov: 25.461,
-      position: [0.574, 0.552, 2.032],
-      rotation: [-2.314, 0.723, 2.681],
+      fov: 55.461,
+      position:[0.8017, 1.9, -0.332],
+      rotation:[-2.364, 0.583, 2.645]
+    
     },
+    //goodiessees
     {
-      fov: 25.461,
-      position: [0.574, 0.552, 2.032],
-      rotation: [-2.314, 0.723, 2.681],
+      fov: 55.461,
+      position:[1.0107, 0.78, -0.332],
+      rotation:[-2.464, 0.583, 2.645]
+    
     },
+    //zoomgoodies
+    {
+      fov: 55,
+      position:[1.117, 0.74, -0.232],
+      rotation:[-2.364, 0.583, 2.645]
+    
+    },
+    
+    //RETURNTWO
     // {
-    //   fov: 86.461,
-    //   position: [-0.117, 0.117, 2.298],
-    //   rotation: [-2.698, -0.553, 3.086],
+    //   fov:50.89,
+    //   position:[-0.90, 0.75, -0.891],
+    //   rotation:[-2.507, -0.712, -2.8]
     // },
     // {
-    //   fov: 106.461,
-    //   position: [-0.117, 0.117, 2.298],
-    //   rotation: [-2.698, -0.553, 3.086],
+    //   fov:90.89,
+    //   position:[-0.90, 0.75, -0.891],
+    //   rotation:[-2.507, -0.712, -2.8]
     // },
-    {
-      fov: 26.461,
-      position: [1.446, 1.814, 1.298],
-      rotation: [-2.16, 0.672, 2.52],
-    },
-    {
-      fov: 26.461,
-      position: [1.446, 1.814, 1.298],
-      rotation: [-2.16, 0.672, 2.52],
-    },
-    {
-      fov:90.89,
-      position:[-2.501, 1.265, -1.004],
-      rotation:[-2.148, -0.64, -2.399]
-    },
-    {
-      fov:75.89,
-      position:[2.179, 1.46, -1.188],
-      rotation:[-2.528, 0.709, 2.711]
-    },
+ 
+//GOAWAY
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 0.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 1.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 2.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 4.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 4.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 4.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },    {
+    //   fov:30.89,
+    //   position:[-0.90, 4.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 4.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 4.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    // {
+    //   fov:30.89,
+    //   position:[-0.90, 4.75, -0.841],
+    //   rotation:[-2.407, -0.712, -2.8]
+    // },
+    
   
 
 
@@ -202,42 +303,61 @@ export function Scene(props) {
   const meshAnimations = {
     lid: [
       { rotation: [0, -0.002, 0], keyframe: 0 },
-      { rotation: [0, -0.002, 0], keyframe: 2.2 },
-      { rotation: [0, -0.002, 0], keyframe: 5.3 },
-      { rotation: [1.344, -0.002, 0], keyframe: 6.6 },
+      { rotation: [0, -0.002, 0], keyframe: 3.29 },
+      { rotation: [1.344, -0.002, 0], keyframe: 5.5 },
+      { rotation: [0, -0.002, 0], keyframe: 5.65 },
+      { rotation: [0, -0.002, 0], keyframe: 6.9 },
+ 
+      // { rotation: [1.344, -0.002, 0], keyframe: 7 },
+      { rotation: [0, -0.002, 0], keyframe: 3.9 },
+      { rotation: [0, -0.002, 0], keyframe: 5.8 },
+      { rotation: [0, -0.002, 0], keyframe: 7.13 },
+      { rotation: [1.344, -0.002, 0], keyframe: 7.4 },
+      { rotation: [1.344, -0.002, 0], keyframe: 8.4 },
+      { rotation: [0, -0.002, 0], keyframe: 9 },
       
     ],
     clip: [
-      { rotation: [0, -0.002, 0], keyframe: 0 },
-      { rotation: [0, -0.002, 0], keyframe: 3 },
-      { rotation: [0, -0.002, 0], keyframe: 4 },
+      // { rotation: [0, -0.002, 0], keyframe: 0 },
+      // { rotation: [0, -0.002, 0], keyframe: 3 },
+      // { rotation: [-1.37, -0.002, 0], keyframe: 3.6 },
+      { rotation: [0, -0.002, 0], keyframe: 1 },
+      { rotation: [-1.37, -0.002, 0], keyframe: 4.95 },
+      { rotation: [0, -0.002, 0], keyframe: 6.2 },
+      { rotation: [0, -0.002, 0], keyframe: 7.02 },
+      { rotation: [-1.37, -0.002, 0], keyframe:7.1 },
 
-      { rotation: [-1.37, -0.002, 0], keyframe:6.21},
-      { rotation: [0, -0.002, 0], keyframe:8.1},
+      // { rotation: [-1.37, -0.002, 0], keyframe: 6.8 },
+      
+      
+
+
+
      
  
     ],
     press: [
       { position: [-0.013, 0.045, 2.743], keyframe: 0 },
-      { position: [-0.013, 0.045, 2.743], keyframe: 9.1 },
-      { position: [-0.013, 0.042, 2.743], keyframe:9.11 },
-      { position: [-0.013, 0.042, 2.743], keyframe:9.81 },
-      { position: [-0.013, 0.042, 2.743], keyframe:12.81 },
-      { position: [-0.013, 0.045, 2.743], keyframe:12.91 },
+      { position: [-0.013, 0.045, 2.743], keyframe: 11.63 },
+    
+      { position: [-0.013, 0.040, 2.743], keyframe:10.1 },
+      { position: [-0.013, 0.042, 2.743], keyframe:13 },
+      { position: [-0.013, 0.045, 2.743], keyframe:13.2 },
      
 
     ],
     tearGroup: [
       { rotation: [0, 0, 0], keyframe: 0 },
-      { rotation: [0, 0, 0], keyframe: 9 },
-      { rotation: [1.472, 0, 0], keyframe: 12.95 },
-      { rotation: [0, 0, 0], keyframe: 13.12 },
+      { rotation: [0, 0, 0], keyframe: 12 },
+   
+      { rotation: [1.472, 0, 0], keyframe: 13.6 },
+      { rotation: [0, 0, 0], keyframe: 14 },
     ],
     cardGroup: [
       { position:[-0.005, 0.042, 2.549], keyframe: 0 },
-      { position: [-0.005, 0.042, 2.549], keyframe: 11 },
-      { position: [-0.005, 0.28, 2.549], keyframe: 12 }, // Adjust these coordinates as needed
       { position: [-0.005, 0.042, 2.549], keyframe: 13 },
+      { position: [-0.005, 0.28, 2.449], keyframe: 13.2 }, // Adjust these coordinates as needed
+      { position: [-0.005, 0.042, 2.549], keyframe: 13.8 },
     ],
   }
   const getInterpolatedPosition = (animations, currentKeyframe, easeFunc = easing.easeOut) => {
@@ -316,81 +436,104 @@ export function Scene(props) {
     )
     
     // First fade sequence
-    const fadeStartKeyframe = 1;
-    const fadeEndKeyframe = 2.6;
+    const fadeStartKeyframe = .85;
+    const fadeEndKeyframe = 4.85;
     const fadeInStartKeyframe = fadeEndKeyframe + 0.1;
     const fadeInEndKeyframe = fadeInStartKeyframe + 1.0;
     
     // Second fade sequence
-    const fadeStartKeyframe2 = 6.19;
-    const fadeEndKeyframe2 = 7.28;
+    const fadeStartKeyframe2 = 8;
+    const fadeEndKeyframe2 = 10.28;
     const fadeInStartKeyframe2 = fadeEndKeyframe2 + 0.1;
     const fadeInEndKeyframe2 = fadeInStartKeyframe2 + 1.0;
+
+    const fadeStartKeyframe3 = 13.8;
+    const fadeEndKeyframe3 = 24.0;
+    const fadeInStartKeyframe3 = fadeEndKeyframe3 + 0.1;
+    const fadeInEndKeyframe3 = fadeStartKeyframe3 + 1.0;
     
-    // Calculate fade progress for both sequences
     const fadeOutProgress = (currentKeyframe - fadeStartKeyframe) / 
-                          (fadeEndKeyframe - fadeStartKeyframe);
-    
-    const fadeInProgress = (currentKeyframe - fadeInStartKeyframe) / 
-                         (fadeInEndKeyframe - fadeInStartKeyframe);
-                         
-    const fadeOutProgress2 = (currentKeyframe - fadeStartKeyframe2) / 
-                           (fadeEndKeyframe2 - fadeStartKeyframe2);
-    
-    const fadeInProgress2 = (currentKeyframe - fadeInStartKeyframe2) / 
-                          (fadeInEndKeyframe2 - fadeInStartKeyframe2);
-    
-    // Apply fade effects for both sequences
-    if (currentKeyframe >= fadeStartKeyframe && currentKeyframe <= fadeEndKeyframe) {
-        // First sequence fade out
-        Object.values(materials).forEach(material => {
-            material.transparent = true;
-            material.opacity = Math.max(0, 1 - fadeOutProgress * 5);
-        });
-    } else if (currentKeyframe > fadeEndKeyframe && currentKeyframe <= fadeInStartKeyframe) {
-        // First sequence complete transparency
-        Object.values(materials).forEach(material => {
-            material.transparent = true;
-            material.opacity = 0;
-        });
-    } else if (currentKeyframe > fadeInStartKeyframe && currentKeyframe <= fadeInEndKeyframe) {
-        // First sequence fade in
-        Object.values(materials).forEach(material => {
-            material.transparent = true;
-            material.opacity = Math.min(1, fadeInProgress * 2);
-        });
-    } else if (currentKeyframe >= fadeStartKeyframe2 && currentKeyframe <= fadeEndKeyframe2) {
-        // Second sequence fade out
-        Object.values(materials).forEach(material => {
-            material.transparent = true;
-            material.opacity = Math.max(0, 1 - fadeOutProgress2 * 5);
-        });
-    } else if (currentKeyframe > fadeEndKeyframe2 && currentKeyframe <= fadeInStartKeyframe2) {
-        // Second sequence complete transparency
-        Object.values(materials).forEach(material => {
-            material.transparent = true;
-            material.opacity = 0;
-        });
-    } else if (currentKeyframe > fadeInStartKeyframe2 && currentKeyframe <= fadeInEndKeyframe2) {
-        // Second sequence fade in
-        Object.values(materials).forEach(material => {
-            material.transparent = true;
-            material.opacity = Math.min(1, fadeInProgress2 * 2);
-        });
-    } else {
-        // Normal state
-        Object.values(materials).forEach(material => {
-            material.transparent = true;
-            material.opacity = 1;
-        });
-    }
+    (fadeEndKeyframe - fadeStartKeyframe);
+
+const fadeInProgress = (currentKeyframe - fadeInStartKeyframe) / 
+   (fadeInEndKeyframe - fadeInStartKeyframe);
+   
+const fadeOutProgress2 = (currentKeyframe - fadeStartKeyframe2) / 
+     (fadeEndKeyframe2 - fadeStartKeyframe2);
+
+const fadeInProgress2 = (currentKeyframe - fadeInStartKeyframe2) / 
+    (fadeInEndKeyframe2 - fadeInStartKeyframe2);
+
+// New fade progress calculations for third sequence
+const fadeOutProgress3 = (currentKeyframe - fadeStartKeyframe3) / 
+     (fadeEndKeyframe3 - fadeStartKeyframe3);
+
+const fadeInProgress3 = (currentKeyframe - fadeInStartKeyframe3) / 
+    (fadeInEndKeyframe3 - fadeInStartKeyframe3);
+
+// Apply fade effects for all sequences
+if (currentKeyframe >= fadeStartKeyframe && currentKeyframe <= fadeEndKeyframe) {
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = Math.max(0, 1 - fadeOutProgress * 5);
+});
+} else if (currentKeyframe > fadeEndKeyframe && currentKeyframe <= fadeInStartKeyframe) {
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = 0;
+});
+} else if (currentKeyframe > fadeInStartKeyframe && currentKeyframe <= fadeInEndKeyframe) {
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = Math.min(1, fadeInProgress * 2);
+});
+} else if (currentKeyframe >= fadeStartKeyframe2 && currentKeyframe <= fadeEndKeyframe2) {
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = Math.max(0, 1 - fadeOutProgress2 * 5);
+});
+} else if (currentKeyframe > fadeEndKeyframe2 && currentKeyframe <= fadeInStartKeyframe2) {
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = 0;
+});
+} else if (currentKeyframe > fadeInStartKeyframe2 && currentKeyframe <= fadeInEndKeyframe2) {
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = Math.min(1, fadeInProgress2 * 2);
+});
+} else if (currentKeyframe >= fadeStartKeyframe3 && currentKeyframe <= fadeEndKeyframe3) {
+// Third sequence fade out
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = Math.max(0, 1 - fadeOutProgress3 * 55);
+});
+} else if (currentKeyframe > fadeEndKeyframe3 && currentKeyframe <= fadeInStartKeyframe3) {
+// Third sequence complete transparency
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = 0;
+});
+} else if (currentKeyframe > fadeInStartKeyframe3 && currentKeyframe <= fadeInEndKeyframe3) {
+// Third sequence fade in
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = Math.min(1, fadeInProgress3 * 2);
+});
+} else {
+// Normal state
+Object.values(materials).forEach(material => {
+material.transparent = true;
+material.opacity = 1;
+});
+}
     // Update pulsing effect for press mesh
     if (pulsingMaterial.current && pressRef.current) {
       pulsingMaterial.current.uniforms.uTime.value += delta * 2; // Increased speed
 
       // Adjusted pulse timing
-      const pulseStartKeyframe = 8.5;
-      const pulseEndKeyframe = 9.5;
+      const pulseStartKeyframe = 11.3;
+      const pulseEndKeyframe = 11.8;
       
       if (currentKeyframe >= pulseStartKeyframe && currentKeyframe <= pulseEndKeyframe) {
         const pulseProgress = (currentKeyframe - pulseStartKeyframe) / 
@@ -507,7 +650,7 @@ export function Scene(props) {
 })
   return (
     <group {...props} dispose={null}>
-           <group>
+           <group position={[0.6022, 0.0, -2.287]} ref={surprise}>
       <group position={[-0.022, 0.044, 2.717]} scale={1.002} ref={tearGroupRef}>
         <mesh
           castShadow
@@ -625,7 +768,8 @@ export function Scene(props) {
         />
       </group>
       </group>
-      <group position={[0, 0.005, 0]}>
+      <group ref={classic}>
+      <group position={[0, 0.005, 0]} >
         <mesh
           castShadow
           receiveShadow
@@ -687,13 +831,24 @@ export function Scene(props) {
         material={materials['Zino classic.001']}
         position={[0.208, 0.005, -0.341]}
       />
+    <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Object_5.geometry}
+        material={materials['default']}
+        position={[-0.001, 0.023, 0.018]}
+        rotation={[0, -0.97, 0]}
+        scale={[0.15, 0.082, 0.15]}
+      />
+    </group>
+
       <PerspectiveCamera
 ref={cameraRef}        makeDefault={true}
         far={1000}
         near={0.1}
-        fov={22.895}
-        position={[0.067, 3.329, -4.178]}
-        rotation={[-2.477, -0.004, -3.138]}
+        fov={90.89}
+        position={[1.117, 0.549, -0.332]}
+        rotation={[-2.259, 0.46, 2.75]}
       />
     </group>
   )
