@@ -45,13 +45,13 @@
     background: white;
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
     .slide {
         height: 300px;
     }
-}
+} */
 
-@media (max-width:361px){
+@media (max-width: 501px) and (max-height: 812px){
     .sectionone p{
         font-size: 1.97rem ;
         text-align: center;
@@ -327,15 +327,7 @@ align-items: center;
     color: white;
     margin-top: 50px;
 } 
-.cards{
-    display: flex;
-    /* margin-top:5vh; */
-    height: 90vh;
-    gap: 1vh;
-   
-    justify-content: space-around;
-    flex-direction: column;
-}
+
 .cta3{
     width: 85vw;
     height: 10vh;
