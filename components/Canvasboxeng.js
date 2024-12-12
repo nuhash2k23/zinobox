@@ -72,7 +72,7 @@ const FadeInElement = ({ children, threshold = 0.05 }) => {
     );
   };
 const Canvasbox = () => {
-  const [pages, setPages] = useState(14.15); // default value
+  const [pages, setPages] = useState(10.15); // default value
 
   useEffect(() => {
     const handleResize = () => {
@@ -262,7 +262,7 @@ The World Star Packaging Award is the crowning achievement of these developments
 
 
   <ImageSlider/>
-  <FadeInElement>
+
   <div className={styles.video}>
   <iframe
  
@@ -274,7 +274,7 @@ The World Star Packaging Award is the crowning achievement of these developments
   ></iframe>
   </div>
 
-  </FadeInElement>
+
  
 <div className={styles.footer}>
             <li>Home</li>

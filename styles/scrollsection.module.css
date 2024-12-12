@@ -1,3 +1,83 @@
+
+@media screen and (min-height: 700px){
+
+.sectionone p{
+    transform: translateY(10vh);
+}
+.sectiontwo{
+    transform: translateY(25vh);
+
+}
+.zinoclassic{
+    transform: translateY(35vh);
+
+}
+.pull{
+    transform: translateY(25vh)!important;
+
+}.three{
+    transform: translateY(2000px) !important;
+
+}
+.zinosurprise{
+ margin-top:200vh !important;
+
+}
+.goodies{
+    margin-top: 200vh !important;
+}
+.sliderr{
+    margin-top: 305vh !important;
+    
+}
+.footer{
+height: 100vh !important;
+}
+.footer li{
+    transform: translateY(-5vh);
+    scale: 1.82;
+    margin-top: 20px;
+}
+}
+
+
+@media screen and (min-height: 800px){
+    .zinosurprise{
+        margin-top:240vh !important;
+       
+       }
+}
+@media screen and (min-height: 900px){
+    .zinosurprise{
+        margin-top:284vh !important
+       
+       }
+       .goodies{
+        margin-top: 240vh !important;
+    }
+       .three{
+        transform: translateY(2000px) !important;
+       }
+       .sliderr{
+        margin-top: 350vh !important;
+       }
+       .sectiontwo{
+        transform: translateY(50vh);
+    
+    }
+    .zinoclassic{
+        transform: translateY(55vh);
+
+    }
+}
+
+
+
+
+
+
+
+
 .sliderContainer {
     width: 100%;
     max-width: 800px;
@@ -51,7 +131,7 @@
     }
 } */
 
-@media (max-width: 501px) {
+
     .sectionone p{
         font-size: 1.97rem ;
         text-align: center;
@@ -114,7 +194,7 @@ max-width: max-content !important;
  
 
     }
-}
+
 
 .canvas{
     width: 100vw;
