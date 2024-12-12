@@ -41,6 +41,7 @@ height: 100vh !important;
 }
 
 
+
 @media screen and (min-height: 800px){
     .zinosurprise{
         margin-top:240vh !important;
@@ -62,11 +63,11 @@ height: 100vh !important;
         margin-top: 350vh !important;
        }
        .sectiontwo{
-        transform: translateY(50vh);
+        transform: translateY(50vh) !important;
     
     }
     .zinoclassic{
-        transform: translateY(55vh);
+        transform: translateY(55vh) !important;
 
     }
 }
