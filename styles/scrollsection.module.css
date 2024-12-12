@@ -72,6 +72,37 @@ height: 100vh !important;
     }
 }
 
+@media screen and (min-height: 800px){
+    .zinosurprise{
+        margin-top:240vh !important;
+       
+       }
+}
+@media screen and (min-height: 660px){
+    .zinosurprise{
+        margin-top:184vh !important
+       
+       }
+       .goodies{
+        margin-top: 130vh !important;
+    }
+       .three{
+        transform: translateY(1700px) !important;
+       }
+       .sliderr{
+        margin-top: 230vh !important;
+       }
+       .sectiontwo{
+        transform: translateY(50vh) !important;
+    
+    }
+    .zinoclassic{
+        transform: translateY(55vh) !important;
+
+    }
+}
+
+
 
 
 
