@@ -264,14 +264,16 @@ The World Star Packaging Award is the crowning achievement of these developments
   <ImageSlider/>
 
   <div className={styles.video}>
-  <iframe
- 
-    height="500"
-    src="https://www.youtube.com/embed/FbacS7AqYpQ"
-    frameBorder="0"
-    allow="encrypted-media"
-    allowFullScreen
-  ></iframe>
+  <video
+  height="500"
+  controls
+  autoPlay
+  muted
+  src="/videoplayback.mp4" 
+  style={{ width: "100%", border: "none" }}
+>
+  Your browser does not support the video tag.
+</video>
   </div>
 
 
