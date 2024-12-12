@@ -10,7 +10,7 @@ import ImageSlider from './ImageSlider';
 import { Pizza } from './Pizza';
 // import Navbar from './Navbar';
 
-const FadeInElement = ({ children, threshold = 0.9 }) => {
+const FadeInElement = ({ children, threshold = 0.05 }) => {
 
  
   
@@ -52,7 +52,7 @@ const FadeInElement = ({ children, threshold = 0.9 }) => {
       </div>
     );
   };
-  const FadeOutElement = ({ children, threshold = 0 }) => {
+  const FadeOutElement = ({ children, threshold = 0.05 }) => {
     const { ref, inView } = useInView({
       threshold,
       triggerOnce: false,
@@ -72,7 +72,27 @@ const FadeInElement = ({ children, threshold = 0.9 }) => {
     );
   };
 const Canvasbox = () => {
+  const [pages, setPages] = useState(14.15); // default value
 
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      if (width === 375 && height === 667) {
+        setPages(14.15);
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   return (
    <>
@@ -81,7 +101,7 @@ const Canvasbox = () => {
 
 
   
-   <ScrollControls pages={12} damping={.35}>
+   <ScrollControls pages={14.15} damping={.45}>
 
    <Scene/>
 
@@ -118,6 +138,9 @@ Request a sample today.</button></FadeInElement>
     </section>
 </FadeOutElement>
     
+
+
+
     <section className={styles.zinoclassic}>
         <FadeInElement>
 <h1 className={styles.classicboxheader}>zinofresh <span className={styles.cls}>Classic</span> Box</h1>
@@ -139,6 +162,7 @@ Thats because weve developed the Freshness Seal, which is integrated into every 
 
 </FadeOutElement>
     </section>
+
 
 
 
