@@ -53,6 +53,10 @@ height: 100vh !important;
         margin-top:284vh !important
        
        }
+       .video{
+        margin-top:24vh !important
+
+       }
        .goodies{
         margin-top: 240vh !important;
     }
@@ -78,7 +82,7 @@ height: 100vh !important;
        
        }
 }
-@media screen and (min-height: 660px){
+@media screen and (max-height: 690px){
     .zinosurprise{
         margin-top:184vh !important
        
