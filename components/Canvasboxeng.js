@@ -119,7 +119,7 @@ const Canvasbox = () => {
         </FadeInElement>
         <FadeOutElement>
         
-        <p className={styles.introparagraph}>We have created Zino Box GmbH and are now revolutionizing our Pizza Box!</p>
+        <p className={styles.introparagraph}> We are the Zino Bpx GmbH And we just revolutionized the pizza box!</p>
         </FadeOutElement>
         </div>
 

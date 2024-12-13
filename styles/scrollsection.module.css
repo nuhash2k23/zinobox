@@ -83,6 +83,9 @@ height: 100vh !important;
        }
 }
 @media screen and (max-height: 690px){
+    .sectionone p{
+        transform: translateY(-30vh) !important;
+    }
     .zinosurprise{
         margin-top:184vh !important
        
@@ -97,11 +100,11 @@ height: 100vh !important;
         margin-top: 230vh !important;
        }
        .sectiontwo{
-        transform: translateY(50vh) !important;
+        transform: translateY(10vh) !important;
     
     }
     .zinoclassic{
-        transform: translateY(55vh) !important;
+        transform: translateY(45vh) !important;
 
     }
 }
