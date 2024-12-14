@@ -85,7 +85,7 @@ const RayMarchingScene = () => {
         
         vec3 bodyP = p;
         float height = 0.15;
-        float bottomRadius = 0.06;
+        float bottomRadius = 0.08;
         float topRadius = 0.1;
         
         float t = (bodyP.y + height * 0.5) / height;
@@ -161,7 +161,7 @@ const RayMarchingScene = () => {
         res = chair1 < res.x ? vec2(chair1, 2.0) : res;
         res = chair2 < res.x ? vec2(chair2, 2.0) : res;
 
-        vec3 cupPos = vec3(0.5 * sin(time), 0.88, 0.3 * cos(time));
+        vec3 cupPos = vec3(0.5 * sin(time), 0.85, 0.3 * cos(time));
         float cup = sdCup(p, cupPos);
         res = cup < res.x ? vec2(cup, 3.0) : res;
 
@@ -335,7 +335,7 @@ const RayMarchingScene = () => {
 
   return (
     <mesh ref={meshRef}>
-      <planeGeometry args={[16, 18]} />
+      <planeGeometry args={[18, 18]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
