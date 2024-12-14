@@ -326,8 +326,8 @@ const RayMarchingScene = () => {
     if (meshRef.current) {
       meshRef.current.material.uniforms.time.value = state.clock.elapsedTime;
       meshRef.current.material.uniforms.iMouse.value.set(
-        state.mouse.x * 0.5 + 0.5,
-        state.mouse.y * 0.5 + 0.5,
+        state.mouse.x * 0.5 + 0.15,
+        state.mouse.y * 0.5 + 0.15,
         0
       );
     }
@@ -335,7 +335,7 @@ const RayMarchingScene = () => {
 
   return (
     <mesh ref={meshRef}>
-      <planeGeometry args={[18, 18]} />
+      <planeGeometry args={[10,10]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
@@ -349,7 +349,7 @@ const RayMarchingComponent = () => {
   return (
 <div style={{ width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0 }}>
   <Canvas>
-  <OrbitControls   enablePan={false} enableZoom={true} enableRotate={false} />
+  {/* <OrbitControls   enablePan={false} enableZoom={true} enableRotate={false} rotation={[0,Math.PI,0]}/> */}
     <RayMarchingScene />
   </Canvas>
 </div>
