@@ -5,6 +5,9 @@ import styles from "@/styles/Home.module.css";
 import Canvasbox from "@/components/Canvasbox";
 import Navbar from "@/components/Navbar";
 import Canvasboxeng from "@/components/Canvasboxeng";
+// import Canvasboxeng from "@/components/Test";
+import RayMarchingComponent from "@/components/Test";
+
 
 
 const GravitasBold = localFont({
@@ -29,10 +32,12 @@ export default function Home() {
       </Head>
    
       <>
-      <main className={ ` ${styles.main} ${Gravitas.variable} ${GravitasBold.variable}`}>
+      {/* <main className={ ` ${styles.main} ${Gravitas.variable} ${GravitasBold.variable}`}> */}
       {/* <Canvasbox/> */}
-     <Canvasboxeng/>
-     </main>
+    
+      <RayMarchingComponent/>
+  
+     {/* </main> */}
       </>
     </>
   );

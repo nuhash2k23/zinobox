@@ -75,50 +75,15 @@ height: 100vh !important;
 
     }
 }
-@media screen and (min-height: 880px){
-    .zinosurprise{
-        margin-top:240vh !important;
-       
-       }
-       .zinoclassic{
-        transform: translateY(45vh) !important;
 
-    }
-       .sectionone p{
-        transform: translateY(-10vh) !important;
-    }
-    .sectiontwo{
-        transform: translateY(30vh) !important;
-    
-    }
-    .sectionone{
-        height: 130vh !important;
-    }
-}
 @media screen and (min-height: 800px){
     .zinosurprise{
         margin-top:240vh !important;
        
        }
-       .zinoclassic{
-        transform: translateY(45vh) !important;
-
-    }
-       .sectionone p{
-        transform: translateY(-10vh) !important;
-    }
-    .sectiontwo{
-        transform: translateY(30vh) !important;
-    
-    }
 }
-@media screen and (max-height: 690px){
-    .sectionone p{
-        transform: translateY(-30vh) !important;
-    }
-    .sectionone{
-        height: 90vh !important;
-    }
+@media screen and (max-height: 630px){
+    
     .zinosurprise{
         margin-top:184vh !important
        
@@ -133,11 +98,11 @@ height: 100vh !important;
         margin-top: 230vh !important;
        }
        .sectiontwo{
-        transform: translateY(10vh) !important;
+        transform: translateY(50vh) !important;
     
     }
     .zinoclassic{
-        transform: translateY(45vh) !important;
+        transform: translateY(55vh) !important;
 
     }
 }
