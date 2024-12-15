@@ -29,12 +29,59 @@ const RayMarchingScene = () => {
     #define SURF_DIST 0.001
     #define PI 3.14159265359
 
-    struct Material {
-        vec3 albedo;
-        float metallic;
-        float roughness;
-        float reflectivity;
-    };
+
+float hash(float n) {
+    return fract(sin(n) * 43758.5453123);
+}
+
+float noise(vec3 x) {
+    vec3 p = floor(x);
+    vec3 f = fract(x);
+    f = f * f * (3.0 - 2.0 * f);
+    
+    float n = p.x + p.y * 157.0 + 113.0 * p.z;
+    return mix(
+        mix(mix(hash(n + 0.0), hash(n + 1.0), f.x),
+            mix(hash(n + 157.0), hash(n + 158.0), f.x), f.y),
+        mix(mix(hash(n + 113.0), hash(n + 114.0), f.x),
+            mix(hash(n + 270.0), hash(n + 271.0), f.x), f.y), f.z
+    );
+}
+
+vec3 woodPattern(vec3 p) {
+    // Scale the position for better grain detail
+    vec3 scaledP = p * 5.0;
+    
+    // Create basic wood grain
+    float grain = noise(scaledP) * 0.5 + 0.5;
+    
+    // Create ring pattern
+    float rings = abs(sin(length(p.xz) * 8.0));
+    rings = smoothstep(0.2, 0.8, rings);
+    
+    // Base rosewood colors
+    vec3 darkWood = vec3(0.2, 0.1, 0.05);
+    vec3 lightWood = vec3(0.4, 0.25, 0.15);
+    vec3 midWood = vec3(0.3, 0.15, 0.1);
+    
+    // Mix colors based on noise and rings
+    vec3 woodColor = mix(darkWood, lightWood, grain);
+    woodColor = mix(woodColor, midWood, rings);
+    
+    // Add fine grain detail
+    float detail = noise(scaledP * 10.0);
+    woodColor *= 0.8 + detail * 0.4;
+    
+    return woodColor;
+}
+
+ struct Material {
+    vec3 albedo;
+    float metallic;
+    float roughness;
+    float reflectivity;
+    bool isWood;
+};
 
     float sdBox(vec3 p, vec3 b) {
         vec3 q = abs(p) - b;
@@ -197,36 +244,39 @@ const RayMarchingScene = () => {
         }
         return res;
     }
+        
 
     Material getMaterial(float id) {
         Material mat;
-        if(id < 0.5) {
-            mat.albedo = vec3(0.2);
-            mat.metallic = 0.0;
-            mat.roughness = 0.9;
-            mat.reflectivity = 0.1;
-        } else if(id < 1.5) {
-            mat.albedo = vec3(0.6, 0.3, 0.1);
-            mat.metallic = 0.0;
-            mat.roughness = 0.7;
-            mat.reflectivity = 0.2;
-        } else if(id < 2.5) {
-            mat.albedo = vec3(0.6, 0.3, 0.1);
-            mat.metallic = 0.0;
-            mat.roughness = 0.8;
-            mat.reflectivity = 0.1;
-        } else if(id < 3.5) {
-            mat.albedo = vec3(0.9, 0.9, 0.9);
-            mat.metallic = 0.0;
-            mat.roughness = 0.3;
-            mat.reflectivity = 0.2;
-        } else {
-            mat.albedo = vec3(0.7, 0.7, 0.9);
-            mat.metallic = 1.0;
-            mat.roughness = 0.1;
-            mat.reflectivity = 0.8;
-        }
-        return mat;
+            mat.isWood = false; 
+  if(id < 0.5) { // Ground
+        mat.albedo = vec3(0.2);
+        mat.metallic = 0.0;
+        mat.roughness = 0.9;
+        mat.reflectivity = 0.1;
+    } else if(id < 1.5) { // Table
+        mat.isWood = true;
+        mat.albedo = woodPattern(p);
+        mat.metallic = 0.0;
+        mat.roughness = 0.3;
+        mat.reflectivity = 0.2;
+    } else if(id < 2.5) { // Chairs
+        mat.albedo = vec3(0.6, 0.3, 0.1);
+        mat.metallic = 0.0;
+        mat.roughness = 0.8;
+        mat.reflectivity = 0.1;
+    } else if(id < 3.5) { // Cup
+        mat.albedo = vec3(0.9, 0.9, 0.9);
+        mat.metallic = 0.0;
+        mat.roughness = 0.3;
+        mat.reflectivity = 0.2;
+    } else { // Vase
+        mat.albedo = vec3(0.7, 0.7, 0.9);
+        mat.metallic = 1.0;
+        mat.roughness = 0.1;
+        mat.reflectivity = 0.8;
+    }
+    return mat;
     }
 
     vec2 rayMarch(vec3 ro, vec3 rd) {
@@ -244,32 +294,48 @@ const RayMarchingScene = () => {
         return vec2(MAX_DIST, lastId);
     }
 
-    vec3 calculateLighting(vec3 p, vec3 n, vec3 viewDir, Material mat) {
-        vec3 lightPos1 = vec3(2.0, 4.0, -2.0);
-        vec3 lightPos2 = vec3(-2.0, 3.0, 2.0);
-        vec3 lightColor1 = vec3(1.0, 0.9, 0.8) * 1.5;
-        vec3 lightColor2 = vec3(0.8, 0.9, 1.0) * 1.2;
+vec3 calculateLighting(vec3 p, vec3 n, vec3 viewDir, Material mat) {
+    vec3 lightPos1 = vec3(2.0, 4.0, -2.0);
+    vec3 lightPos2 = vec3(-2.0, 3.0, 2.0);
+    vec3 lightColor1 = vec3(1.0, 0.9, 0.8) * 1.5;
+    vec3 lightColor2 = vec3(0.8, 0.9, 1.0) * 1.2;
 
-        vec3 color = vec3(0.0);
+    vec3 color = vec3(0.0);
 
-        vec3 lightDir1 = normalize(lightPos1 - p);
-        float shadow1 = softShadow(p, lightDir1, 0.1, length(lightPos1 - p), 16.0);
-        float diff1 = max(dot(n, lightDir1), 0.0);
-        vec3 h1 = normalize(lightDir1 + viewDir);
-        float spec1 = pow(max(dot(n, h1), 0.0), 32.0);
-        color += (mat.albedo * diff1 + spec1 * mat.reflectivity) * lightColor1 * shadow1;
-
-        vec3 lightDir2 = normalize(lightPos2 - p);
-        float shadow2 = softShadow(p, lightDir2, 0.1, length(lightPos2 - p), 16.0);
-        float diff2 = max(dot(n, lightDir2), 0.0);
-        vec3 h2 = normalize(lightDir2 + viewDir);
-        float spec2 = pow(max(dot(n, h2), 0.0), 32.0);
-        color += (mat.albedo * diff2 + spec2 * mat.reflectivity) * lightColor2 * shadow2;
-
-        color += mat.albedo * 0.1;
-
-        return color;
+    // Light 1
+    vec3 lightDir1 = normalize(lightPos1 - p);
+    float shadow1 = softShadow(p, lightDir1, 0.1, length(lightPos1 - p), 16.0);
+    float diff1 = max(dot(n, lightDir1), 0.0);
+    vec3 h1 = normalize(lightDir1 + viewDir);
+    float spec1 = pow(max(dot(n, h1), 0.0), 32.0);
+    
+    // Enhanced wood specular
+    if(mat.isWood) {
+        float woodSpec = pow(max(dot(n, h1), 0.0), 64.0);
+        spec1 = mix(spec1, woodSpec, 0.5);
     }
+    
+    color += (mat.albedo * diff1 + spec1 * mat.reflectivity) * lightColor1 * shadow1;
+
+    // Light 2
+    vec3 lightDir2 = normalize(lightPos2 - p);
+    float shadow2 = softShadow(p, lightDir2, 0.1, length(lightPos2 - p), 16.0);
+    float diff2 = max(dot(n, lightDir2), 0.0);
+    vec3 h2 = normalize(lightDir2 + viewDir);
+    float spec2 = pow(max(dot(n, h2), 0.0), 32.0);
+    
+    if(mat.isWood) {
+        float woodSpec = pow(max(dot(n, h2), 0.0), 64.0);
+        spec2 = mix(spec2, woodSpec, 0.5);
+    }
+    
+    color += (mat.albedo * diff2 + spec2 * mat.reflectivity) * lightColor2 * shadow2;
+
+    // Ambient
+    color += mat.albedo * 0.1;
+
+    return color;
+}
 
     void main() {
         vec2 uv = vUv * 2.0 - 1.0;
@@ -294,7 +360,7 @@ const RayMarchingScene = () => {
         if(result.x < MAX_DIST) {
             vec3 p = ro + rd * result.x;
             vec3 normal = getNormal(p);
-            Material mat = getMaterial(result.y);
+     Material mat = getMaterial(result.y, p);
             color = calculateLighting(p, normal, -rd, mat);
 
             if(mat.reflectivity > 0.0) {
