@@ -1,674 +1,3 @@
-/* eslint-disable react/jsx-no-duplicate-props */
-// import React, { useState, useRef, useEffect } from 'react';
-// import { Canvas, useFrame } from '@react-three/fiber';
-// import { Environment, OrbitControls, useGLTF } from '@react-three/drei';
-// import * as THREE from 'three';
-
-
-
-
-// export const RustShaderCircle = {
-//     uniforms: {
-//       baseTexture: { value: null },
-//       rustAmount: { value: 0.0 },
-//       noiseScale: { value: 4.0 },
-//       metalness: { value: .8 },
-//       roughness: { value: .2 }
-//     },
-//     vertexShader: `
-//       varying vec2 vUv;
-//       void main() {
-//         vUv = uv;
-//         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-//       }
-//     `,
-//     fragmentShader: `
-//       uniform sampler2D baseTexture;
-//       uniform float rustAmount;
-//       uniform float noiseScale;
-//       uniform float metalness;
-//       uniform float roughness;
-//       varying vec2 vUv;
-  
-//       float hash(vec2 p) {
-//         return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-//       }
-  
-//       float noise(vec2 p) {
-//         vec2 i = floor(p);
-//         vec2 f = fract(p);
-//         f = f * f * (3.0 - 2.0 * f);
-        
-//         float a = hash(i);
-//         float b = hash(i + vec2(1.0, 0.0));
-//         float c = hash(i + vec2(0.0, 1.0));
-//         float d = hash(i + vec2(1.0, 1.0));
-        
-//         return mix(
-//           mix(a, b, f.x),
-//           mix(c, d, f.x),
-//           f.y
-//         );
-//       }
-  
-//       float fbm(vec2 p) {
-//         float value = 0.0;
-//         float amplitude = 0.5;
-//         float frequency = 1.0;
-//         for(int i = 0; i < 8; i++) {
-//           value += amplitude * noise(p * frequency);
-//           frequency *= 2.2;
-//           amplitude *= 0.6;
-//         }
-//         return value;
-//       }
-  
-//       void main() {
-//         vec4 baseColor = texture2D(baseTexture, vUv);
-    
-//         float uniqueSeed = 0.7;
-//         vec2 uv = vUv * noiseScale + uniqueSeed;
-        
-//         float n1 = fbm(uv * 2.0);
-//         float n2 = fbm(uv * 4.0 + vec2(5.2, 1.3));
-//         float n3 = fbm(uv * 8.0 + vec2(9.4, 2.6));
-        
-//         float rustPattern = (n1 * 0.6 + n2 * 0.25 + n3 * 0.15) * 1.8;
-//         rustPattern = pow(rustPattern, 0.65);
-        
-//         vec4 darkRust = vec4(0.52, 0.28, 0.12, 0.8);
-//         vec4 midRust = vec4(0.58, 0.32, 0.15, 0.5);
-//         vec4 lightRust = vec4(0.65, 0.38, 0.18, 0.3);
-        
-//         float threshold = smoothstep(0.3, 0.9, rustAmount);
-//         float adjustedPattern = mix(rustPattern, 1.0, threshold);
-        
-//         vec4 rustMix = mix(
-//           darkRust,
-//           mix(midRust, lightRust, n2),
-//           n1 * n3 * 0.8
-//         );
-        
-//         float finalMix = rustAmount * adjustedPattern;
-//         finalMix = mix(finalMix, 1.0, pow(rustAmount, 0.5));
-  
-        
-//         vec4 finalColor = baseColor;
-//         finalColor.rgb = mix(
-//           baseColor.rgb, 
-//           rustMix.rgb, 
-//           finalMix * rustMix.a
-//         );
-        
-        
-//         finalColor.a = baseColor.a;
-        
-        
-//         finalColor.rgb = mix(finalColor.rgb, finalColor.rgb * (1.0 - roughness), metalness);
-        
-//         gl_FragColor = finalColor;
-//       }
-//     `
-//   };
-  
-// export const BridgeRustShader = {
-//     uniforms: {
-//         baseTexture: { value: null },
-//         rustAmount: { value: 0.0 },
-//         noiseScale: { value: 4.0 },
-//         metalness: { value: .8 },
-//         roughness: { value: .2 }
-//       },
-//       vertexShader: `
-//         varying vec2 vUv;
-//         void main() {
-//           vUv = uv;
-//           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-//         }
-//       `,
-//       fragmentShader: `
-//         uniform sampler2D baseTexture;
-//         uniform float rustAmount;
-//         uniform float noiseScale;
-//         uniform float metalness;
-//         uniform float roughness;
-//         varying vec2 vUv;
-    
-//         float hash(vec2 p) {
-//           return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-//         }
-    
-//         float noise(vec2 p) {
-//           vec2 i = floor(p);
-//           vec2 f = fract(p);
-//           f = f * f * (3.0 - 2.0 * f);
-          
-//           float a = hash(i);
-//           float b = hash(i + vec2(1.0, 0.0));
-//           float c = hash(i + vec2(0.0, 1.0));
-//           float d = hash(i + vec2(1.0, 1.0));
-          
-//           return mix(
-//             mix(a, b, f.x),
-//             mix(c, d, f.x),
-//             f.y
-//           );
-//         }
-    
-//         float fbm(vec2 p) {
-//           float value = 0.0;
-//           float amplitude = 0.5;
-//           float frequency = 1.0;
-//           for(int i = 0; i < 8; i++) {
-//             value += amplitude * noise(p * frequency);
-//             frequency *= 2.2;
-//             amplitude *= 0.6;
-//           }
-//           return value;
-//         }
-    
-//         void main() {
-//           vec4 baseColor = texture2D(baseTexture, vUv);
-      
-//           float uniqueSeed = 0.7;
-//           vec2 uv = vUv * noiseScale + uniqueSeed;
-          
-//           float n1 = fbm(uv * 2.0);
-//           float n2 = fbm(uv * 4.0 + vec2(5.2, 1.3));
-//           float n3 = fbm(uv * 8.0 + vec2(9.4, 2.6));
-          
-//           float rustPattern = (n1 * 0.6 + n2 * 0.25 + n3 * 0.15) * 1.8;
-//           rustPattern = pow(rustPattern, 0.65);
-          
-//           vec4 darkRust = vec4(0.52, 0.28, 0.12, 0.8);
-//           vec4 midRust = vec4(0.58, 0.32, 0.15, 0.5);
-//           vec4 lightRust = vec4(0.65, 0.38, 0.18, 0.3);
-          
-//           float threshold = smoothstep(0.3, 0.9, rustAmount);
-//           float adjustedPattern = mix(rustPattern, 1.0, threshold);
-          
-//           vec4 rustMix = mix(
-//             darkRust,
-//             mix(midRust, lightRust, n2),
-//             n1 * n3 * 0.8
-//           );
-          
-//           float finalMix = rustAmount * adjustedPattern;
-//           finalMix = mix(finalMix, 1.0, pow(rustAmount, 0.5));
-    
-          
-//           vec4 finalColor = baseColor;
-//           finalColor.rgb = mix(
-//             baseColor.rgb, 
-//             rustMix.rgb, 
-//             finalMix * rustMix.a
-//           );
-          
-          
-//           finalColor.a = baseColor.a;
-          
-          
-//           finalColor.rgb = mix(finalColor.rgb, finalColor.rgb * (1.0 - roughness), metalness);
-          
-//           gl_FragColor = finalColor;
-//         }
-//       `
-//   };
-// function Model({ year }) {
-//     const { nodes, materials } = useGLTF('/Bridge.glb');
-//     const fenceMaterialRef = useRef();
-//     const pillarMaterialRef = useRef();
-
-//     useEffect(() => {
-//         if (materials) {
-//             // Create Physical Shader Material for Rust
-//             const createPhysicalShaderMaterial = (shader, baseMaterial) => {
-//                 const material = new THREE.MeshPhysicalMaterial({
-//                     map: baseMaterial.map,
-//                     metalness: 0.8,
-//                     roughness: 0,
-//                     clearcoat: 0.3,
-//                     clearcoatRoughness: 0.25,
-//                     transparent: true,
-//                     opacity: 1,
-//                     blending: THREE.NormalBlending,
-//                   });
-          
-//                   material.onBeforeCompile = (shader) => {
-//                     shader.uniforms.rustAmount = { value: 0.0 };
-//                     shader.uniforms.noiseScale = { value: 9.0 };
-//                     shader.uniforms.baseTexture = { value: baseMaterial.map };
-            
-//                     // Vertex shader modifications remain the same
-//                     shader.vertexShader = shader.vertexShader.replace(
-//                       '#include <common>',
-//                       `
-//                       #include <common>
-//                       varying vec2 vUvRust;
-//                       `
-//                     );
-            
-//                     shader.vertexShader = shader.vertexShader.replace(
-//                       '#include <begin_vertex>',
-//                       `
-//                       #include <begin_vertex>
-//                       vUvRust = uv;
-//                       `
-//                     );
-            
-//                     // Fragment shader modifications
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <common>',
-//                       `
-//                       #include <common>
-//                       uniform float rustAmount;
-//                       uniform float noiseScale;
-//                       uniform sampler2D baseTexture;
-//                       varying vec2 vUvRust;
-            
-//                       float hash(vec2 p) {
-//                         p = fract(p * vec2(234.34, 435.345));
-//                         p += dot(p, p + 34.23);
-//                         return fract(p.x * p.y);
-//                       }
-                    
-//                       float noise(vec2 p) {
-//                         vec2 i = floor(p);
-//                         vec2 f = fract(p);
-//                         float a = hash(i);
-//                         float b = hash(i + vec2(1.0, 0.0));
-//                         float c = hash(i + vec2(0.0, 1.0));
-//                         float d = hash(i + vec2(1.0, 1.0));
-//                         f = f * f * (3.0 - 2.0 * f);
-//                         return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-//                       }
-                    
-//                       float fbm(vec2 p) {
-//                         float value = 0.0;
-//                         float amplitude = 0.5;
-//                         float frequency = 1.0;
-//                         for(int i = 0; i < 8; i++) {
-//                           value += amplitude * noise(p * frequency);
-//                           frequency *= 2.2;
-//                           amplitude *= 0.6;
-//                         }
-//                         return value;
-//                       }
-//                       `
-//                     );
-            
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <color_fragment>',
-//                       `
-//                       #include <color_fragment>
-                      
-//                       vec2 uv = vUvRust * noiseScale;
-//                       float n1 = fbm(uv * 2.0);
-//                       float n2 = fbm(uv * 4.0 + vec2(5.2, 1.3));
-//                       float n3 = fbm(uv * 8.0 + vec2(9.4, 2.6));
-                      
-//                       float rustPattern = (n1 * 0.5 + n2 * 0.3 + n3 * 0.2) * 1.5;
-//                       rustPattern = pow(rustPattern, 0.7);
-                      
-//                       vec4 darkRust = vec4(0.82, 0.75, 0.55, 1.0);    // Light sand
-//                       vec4 midRust = vec4(0.72, 0.62, 0.42, 0.71);     // Medium sand (transparent)
-//                       vec4 lightRust = vec4(0.58, 0.48, 0.28, 0.30);   // Dark sand
-                      
-//                       float threshold = 1.0 - (rustAmount * 2.0);
-//                       float adjustedPattern = smoothstep(threshold, 1.0, rustPattern);
-                      
-//                       vec4 rustMix = mix(
-//                         darkRust,
-//                         mix(midRust, lightRust, n2),
-//                         n1 * n3
-//                       );
-                      
-//                       float finalMix = rustAmount * adjustedPattern;
-//                       finalMix = pow(finalMix, 1.5);
-                      
-//                       // Convert diffuseColor to vec4 while preserving its original alpha
-//                       vec4 baseColor = vec4(diffuseColor.rgb, diffuseColor.a);
-                      
-//                       // Only mix the rust effect where it's not transparent
-//                       diffuseColor = mix(baseColor, rustMix, finalMix * rustMix.a);
-//                       // Preserve the original texture's alpha
-//                       diffuseColor.a = baseColor.a;
-//                       `
-//                     );
-            
-//                     // Modify metalness and roughness
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <roughnessmap_fragment>',
-//                       `
-//                       #include <roughnessmap_fragment>
-//                       roughnessFactor = mix(roughnessFactor, 1.0, finalMix);
-//                       `
-//                     );
-            
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <metalnessmap_fragment>',
-//                       `
-//                       #include <metalnessmap_fragment>
-//                       metalnessFactor *= (1.0 - finalMix);
-//                       `
-//                     );
-            
-//                     material.userData.shader = shader;
-//                   };
-//                 material.needsUpdate = true;
-//                 return material;
-//               };
-    
-//             // Create Moss Material
-//             const createPhysicalShaderMaterial2 = (shader, baseMaterial) => {
-//                 const material = new THREE.MeshPhysicalMaterial({
-//                     map: baseMaterial.map,
-//                     metalness: 0.8,
-//                     roughness: 0,
-//                     clearcoat: 0.3,
-//                     clearcoatRoughness: 0.25,
-//                     transparent: true,
-//                     opacity: 1,
-//                     blending: THREE.NormalBlending,
-//                   });
-          
-//                   material.onBeforeCompile = (shader) => {
-//                     shader.uniforms.rustAmount = { value: 0.0 };
-//                     shader.uniforms.noiseScale = { value: 9.0 };
-//                     shader.uniforms.baseTexture = { value: baseMaterial.map };
-            
-//                     // Vertex shader modifications remain the same
-//                     shader.vertexShader = shader.vertexShader.replace(
-//                       '#include <common>',
-//                       `
-//                       #include <common>
-//                       varying vec2 vUvRust;
-//                       `
-//                     );
-            
-//                     shader.vertexShader = shader.vertexShader.replace(
-//                       '#include <begin_vertex>',
-//                       `
-//                       #include <begin_vertex>
-//                       vUvRust = uv;
-//                       `
-//                     );
-            
-//                     // Fragment shader modifications
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <common>',
-//                       `
-//                       #include <common>
-//                       uniform float rustAmount;
-//                       uniform float noiseScale;
-//                       uniform sampler2D baseTexture;
-//                       varying vec2 vUvRust;
-            
-//                       float hash(vec2 p) {
-//                         p = fract(p * vec2(234.34, 435.345));
-//                         p += dot(p, p + 34.23);
-//                         return fract(p.x * p.y);
-//                       }
-                    
-//                       float noise(vec2 p) {
-//                         vec2 i = floor(p);
-//                         vec2 f = fract(p);
-//                         float a = hash(i);
-//                         float b = hash(i + vec2(1.0, 0.0));
-//                         float c = hash(i + vec2(0.0, 1.0));
-//                         float d = hash(i + vec2(1.0, 1.0));
-//                         f = f * f * (3.0 - 2.0 * f);
-//                         return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-//                       }
-                    
-//                       float fbm(vec2 p) {
-//                         float value = 0.0;
-//                         float amplitude = 0.5;
-//                         float frequency = 1.0;
-//                         for(int i = 0; i < 8; i++) {
-//                           value += amplitude * noise(p * frequency);
-//                           frequency *= 2.2;
-//                           amplitude *= 0.6;
-//                         }
-//                         return value;
-//                       }
-//                       `
-//                     );
-            
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <color_fragment>',
-//                       `
-//                       #include <color_fragment>
-                      
-//                       vec2 uv = vUvRust * noiseScale;
-//                       float n1 = fbm(uv * 2.0);
-//                       float n2 = fbm(uv * 4.0 + vec2(5.2, 1.3));
-//                       float n3 = fbm(uv * 8.0 + vec2(9.4, 2.6));
-                      
-//                       float rustPattern = (n1 * 0.5 + n2 * 0.3 + n3 * 0.2) * 1.5;
-//                       rustPattern = pow(rustPattern, 0.7);
-                      
-//                       vec4 darkRust = vec4(0.82, 0.75, 0.55, 1.0);    // Light sand
-//                       vec4 midRust = vec4(0.72, 0.62, 0.42, 0.71);     // Medium sand (transparent)
-//                       vec4 lightRust = vec4(0.58, 0.48, 0.28, 0.30);   // Dark sand
-                      
-//                       float threshold = 1.0 - (rustAmount * 2.0);
-//                       float adjustedPattern = smoothstep(threshold, 1.0, rustPattern);
-                      
-//                       vec4 rustMix = mix(
-//                         darkRust,
-//                         mix(midRust, lightRust, n2),
-//                         n1 * n3
-//                       );
-                      
-//                       float finalMix = rustAmount * adjustedPattern;
-//                       finalMix = pow(finalMix, 1.5);
-                      
-//                       // Convert diffuseColor to vec4 while preserving its original alpha
-//                       vec4 baseColor = vec4(diffuseColor.rgb, diffuseColor.a);
-                      
-//                       // Only mix the rust effect where it's not transparent
-//                       diffuseColor = mix(baseColor, rustMix, finalMix * rustMix.a);
-//                       // Preserve the original texture's alpha
-//                       diffuseColor.a = baseColor.a;
-//                       `
-//                     );
-            
-//                     // Modify metalness and roughness
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <roughnessmap_fragment>',
-//                       `
-//                       #include <roughnessmap_fragment>
-//                       roughnessFactor = mix(roughnessFactor, 1.0, finalMix);
-//                       `
-//                     );
-            
-//                     shader.fragmentShader = shader.fragmentShader.replace(
-//                       '#include <metalnessmap_fragment>',
-//                       `
-//                       #include <metalnessmap_fragment>
-//                       metalnessFactor *= (1.0 - finalMix);
-//                       `
-//                     );
-            
-//                     material.userData.shader = shader;
-//                   };
-//                 material.needsUpdate = true;
-//                 return material;
-//               };
-//             // Create both materials
-//             fenceMaterialRef.current = createPhysicalShaderMaterial(RustShaderCircle, materials['Material.002']);
-//             pillarMaterialRef.current = createPhysicalShaderMaterial2(BridgeRustShader, materials['Scene_-_Root']);
-//         }
-//     }, [materials]);
-    
-//       useFrame(() => {
-//         if (fenceMaterialRef.current?.userData.shader) {
-//           const rustAmount = (year - 2000) / 20;
-//           fenceMaterialRef.current.userData.shader.uniforms.rustAmount.value = rustAmount * 1.21;
-//         }
-//         if (pillarMaterialRef.current?.userData.shader) {
-//             const rustAmount = (year - 2000) / 20;
-//             pillarMaterialRef.current.userData.shader.uniforms.rustAmount.value = rustAmount * 1.21;
-//         }
-//       });
-
-//       return (
-//         <group dispose={null} scale={0.5}>
-//         <mesh
-//           castShadow
-//           receiveShadow
-//           geometry={nodes.lightstand.geometry}
-//           material={materials.Material}
-//           position={[-13.003, 0, -281.684]}
-//           rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-//           scale={0.001}
-//         />
-//         <mesh
-//           castShadow
-//           receiveShadow
-//           geometry={nodes.road.geometry}
-//           material={materials['road_road_0016_01_tiled.001']}
-//           position={[-13.003, 0, -281.684]}
-//           rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-//           scale={0.001}
-//         />
-//     <mesh
-//         castShadow
-//         receiveShadow
-//         geometry={nodes.fence.geometry}
-//         material={fenceMaterialRef.current || materials['Material.002']}
-//         position={[-13.003, 0, -281.684]}
-//         rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-//         scale={0.001}
-//       />
-//          <mesh
-//                 castShadow
-//                 receiveShadow
-//                 geometry={nodes.rectpillar.geometry}
-//                 material={pillarMaterialRef.current || materials['Scene_-_Root']}
-//                 position={[-13.003, 0, -281.684]}
-//                 rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-//                 scale={0.001}
-//             />
-//         <mesh
-//           castShadow
-//           receiveShadow
-//           geometry={nodes.light.geometry}
-//           material={materials['Material.001']}
-//           position={[-13.003, 0, -281.684]}
-//           rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-//           scale={0.001}
-//         />
-//       </group>
-//       );
-// }
-
-// const BridgeScene = () => {
-//   const [year, setYear] = useState(2000);
-
-//   const handleYearChange = (event) => {
-//     const value = parseFloat(event.target.value);
-//     setYear(Number(value.toFixed(1)));
-//   };
-
-//   return (
-//     <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
-//       <Canvas
-//         shadows
-//         camera={{ 
-//           position: [-10, 40, -18],
-//           fov: 75,
-//           near: 0.01,
-//           far: 10000
-//         }}
-//       >
-//         {/* <ambientLight intensity={0.5} />
-//         <directionalLight
-//           position={[5, 5, 5]}
-//           castShadow
-//           intensity={1}
-//           shadow-mapSize-width={1024}
-//           shadow-mapSize-height={1024}
-//         /> */}
-//         <Model year={year} />
-//         <OrbitControls 
-//           enablePan={true}
-//           enableZoom={true}
-//           enableRotate={true}
-//           maxDistance={50}
-//           minDistance={2}
-//         />
-//         <Environment
-//           files="/derelict_highway_midday_2k.hdr"
-//           background={false}
-//           blur={0.5}
-//         />
-//       </Canvas>
-
-//       <div
-//         style={{
-//           position: 'absolute',
-//           bottom: '20px',
-//           left: '50%',
-//           transform: 'translateX(-50%)',
-//           width: '80%',
-//           maxWidth: '600px',
-//           background: 'rgba(0, 0, 0, 0.7)',
-//           padding: '20px',
-//           borderRadius: '10px',
-//           color: 'white',
-//         }}
-//       >
-//         <div style={{ 
-//           display: 'flex', 
-//           flexDirection: 'column', 
-//           gap: '10px',
-//           alignItems: 'center' 
-//         }}>
-//           <span>Year: {year.toFixed(1)}</span>
-//           <input
-//             type="range"
-//             min={2000}
-//             max={2020}
-//             value={year}
-//             step="0.1"
-//             onChange={handleYearChange}
-//             style={{
-//               width: '100%',
-//               height: '20px',
-//               borderRadius: '10px',
-//               cursor: 'pointer',
-//               WebkitAppearance: 'none',
-//               background: `linear-gradient(to right, 
-//                 #4CAF50 0%, 
-//                 #4CAF50 ${((year - 2000) / 20) * 100}%, 
-//                 #ddd ${((year - 2000) / 20) * 100}%, 
-//                 #ddd 100%)`,
-//             }}
-//           />
-//           <div style={{ 
-//             display: 'flex', 
-//             justifyContent: 'space-between', 
-//             width: '100%',
-//             fontSize: '0.8rem' 
-//           }}>
-//             <span>2000</span>
-//             <span>2005</span>
-//             <span>2010</span>
-//             <span>2015</span>
-//             <span>2020</span>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// useGLTF.preload('/Bridge.glb');
-
-// export default BridgeScene;
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, OrbitControls, useGLTF, PerspectiveCamera, Stage } from '@react-three/drei';
@@ -693,16 +22,16 @@ const Hotspot = ({ position, onClick, label }) => {
             onPointerOver={() => setHovered(true)}
             onPointerOut={() => setHovered(false)}
           >
-            <circleGeometry args={[0.3, 32]} />
+            <circleGeometry args={[0.83, 32]} />
             <meshBasicMaterial
               color={hovered ? "#ff4444" : "#ffffff"}
               transparent
-              opacity={0.8}
+              opacity={1.0}
             />
           </mesh>
           <sprite
-            position={[0, 0.5, 0]}
-            scale={[2, 1, 1]}
+            position={[0, 3.95, 0]}
+            scale={[12, 6, 12]}
           >
             <spriteMaterial
               transparent
@@ -734,21 +63,21 @@ const Hotspot = ({ position, onClick, label }) => {
     const hotspots = [
       {
         id: 1,
-        position: [-13.003, 2, -281.684],
+        position: [-13.003, 40, -181.684],
         label: "Fence Damage",
         description: "Severe rust damage on the bridge fence",
         image: "/hotspot1.jpg"
       },
       {
         id: 2,
-        position: [-5, 0, -140],
+        position: [-20, 20, -140],
         label: "Road Cracks",
         description: "Deep cracks forming in the road surface",
         image: "/hotspot2.jpg"
       },
       {
         id: 3,
-        position: [-5, 4, -140],
+        position: [-15, 32, -40],
         label: "Light Failure",
         description: "Street light showing signs of deterioration",
         image: "/hotspot3.jpg"
@@ -1721,146 +1050,333 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
     );
   };
   
-  const LayerPanel = ({ resetCamera }) => {
-    const [selectedHotspot, setSelectedHotspot] = useState(null);
+  const getConditionDescription = (year) => {
+    const age = year - 2000;
+    if (age <= 5) {
+      return {
+        Corrosion: "Minor surface oxidation",
+        Crack: "Hairline cracks visible",
+        Debris: "Minimal accumulation",
+        "Exposed Rebar": "No exposure visible",
+        Spalling: "Surface intact",
+        overall: "Good structural condition"
+      };
+    } else if (age <= 10) {
+      return {
+        Corrosion: "Moderate rust formation",
+        Crack: "Notable crack development",
+        Debris: "Moderate debris buildup",
+        "Exposed Rebar": "Initial rebar visibility",
+        Spalling: "Early concrete deterioration",
+        overall: "Fair condition, maintenance recommended"
+      };
+    } else if (age <= 15) {
+      return {
+        Corrosion: "Significant corrosion present",
+        Crack: "Deep cracks forming",
+        Debris: "Substantial debris accumulation",
+        "Exposed Rebar": "Multiple exposed sections",
+        Spalling: "Advanced concrete degradation",
+        overall: "Poor condition, repairs needed"
+      };
+    } else {
+      return {
+        Corrosion: "Severe structural rust",
+        Crack: "Critical crack formation",
+        Debris: "Heavy debris obstruction",
+        "Exposed Rebar": "Widespread rebar exposure",
+        Spalling: "Severe concrete failure",
+        overall: "Critical condition, immediate attention required"
+      };
+    }
+  };
   
-    const hotspots = [
-      { id: 1, name: 'Hotspot 1', position: [0, 0, 0] },
-      { id: 2, name: 'Hotspot 2', position: [2, 2, 0] },
-      // Add more hotspots as needed
-    ];
+  const LayerPanel = ({ resetCamera, year, onClose }) => {
+    const conditions = getConditionDescription(year);
+    
+    const layers = {
+      Corrosion: [
+        { 
+          id: 'A1', 
+          name: 'A1 - Corrosion', 
+          icon: '🔴',
+          condition: conditions.Corrosion 
+        }
+      ],
+      Crack: [
+        { 
+          id: 'A4', 
+          name: 'A4 - Crack', 
+          icon: '🔴',
+          condition: conditions.Crack 
+        },
+        { 
+          id: 'A5', 
+          name: 'A5 - Crack', 
+          icon: '🔴',
+          condition: conditions.Crack 
+        }
+      ],
+      Debris: [
+        { 
+          id: 'A6', 
+          name: 'A6 - Debris', 
+          icon: '💛',
+          condition: conditions.Debris 
+        }
+      ],
+      'Exposed Rebar': [
+        { 
+          id: 'AB', 
+          name: 'AB - Exposed Rebar', 
+          icon: '⬛',
+          condition: conditions["Exposed Rebar"]
+        },
+        { 
+          id: 'AC', 
+          name: 'AC - Exposed Rebar', 
+          icon: '⬛',
+          condition: conditions["Exposed Rebar"]
+        }
+      ],
+      Spalling: [
+        { 
+          id: 'A2', 
+          name: 'A2 - Spalling', 
+          icon: '🟡',
+          condition: conditions.Spalling 
+        },
+        { 
+          id: 'A3', 
+          name: 'A3 - Spalling', 
+          icon: '🟡',
+          condition: conditions.Spalling 
+        },
+        { 
+          id: 'A7', 
+          name: 'A7 - Spalling', 
+          icon: '🟡',
+          condition: conditions.Spalling 
+        }
+      ]
+    };
   
     return (
       <div style={{
         position: 'absolute',
         right: '20px',
         top: '20px',
-        background: 'rgba(0, 0, 0, 0.7)',
+        background: 'rgba(0, 0, 0, 0.85)',
         padding: '20px',
         borderRadius: '10px',
         color: 'white',
         maxHeight: '80vh',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        minWidth: '300px'
       }}>
-        <button 
-          onClick={resetCamera}
-          style={{
-            width: '100%',
-            padding: '10px',
-            marginBottom: '20px',
-            background: '#4CAF50',
-            border: 'none',
-            borderRadius: '5px',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          Reset View
-        </button>
-        
-        <h3>Layers</h3>
-        <div style={{ marginTop: '10px' }}>
-          {['Road', 'Fence', 'Pillars', 'Lights'].map(layer => (
-            <div key={layer} style={{
-              padding: '8px',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <input type="checkbox" defaultChecked />
-              <span>{layer}</span>
-            </div>
-          ))}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          paddingBottom: '10px'
+        }}>
+          <h3 style={{ margin: 0 }}>Structural Assessment</h3>
+          <button 
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '20px'
+            }}
+          >
+            ✕
+          </button>
         </div>
   
-        {selectedHotspot && (
-          <div style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'white',
-            padding: '20px',
-            borderRadius: '10px',
-            zIndex: 1000
-          }}>
-            <button 
-              onClick={() => setSelectedHotspot(null)}
-              style={{
-                position: 'absolute',
-                right: '10px',
-                top: '10px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              ✕
-            </button>
-            <h3>{selectedHotspot.name}</h3>
-            <div style={{ width: '300px', height: '200px', background: '#eee' }}>
-              Image Placeholder
-            </div>
-            <p>Description text goes here...</p>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          padding: '10px',
+          borderRadius: '5px',
+          marginBottom: '20px'
+        }}>
+          <h4 style={{ margin: '0 0 5px 0', color: '#4CAF50' }}>Overall Condition</h4>
+          <p style={{ margin: 0, fontSize: '14px' }}>{conditions.overall}</p>
+        </div>
+  
+        {Object.entries(layers).map(([category, items]) => (
+          <div key={category} style={{ marginBottom: '20px' }}>
+            <h4 style={{ 
+              color: '#ffffff', 
+              marginBottom: '10px',
+              fontSize: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              {category}
+            </h4>
+            {items.map(item => (
+              <div key={item.id} style={{
+                padding: '10px',
+                borderRadius: '4px',
+                marginBottom: '8px',
+                background: 'rgba(255, 255, 255, 0.05)'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '5px'
+                }}>
+                  <span style={{ marginRight: '10px' }}>{item.icon}</span>
+                  <span>{item.name}</span>
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#aaa',
+                  marginLeft: '25px'
+                }}>
+                  {item.condition}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        ))}
       </div>
     );
   };
   const CustomControls = ({ controlMode }) => {
     const { camera, gl: { domElement } } = useThree();
     const controls = useRef();
-  
-    // Remove this useEffect that was resetting the camera
-    // useEffect(() => {
-    //   if (controls.current) {
-    //     controls.current.reset();
-    //   }
-    // }, [controlMode]);
-  
+
+    useEffect(() => {
+        // Prevent default touch behaviors
+        const preventDefault = (e) => {
+            e.preventDefault();
+        };
+
+        // Add touch event listeners
+        domElement.addEventListener('touchstart', preventDefault, { passive: false });
+        domElement.addEventListener('touchmove', preventDefault, { passive: false });
+        domElement.addEventListener('touchend', preventDefault, { passive: false });
+
+        if (controls.current) {
+            // Configure touch controls
+            controls.current.touches = {
+                ONE: controlMode === 'orbit'
+                    ? THREE.TOUCH.ROTATE
+                    : controlMode === 'pan'
+                        ? THREE.TOUCH.PAN
+                        : THREE.TOUCH.ROTATE,
+                TWO: controlMode === 'zoom'
+                    ? THREE.TOUCH.DOLLY
+                    : THREE.TOUCH.DOLLY_PAN
+            };
+
+            // Adjust sensitivity
+            controls.current.rotateSpeed = 0.5;
+            controls.current.zoomSpeed = 0.5;
+            controls.current.panSpeed = 0.8;
+
+            // Enable smooth damping
+            controls.current.enableDamping = true;
+            controls.current.dampingFactor = 0.05;
+
+            // Configure touch behavior
+            controls.current.touchRotateSpeed = 0.5;
+            controls.current.touchZoomSpeed = 1.5;
+            controls.current.touchPanSpeed = 1.0;
+        }
+
+        // Cleanup
+        return () => {
+            domElement.removeEventListener('touchstart', preventDefault);
+            domElement.removeEventListener('touchmove', preventDefault);
+            domElement.removeEventListener('touchend', preventDefault);
+        };
+    }, [controlMode, domElement]);
+
     useFrame(() => {
-      if (controls.current) {
-        controls.current.update();
-      }
+        if (controls.current) {
+            controls.current.update();
+        }
     });
-  
+
     return (
-      <OrbitControls
-        ref={controls}
-        args={[camera, domElement]}
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        mouseButtons={{
-          LEFT: controlMode === 'orbit' 
-            ? THREE.MOUSE.ROTATE 
-            : controlMode === 'pan' 
-              ? THREE.MOUSE.PAN 
-              : THREE.MOUSE.ROTATE,
-          MIDDLE: THREE.MOUSE.DOLLY,
-          RIGHT: THREE.MOUSE.PAN
-        }}
-        enableDamping={true}
-        dampingFactor={0.05}
-        enabled={true}
-        rotateSpeed={controlMode === 'orbit' ? 1 : 0}
-        zoomSpeed={controlMode === 'zoom' ? 1 : 0.5}
-        panSpeed={controlMode === 'pan' ? 2 : 1}
-        enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
-        enableRotate={controlMode === 'orbit'}
-      />
+        <OrbitControls
+            ref={controls}
+            args={[camera, domElement]}
+            enablePan={true}
+            enableZoom={true}
+            enableRotate={true}
+            mouseButtons={{
+                LEFT: controlMode === 'orbit'
+                    ? THREE.MOUSE.ROTATE
+                    : controlMode === 'pan'
+                        ? THREE.MOUSE.PAN
+                        : THREE.MOUSE.ROTATE,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.PAN
+            }}
+            touches={{
+                ONE: controlMode === 'orbit'
+                    ? THREE.TOUCH.ROTATE
+                    : controlMode === 'pan'
+                        ? THREE.TOUCH.PAN
+                        : THREE.TOUCH.ROTATE,
+                TWO: controlMode === 'zoom'
+                    ? THREE.TOUCH.DOLLY
+                    : THREE.TOUCH.DOLLY_PAN
+            }}
+            enabled={true}
+            rotateSpeed={controlMode === 'orbit' ? 0.5 : 0}
+            zoomSpeed={controlMode === 'zoom' ? 0.5 : 0.3}
+            panSpeed={controlMode === 'pan' ? 0.8 : 0.5}
+            enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
+            enableRotate={controlMode === 'orbit'}
+            enableTouchRotate={controlMode === 'orbit'}
+            enableTouchPan={controlMode === 'pan'}
+            enableTouchZoom={controlMode === 'zoom' || controlMode === 'orbit'}
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI / 1.5}
+            minDistance={2}
+            maxDistance={100}
+        />
     );
-  };
+};
+
+const isTouchDevice = () => {
+    if (typeof window === 'undefined') return false;
+    
+    return (('ontouchstart' in window) ||
+        (navigator.maxTouchPoints > 0) ||
+        (navigator.msMaxTouchPoints > 0));
+};
+
 const BridgeScene = () => {
     const [year, setYear] = useState(2000);
+    const [isTouch, setIsTouch] = useState(false);
     const [controlMode, setControlMode] = useState('orbit');
     const cameraRef = useRef();
+    const [showLayers, setShowLayers] = useState(true);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
         setYear(Math.round(value));
     };
+    useEffect(() => {
+        setIsTouch(isTouchDevice());
+    }, []);
+    const ControlButtons = () => (
+        <ControlPanel 
+            setControlMode={setControlMode} 
+            controlMode={controlMode}
+            isTouch={isTouch}
+        />
+    );
     const resetCamera = () => {
         if (cameraRef.current) {
           cameraRef.current.position.set(-10, 40, -18);
@@ -1872,34 +1388,39 @@ const BridgeScene = () => {
             <Canvas
                 shadows
                 camera={{ 
-                    position: [-10, 40, -18],
+                    position: [-15, 40, -18],
                     fov: 75,
                     near: 0.01,
                     far: 10000
                 }}
             >
-                <Environment 
-                    files="/derelict_highway_midday_2k.hdr"
-                    background={true}
-                    blur={100}
-                    preset={null}
-                    environmentIntensity={.8921}
-                />
-                 <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 10, 5]} intensity={1} />
-<Stage environment={null}>
+         
+             
+          <directionalLight position={[10, 10, 5]} intensity={2.6} />
+          <directionalLight position={[-10,- 10,- 5]} intensity={2.6} />
+<Stage environment={null} adjustCamera={false}>
 <Model year={year} setSelectedHotspot={setSelectedHotspot} />
 </Stage>
               
-                {/* <OrbitControls 
-          enablePan={controlMode === 'pan'}
-          enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
-          enableRotate={controlMode === 'orbit'}
-          maxDistance={500}
-          minDistance={1}
-        /> */}
+
         <CustomControls controlMode={controlMode} />
             </Canvas>
+            <ControlButtons />
+            {isTouch && controlMode !== 'orbit' && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: '100px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    color: 'white',
+                    fontSize: '12px'
+                }}>
+                    {controlMode === 'pan' ? 'Drag to pan' : 'Pinch to zoom'}
+                </div>
+            )}
             {selectedHotspot && (
         <div style={{
           position: 'fixed',
@@ -1944,7 +1465,13 @@ const BridgeScene = () => {
       )}
 
             <ControlPanel setControlMode={setControlMode} controlMode={controlMode} />
-            <LayerPanel resetCamera={resetCamera} />
+            {showLayers && (
+        <LayerPanel 
+          resetCamera={resetCamera} 
+          year={year}
+          onClose={() => setShowLayers(false)}
+        />
+      )}
             <div
                 style={{
                     position: 'absolute',
