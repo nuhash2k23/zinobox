@@ -63,23 +63,23 @@ const Hotspot = ({ position, onClick, label }) => {
     const hotspots = [
       {
         id: 1,
-        position: [-13.003, 40, -181.684],
-        label: "Fence Damage",
-        description: "Severe rust damage on the bridge fence",
+        position: [0.81, 30, 51.684],
+        label: "Road Damage",
+        description: "Severe cracks and damage seen on the road",
         image: "/hotspot1.jpg"
       },
       {
         id: 2,
-        position: [-20, 20, -140],
-        label: "Road Cracks",
-        description: "Deep cracks forming in the road surface",
+        position: [-20, 20, 84],
+        label: "Bridge Moss",
+        description: "Deep moss of green and black forming in the bridge surface",
         image: "/hotspot2.jpg"
       },
       {
         id: 3,
-        position: [-15, 32, -40],
-        label: "Light Failure",
-        description: "Street light showing signs of deterioration",
+        position: [-15, 32, 90],
+        label: "Fence Rust",
+        description: "Fence showing rust signs of deterioration",
         image: "/hotspot3.jpg"
       },
       // Add more hotspots as needed
