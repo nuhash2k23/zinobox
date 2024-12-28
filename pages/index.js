@@ -2,9 +2,13 @@ import Head from "next/head";
 import Image from "next/image";
 import localFont from "next/font/local";
 import styles from "@/styles/Home.module.css";
-import Canvasbox from "@/components/Canvasbox";
-import Navbar from "@/components/Navbar";
-import Canvasboxeng from "@/components/Canvasboxeng";
+// import Canvasbox from "@/components/Canvasbox";
+// import Navbar from "@/components/Navbar";
+// import Canvasboxeng from "@/components/Canvasboxeng";
+// import GradientCanvas from "@/components/GradientCanvas";
+import Scene from "@/components/hooks/Scene";
+import BridgeScene from "@/components/BridgeComponent";
+
 
 
 const GravitasBold = localFont({
@@ -31,7 +35,10 @@ export default function Home() {
       <>
       <main className={ ` ${styles.main} ${Gravitas.variable} ${GravitasBold.variable}`}>
       {/* <Canvasbox/> */}
-     <Canvasboxeng/>
+     {/* <Canvasboxeng/> */}
+     {/* <GradientCanvas/> */}
+     {/* <Scene/> */}
+     <BridgeScene/>
      </main>
       </>
     </>

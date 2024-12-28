@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Galactic Earth</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body { 
+            margin: 0; 
+            overflow: hidden;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            alpha: true 
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        document.body.appendChild(renderer.domElement);
+
+        // Create simple atmospheric glow
+        function createAtmosphere() {
+            const atmosphereShader = {
+                vertexShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vNormal;
+                    void main() {
+                        float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+                        gl_FragColor = vec4(0.3, 0.6, 1.0, intensity * 0.5);
+                    }
+                `
+            };
+
+            const geometry = new THREE.SphereGeometry(5.2, 64, 64);
+            const material = new THREE.ShaderMaterial({
+                vertexShader: atmosphereShader.vertexShader,
+                fragmentShader: atmosphereShader.fragmentShader,
+                transparent: true,
+                side: THREE.BackSide,
+                blending: THREE.AdditiveBlending
+            });
+
+            return new THREE.Mesh(geometry, material);
+        }
+
+        const atmosphere = createAtmosphere();
+        scene.add(atmosphere);
+
+        // Create background stars
+        function createStars() {
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsCount = 3000;
+            const positions = new Float32Array(starsCount * 3);
+            const colors = new Float32Array(starsCount * 3);
+
+            for(let i = 0; i < starsCount; i++) {
+                const i3 = i * 3;
+                const radius = 50;
+                const theta = 2 * Math.PI * Math.random();
+                const phi = Math.acos(2 * Math.random() - 1);
+
+                positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+                positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                positions[i3 + 2] = radius * Math.cos(phi);
+
+                const brightness = 0.5 + Math.random() * 0.5;
+                colors[i3] = brightness;
+                colors[i3 + 1] = brightness;
+                colors[i3 + 2] = brightness;
+            }
+
+            starsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            starsGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const starsMaterial = new THREE.PointsMaterial({
+                size: 0.05,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            return new THREE.Points(starsGeometry, starsMaterial);
+        }
+
+        const stars = createStars();
+        scene.add(stars);
+
+        const radius = 5;
+        const segments = 400;
+
+        // Create base sphere
+        const oceanGeometry = new THREE.SphereGeometry(radius, segments, segments);
+        const oceanMaterial = new THREE.MeshBasicMaterial({
+            color: 0x1a1a1a,
+            transparent: true,
+            opacity: 0.95
+        });
+        const oceanSphere = new THREE.Mesh(oceanGeometry, oceanMaterial);
+        scene.add(oceanSphere);
+
+        // Function to generate random points on a sphere
+        function generateSpherePoint(radius) {
+            const u = Math.random();
+            const v = Math.random();
+            const theta = 2 * Math.PI * u;
+            const phi = Math.acos(2 * v - 1);
+            return {
+                x: radius * Math.sin(phi) * Math.cos(theta),
+                y: radius * Math.sin(phi) * Math.sin(theta),
+                z: radius * Math.cos(phi)
+            };
+        }
+
+        // Create points for continents
+        const positions = [];
+        const colors = [];
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.src = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg';
+
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Generate random points and check if they're on land
+            const totalPoints = 100000;
+            for(let i = 0; i < totalPoints; i++) {
+                const point = generateSpherePoint(radius + 0.01);
+                
+                let u = 0.5 + Math.atan2(point.z, point.x) / (2 * Math.PI);
+                let v = 0.5 - Math.asin(point.y / radius) / Math.PI;
+
+                u = Math.max(0, Math.min(1, u));
+                v = Math.max(0, Math.min(1, v));
+
+                const pixelX = Math.floor(u * (canvas.width - 1));
+                const pixelY = Math.floor(v * (canvas.height - 1));
+                const pixelIndex = (pixelY * canvas.width + pixelX) * 4;
+
+                const r = data[pixelIndex];
+                const g = data[pixelIndex + 1];
+                const b = data[pixelIndex + 2];
+
+                const isWater = b > Math.max(r, g);
+                if (!isWater) {
+                    positions.push(point.x, point.y, point.z);
+                    colors.push(0.29, 0.62, 1);
+                }
+            }
+
+            updatePointCloud();
+        };
+
+        function updatePointCloud() {
+            const pointsGeometry = new THREE.BufferGeometry();
+            pointsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            pointsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            const pointsMaterial = new THREE.PointsMaterial({
+                size: 0.015,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.9
+            });
+
+            const continentPoints = new THREE.Points(pointsGeometry, pointsMaterial);
+            scene.add(continentPoints);
+
+            let time = 0;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.001;
+
+                // Rotate elements
+                oceanSphere.rotation.y += 0.002;
+                continentPoints.rotation.y += 0.002;
+                atmosphere.rotation.y += 0.002;
+                stars.rotation.y -= 0.0001;
+
+                // Camera movement
+                camera.position.x = Math.sin(time * 0.5) * 0.5;
+                camera.position.y = Math.cos(time * 0.3) * 0.5;
+                camera.lookAt(scene.position);
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        }
+
+        camera.position.z = 10;
+
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>

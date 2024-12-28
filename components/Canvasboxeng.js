@@ -277,7 +277,7 @@ The World Star Packaging Award is the crowning achievement of these developments
   </div>
 
 
- 
+
 <div className={styles.footer}>
             <li>Home</li>
             <li>Products</li>
