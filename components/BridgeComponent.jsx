@@ -1362,7 +1362,7 @@ const BridgeScene = () => {
     const [isTouch, setIsTouch] = useState(false);
     const [controlMode, setControlMode] = useState('orbit');
     const cameraRef = useRef();
-    const [showLayers, setShowLayers] = useState(true);
+    const [showLayers, setShowLayers] = useState(false);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
