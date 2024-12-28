@@ -499,8 +499,8 @@ function Model({ year, setSelectedHotspot  }) {
             const createRustMaterial = (baseMaterial) => {
                 const material = new THREE.MeshPhysicalMaterial({
                     map: baseMaterial.map,
-                    metalness: 0.81,
-                    roughness: 0.62,
+                    metalness: 0.91,
+                    roughness: 0.42,
                     clearcoat: 0.0,
                     clearcoatRoughness: 0.0,
                     transparent: true,
@@ -777,8 +777,8 @@ const createRoadMaterial = (baseMaterial) => {
 const createMossMaterial = (baseMaterial) => {
     const material = new THREE.MeshPhysicalMaterial({
         map: baseMaterial.map,
-        metalness: 0.18,
-        roughness: 0.82,
+        metalness: 0.68,
+        roughness: 0.62,
         clearcoat: 1.0,
         clearcoatRoughness: 1.0,
         transparent: true,
@@ -1117,28 +1117,8 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
           condition: conditions.Crack 
         }
       ],
-      Debris: [
-        { 
-          id: 'A6', 
-          name: 'A6 - Debris', 
-          icon: '💛',
-          condition: conditions.Debris 
-        }
-      ],
-      'Exposed Rebar': [
-        { 
-          id: 'AB', 
-          name: 'AB - Exposed Rebar', 
-          icon: '⬛',
-          condition: conditions["Exposed Rebar"]
-        },
-        { 
-          id: 'AC', 
-          name: 'AC - Exposed Rebar', 
-          icon: '⬛',
-          condition: conditions["Exposed Rebar"]
-        }
-      ],
+ 
+    
       Spalling: [
         { 
           id: 'A2', 
@@ -1251,51 +1231,40 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
   const CustomControls = ({ controlMode }) => {
     const { camera, gl: { domElement } } = useThree();
     const controls = useRef();
+    const touchStart = useRef({ y: 0 });
+    const lastZoom = useRef(0);
 
     useEffect(() => {
-        // Prevent default touch behaviors
-        const preventDefault = (e) => {
+        const handleTouchStart = (e) => {
             e.preventDefault();
+            if (controlMode === 'zoom') {
+                touchStart.current.y = e.touches[0].clientY;
+                lastZoom.current = 0;
+            }
         };
 
-        // Add touch event listeners
-        domElement.addEventListener('touchstart', preventDefault, { passive: false });
-        domElement.addEventListener('touchmove', preventDefault, { passive: false });
-        domElement.addEventListener('touchend', preventDefault, { passive: false });
+        const handleTouchMove = (e) => {
+            e.preventDefault();
+            if (controlMode === 'zoom' && e.touches.length === 1) {
+                const deltaY = touchStart.current.y - e.touches[0].clientY;
+                const zoomSpeed = 0.01;
+                const newZoom = deltaY * zoomSpeed;
+                const zoomDelta = newZoom - lastZoom.current;
+                
+                if (controls.current) {
+                    // Simulate dolly in/out based on touch movement
+                    controls.current.object.position.multiplyScalar(1 - zoomDelta);
+                    lastZoom.current = newZoom;
+                }
+            }
+        };
 
-        if (controls.current) {
-            // Configure touch controls
-            controls.current.touches = {
-                ONE: controlMode === 'orbit'
-                    ? THREE.TOUCH.ROTATE
-                    : controlMode === 'pan'
-                        ? THREE.TOUCH.PAN
-                        : THREE.TOUCH.ROTATE,
-                TWO: controlMode === 'zoom'
-                    ? THREE.TOUCH.DOLLY
-                    : THREE.TOUCH.DOLLY_PAN
-            };
+        domElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+        domElement.addEventListener('touchmove', handleTouchMove, { passive: false });
 
-            // Adjust sensitivity
-            controls.current.rotateSpeed = 0.5;
-            controls.current.zoomSpeed = 0.5;
-            controls.current.panSpeed = 0.8;
-
-            // Enable smooth damping
-            controls.current.enableDamping = true;
-            controls.current.dampingFactor = 0.05;
-
-            // Configure touch behavior
-            controls.current.touchRotateSpeed = 0.5;
-            controls.current.touchZoomSpeed = 1.5;
-            controls.current.touchPanSpeed = 1.0;
-        }
-
-        // Cleanup
         return () => {
-            domElement.removeEventListener('touchstart', preventDefault);
-            domElement.removeEventListener('touchmove', preventDefault);
-            domElement.removeEventListener('touchend', preventDefault);
+            domElement.removeEventListener('touchstart', handleTouchStart);
+            domElement.removeEventListener('touchmove', handleTouchMove);
         };
     }, [controlMode, domElement]);
 
@@ -1309,15 +1278,15 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
         <OrbitControls
             ref={controls}
             args={[camera, domElement]}
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
+            enablePan={controlMode === 'pan'}
+            enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
+            enableRotate={controlMode === 'orbit'}
             mouseButtons={{
                 LEFT: controlMode === 'orbit'
                     ? THREE.MOUSE.ROTATE
                     : controlMode === 'pan'
                         ? THREE.MOUSE.PAN
-                        : THREE.MOUSE.ROTATE,
+                        : THREE.MOUSE.DOLLY,
                 MIDDLE: THREE.MOUSE.DOLLY,
                 RIGHT: THREE.MOUSE.PAN
             }}
@@ -1326,24 +1295,31 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
                     ? THREE.TOUCH.ROTATE
                     : controlMode === 'pan'
                         ? THREE.TOUCH.PAN
-                        : THREE.TOUCH.ROTATE,
-                TWO: controlMode === 'zoom'
-                    ? THREE.TOUCH.DOLLY
-                    : THREE.TOUCH.DOLLY_PAN
+                        : THREE.TOUCH.DOLLY,
+                TWO: THREE.TOUCH.DOLLY_PAN
             }}
             enabled={true}
             rotateSpeed={controlMode === 'orbit' ? 0.5 : 0}
             zoomSpeed={controlMode === 'zoom' ? 0.5 : 0.3}
             panSpeed={controlMode === 'pan' ? 0.8 : 0.5}
-            enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
-            enableRotate={controlMode === 'orbit'}
-            enableTouchRotate={controlMode === 'orbit'}
-            enableTouchPan={controlMode === 'pan'}
-            enableTouchZoom={controlMode === 'zoom' || controlMode === 'orbit'}
             minPolarAngle={0}
             maxPolarAngle={Math.PI / 1.5}
             minDistance={2}
             maxDistance={100}
+            // Additional touch-specific settings
+            enableTouchRotate={controlMode === 'orbit'}
+            enableTouchPan={controlMode === 'pan'}
+            enableTouchZoom={true}
+            touchStart={(event) => {
+                if (controlMode === 'zoom') {
+                    event.preventDefault();
+                }
+            }}
+            touchMove={(event) => {
+                if (controlMode === 'zoom') {
+                    event.preventDefault();
+                }
+            }}
         />
     );
 };
