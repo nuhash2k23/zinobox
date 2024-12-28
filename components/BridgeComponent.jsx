@@ -1,31 +1,82 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Environment, OrbitControls, useGLTF, PerspectiveCamera, Stage } from '@react-three/drei';
+import {  OrbitControls, useGLTF, Stage } from '@react-three/drei';
 import * as THREE from 'three';
 
-const MenuButton = ({ onClick }) => (
+
+const Icons = {
+    orbit: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="4 4"/>
+        <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+    pan: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 9L2 12M2 12L5 15M2 12H22M15 5L12 2M12 2L9 5M12 2V22M15 19L12 22M12 22L9 19M19 9L22 12M22 12L19 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    zoom: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M10 7V13M7 10H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+    layers: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 12L11.7317 16.8649C11.9006 16.9534 12.0994 16.9534 12.2683 16.8649L22 12M2 17L11.7317 21.8649C11.9006 21.9534 12.0994 21.9534 12.2683 21.8649L22 17M2 7L11.7317 2.13505C11.9006 2.04663 12.0994 2.04663 12.2683 2.13505L22 7L12.2683 11.8649C12.0994 11.9534 11.9006 11.9534 11.7317 11.8649L2 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    close: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    )
+  };
+
+
+  const MenuButton = ({ onClick, isOpen }) => (
     <button
       onClick={onClick}
       style={{
         position: 'absolute',
         right: '20px',
         top: '20px',
-        background: 'rgba(0, 0, 0, 0.7)',
+        background: 'rgba(0, 0, 0, 0.8)',
         border: 'none',
-        borderRadius: '5px',
-        padding: '10px',
+        borderRadius: '12px',
+        padding: '12px 16px',
         cursor: 'pointer',
         color: 'white',
         display: 'flex',
         alignItems: 'center',
-        gap: '5px',
-        zIndex: 1000
+        gap: '8px',
+        zIndex: 1000,
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isOpen ? 'translateX(calc(100% + 320px))' : 'translateX(0)',
+        opacity: isOpen ? 0 : 1,
       }}
     >
-      <span style={{ fontSize: '20px' }}>☰</span>
-      <span>Layers</span>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        transform: `scale(${isOpen ? 0.8 : 1})`,
+        transition: 'transform 0.3s ease'
+      }}>
+        {Icons.layers}
+        <span style={{ 
+          fontSize: '14px',
+          fontWeight: '500',
+          letterSpacing: '0.5px'
+        }}>Layers</span>
+      </div>
     </button>
   );
+  
 
 const Hotspot = ({ position, onClick, label }) => {
     const [hovered, setHovered] = useState(false);
@@ -1019,62 +1070,68 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
 }
 
 const ControlPanel = ({ setControlMode, controlMode }) => {
+    const buttonStyle = (mode) => ({
+      padding: '12px',
+      background: controlMode === mode 
+        ? 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)'
+        : 'rgba(255, 255, 255, 0.1)',
+      border: 'none',
+      borderRadius: '12px',
+      color: 'white',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      transition: 'all 0.3s ease',
+      boxShadow: controlMode === mode 
+        ? '0 4px 15px rgba(76, 175, 80, 0.3)'
+        : 'none',
+      transform: controlMode === mode 
+        ? 'scale(1.05)'
+        : 'scale(1)',
+      ':hover': {
+        background: controlMode === mode 
+          ? 'linear-gradient(135deg, #45a049 0%, #409444 100%)'
+          : 'rgba(255, 255, 255, 0.15)'
+      }
+    });
+  
     return (
       <div style={{
         position: 'absolute',
         left: '20px',
         top: '50%',
         transform: 'translateY(-50%)',
-        background: 'rgba(0, 0, 0, 0.7)',
-        padding: '10px',
-        borderRadius: '10px',
+        background: 'rgba(0, 0, 0, 0.8)',
+        padding: '12px',
+        borderRadius: '16px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '10px'
+        gap: '8px',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
       }}>
-        <button 
-          onClick={() => setControlMode('orbit')}
-          style={{
-            padding: '10px',
-            background: controlMode === 'orbit' ? '#4CAF50' : '#333',
-            border: 'none',
-            borderRadius: '5px',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          Orbit
-        </button>
-        <button 
-          onClick={() => setControlMode('pan')}
-          style={{
-            padding: '10px',
-            background: controlMode === 'pan' ? '#4CAF50' : '#333',
-            border: 'none',
-            borderRadius: '5px',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          Pan
-        </button>
-        <button 
-          onClick={() => setControlMode('zoom')}
-          style={{
-            padding: '10px',
-            background: controlMode === 'zoom' ? '#4CAF50' : '#333',
-            border: 'none',
-            borderRadius: '5px',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          Zoom
-        </button>
+        {[
+          { mode: 'orbit', icon: Icons.orbit, label: 'Orbit' },
+          { mode: 'pan', icon: Icons.pan, label: 'Pan' },
+          { mode: 'zoom', icon: Icons.zoom, label: 'Zoom' }
+        ].map(({ mode, icon, label }) => (
+          <button 
+            key={mode}
+            onClick={() => setControlMode(mode)}
+            style={buttonStyle(mode)}
+          >
+            {icon}
+            <span style={{
+              fontSize: '14px',
+              fontWeight: '500',
+              letterSpacing: '0.5px'
+            }}>{label}</span>
+          </button>
+        ))}
       </div>
     );
   };
-  
   const getConditionDescription = (year) => {
     const age = year - 2000;
     if (age <= 5) {
@@ -1117,119 +1174,171 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
   };
   
   const LayerPanel = ({ resetCamera, year, onClose }) => {
+    const [mounted, setMounted] = useState(false);
     const conditions = getConditionDescription(year);
     
+    useEffect(() => {
+      setMounted(true);
+      return () => setMounted(false);
+    }, []);
+  
+    // Define layers here
     const layers = {
-      Corrosion: [
+      'Road Condition': [
         { 
           id: 'A1', 
-          name: 'A1 - Corrosion', 
-          icon: '🔴',
-          condition: conditions.Corrosion 
-        }
-      ],
-      Crack: [
-        { 
-          id: 'A4', 
-          name: 'A4 - Crack', 
-          icon: '🔴',
+          name: 'Road Cracks', 
+          icon: '🛣️',
           condition: conditions.Crack 
         },
-        { 
-          id: 'A5', 
-          name: 'A5 - Crack', 
-          icon: '🔴',
-          condition: conditions.Crack 
-        }
-      ],
- 
-    
-      Spalling: [
         { 
           id: 'A2', 
-          name: 'A2 - Spalling', 
-          icon: '🟡',
-          condition: conditions.Spalling 
+          name: 'Surface Damage', 
+          icon: '⚠️',
+          condition: conditions.Crack 
+        }
+      ],
+      'Structural Issues': [
+        { 
+          id: 'B1', 
+          name: 'Fence Rust', 
+          icon: '🔧',
+          condition: conditions.Corrosion 
         },
         { 
-          id: 'A3', 
-          name: 'A3 - Spalling', 
-          icon: '🟡',
+          id: 'B2', 
+          name: 'Pillar Damage', 
+          icon: '🏗️',
           condition: conditions.Spalling 
+        }
+      ],
+      'Environmental Damage': [
+        { 
+          id: 'C1', 
+          name: 'Moss Growth', 
+          icon: '🌱',
+          condition: conditions.Debris 
         },
         { 
-          id: 'A7', 
-          name: 'A7 - Spalling', 
-          icon: '🟡',
+          id: 'C2', 
+          name: 'Water Damage', 
+          icon: '💧',
           condition: conditions.Spalling 
         }
       ]
     };
   
+    const panelStyle = {
+      position: 'absolute',
+      right: '20px',
+      top: '20px',
+      background: 'rgba(0, 0, 0, 0.85)',
+      padding: '20px',
+      borderRadius: '16px',
+      color: 'white',
+      maxHeight: '80vh',
+      overflowY: 'auto',
+      minWidth: '300px',
+      backdropFilter: 'blur(10px)',
+      boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      transform: mounted ? 'translateX(0)' : 'translateX(100%)',
+      opacity: mounted ? 1 : 0,
+    };
+  
+    const headerStyle = {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '20px',
+      borderBottom: '1px solid rgba(255,255,255,0.2)',
+      paddingBottom: '10px',
+      transform: mounted ? 'translateY(0)' : 'translateY(-20px)',
+      opacity: mounted ? 1 : 0,
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s',
+    };
+  
+    const closeButtonStyle = {
+      background: 'none',
+      border: 'none',
+      color: 'white',
+      cursor: 'pointer',
+      padding: '8px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'all 0.2s ease',
+      ':hover': {
+        background: 'rgba(255, 255, 255, 0.1)',
+      }
+    };
+  
+    const categoryStyle = (index) => ({
+      marginBottom: '20px',
+      transform: mounted ? 'translateX(0)' : 'translateX(50px)',
+      opacity: mounted ? 1 : 0,
+      transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${0.1 + index * 0.1}s`,
+    });
+  
     return (
-      <div style={{
-        position: 'absolute',
-        right: '20px',
-        top: '20px',
-        background: 'rgba(0, 0, 0, 0.85)',
-        padding: '20px',
-        borderRadius: '10px',
-        color: 'white',
-        maxHeight: '80vh',
-        overflowY: 'auto',
-        minWidth: '300px'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-          borderBottom: '1px solid rgba(255,255,255,0.2)',
-          paddingBottom: '10px'
-        }}>
-          <h3 style={{ margin: 0 }}>Structural Assessment</h3>
+      <div style={panelStyle}>
+        <div style={headerStyle}>
+          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+            Structural Assessment
+          </h3>
           <button 
             onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '20px'
-            }}
+            style={closeButtonStyle}
           >
-            ✕
+            {Icons.close}
           </button>
         </div>
   
         <div style={{
           background: 'rgba(255, 255, 255, 0.1)',
-          padding: '10px',
-          borderRadius: '5px',
-          marginBottom: '20px'
+          padding: '15px',
+          borderRadius: '12px',
+          marginBottom: '20px',
+          transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+          opacity: mounted ? 1 : 0,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s',
         }}>
-          <h4 style={{ margin: '0 0 5px 0', color: '#4CAF50' }}>Overall Condition</h4>
-          <p style={{ margin: 0, fontSize: '14px' }}>{conditions.overall}</p>
+          <h4 style={{ 
+            margin: '0 0 8px 0', 
+            color: '#4CAF50',
+            fontSize: '16px',
+            fontWeight: '500'
+          }}>Overall Condition</h4>
+          <p style={{ 
+            margin: 0, 
+            fontSize: '14px',
+            lineHeight: '1.5'
+          }}>{conditions.overall}</p>
         </div>
   
-        {Object.entries(layers).map(([category, items]) => (
-          <div key={category} style={{ marginBottom: '20px' }}>
+        {Object.entries(layers).map(([category, items], index) => (
+          <div key={category} style={categoryStyle(index)}>
             <h4 style={{ 
               color: '#ffffff', 
-              marginBottom: '10px',
+              marginBottom: '12px',
               fontSize: '16px',
+              fontWeight: '500',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
               {category}
             </h4>
-            {items.map(item => (
+            {items.map((item, itemIndex) => (
               <div key={item.id} style={{
-                padding: '10px',
-                borderRadius: '4px',
+                padding: '12px',
+                borderRadius: '8px',
                 marginBottom: '8px',
-                background: 'rgba(255, 255, 255, 0.05)'
+                background: 'rgba(255, 255, 255, 0.05)',
+                transform: mounted ? 'translateX(0)' : 'translateX(30px)',
+                opacity: mounted ? 1 : 0,
+                transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${0.2 + (index * 0.1) + (itemIndex * 0.05)}s`,
               }}>
                 <div style={{
                   display: 'flex',
@@ -1237,12 +1346,13 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
                   marginBottom: '5px'
                 }}>
                   <span style={{ marginRight: '10px' }}>{item.icon}</span>
-                  <span>{item.name}</span>
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
                 </div>
                 <div style={{
                   fontSize: '12px',
                   color: '#aaa',
-                  marginLeft: '25px'
+                  marginLeft: '25px',
+                  lineHeight: '1.4'
                 }}>
                   {item.condition}
                 </div>
@@ -1467,18 +1577,18 @@ const BridgeScene = () => {
       )}
 
             <ControlPanel setControlMode={setControlMode} controlMode={controlMode} />
-            {!showLayers && (
-                <MenuButton onClick={() => setShowLayers(true)} />
-            )}
+            <MenuButton 
+        onClick={() => setShowLayers(true)} 
+        isOpen={showLayers}
+      />
 
-            {/* Layer Panel */}
-            {showLayers && (
-                <LayerPanel 
-                    resetCamera={resetCamera} 
-                    year={year}
-                    onClose={() => setShowLayers(false)}
-                />
-            )}  <div
+      {showLayers && (
+        <LayerPanel 
+          resetCamera={resetCamera} 
+          year={year}
+          onClose={() => setShowLayers(false)}
+        />
+      )}  <div
                 style={{
                     position: 'absolute',
                     bottom: '20px',
