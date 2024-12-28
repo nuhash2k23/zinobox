@@ -580,13 +580,13 @@ function Model({ year, setSelectedHotspot  }) {
                         }
 
                         float fbm(vec2 p) {
-                            float value = 0.0;
-                            float amplitude = 0.5;
-                            float frequency = 1.0;
+                            float value = -0.30;
+                            float amplitude = 0.65;
+                float frequency = 0.20;
                             for(int i = 0; i < 8; i++) {
                                 value += amplitude * noise(p * frequency);
-                                frequency *= 2.2;
-                                amplitude *= 0.6;
+                                frequency *= 6.82;
+                                amplitude *= 0.56;
                             }
                             return value;
                         }
@@ -607,7 +607,7 @@ function Model({ year, setSelectedHotspot  }) {
                         rustPattern = pow(rustPattern, 0.7);
                         
                   vec4 darkRust = vec4(0.32, 0.18, 0.08, 1.0);    // Much darker brown
-vec4 midRust = vec4(0.0,0.0,0.0, 1.0);    // Darker mid toneA
+vec4 midRust = vec4(0.0,0.0,0.0, 0.30);    // Darker mid toneA
 vec4 lightRust = vec4(0.45, 0.28, 0.14, 0.14);  // Darker light tone
                         
                         float threshold = 1.0 - (rustAmount * 2.0);
@@ -761,7 +761,7 @@ const createRoadMaterial = (baseMaterial) => {
                 float crack = fbm(noiseCoord);
                 
                 // Calculate crack edges
-                float crackThreshold = 1.0 - crackAmount * 0.34;
+                float crackThreshold = 0.9 - crackAmount * 0.34;
                 float edgeWidth = 0.1 * crackAmount;
                 float innerCrack = smoothstep(crackThreshold - edgeWidth, crackThreshold, crack);
                 float outerCrack = smoothstep(crackThreshold, crackThreshold + edgeWidth, crack);
@@ -787,7 +787,7 @@ const createRoadMaterial = (baseMaterial) => {
                 finalColor = mix(finalColor, crackColor, shadowIntensity);
                 
                 // Add some ambient occlusion effect
-                float ao = 3.4 - (vDisplacement * 1.05);
+                float ao = 4.0 - (vDisplacement * 1.05);
                 finalColor *= ao;
                 
                 gl_FragColor = vec4(finalColor, 1.0);
@@ -802,8 +802,8 @@ const createRoadMaterial = (baseMaterial) => {
 const createMossMaterial = (baseMaterial) => {
     const material = new THREE.MeshPhysicalMaterial({
         map: baseMaterial.map,
-        metalness: 0.68,
-        roughness: 0.62,
+        metalness: 0.01,
+        roughness: 1.0,
         clearcoat: 1.0,
         clearcoatRoughness: 1.0,
         transparent: true,
@@ -859,8 +859,8 @@ const createMossMaterial = (baseMaterial) => {
 
             float fbm(vec2 p) {
                 float value = 0.0;
-                float amplitude = 0.5;
-                float frequency = 1.0;
+                float amplitude = 0.65;
+                float frequency = 0.20;
                 for(int i = 0; i < 8; i++) {
                     value += amplitude * noise(p * frequency);
                     frequency *= 2.2;
@@ -885,7 +885,7 @@ const createMossMaterial = (baseMaterial) => {
             rustPattern = pow(rustPattern, 0.7);
             
             // Different colors for pillar
-      vec4 darkColor = vec4(0.05, 0.08, 0.04, 0.85);    // Very dark moss green, almost black
+      vec4 darkColor = vec4(0.05, 0.08, 0.04, 1.0);    // Very dark moss green, almost black
 vec4 midColor = vec4(0.08, 0.12, 0.06, 0.0005);     // Dark murky green
 vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very dark green
 
