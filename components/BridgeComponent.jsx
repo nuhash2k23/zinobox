@@ -1273,6 +1273,7 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
             controls.current.update();
         }
     });
+    
 
     return (
         <OrbitControls
@@ -1331,13 +1332,35 @@ const isTouchDevice = () => {
         (navigator.maxTouchPoints > 0) ||
         (navigator.msMaxTouchPoints > 0));
 };
-
+const MenuButton = ({ onClick }) => (
+    <button
+      onClick={onClick}
+      style={{
+        position: 'absolute',
+        right: '20px',
+        top: '20px',
+        background: 'rgba(0, 0, 0, 0.7)',
+        border: 'none',
+        borderRadius: '5px',
+        padding: '10px',
+        cursor: 'pointer',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px',
+        zIndex: 1000
+      }}
+    >
+      <span style={{ fontSize: '20px' }}>☰</span>
+      <span>Layers</span>
+    </button>
+  );
 const BridgeScene = () => {
     const [year, setYear] = useState(2000);
     const [isTouch, setIsTouch] = useState(false);
     const [controlMode, setControlMode] = useState('orbit');
     const cameraRef = useRef();
-    const [showLayers, setShowLayers] = useState(true);
+    const [showLayers, setShowLayers] = useState(false);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
@@ -1441,13 +1464,18 @@ const BridgeScene = () => {
       )}
 
             <ControlPanel setControlMode={setControlMode} controlMode={controlMode} />
+            {!showLayers && (
+                <MenuButton onClick={() => setShowLayers(true)} />
+            )}
+
+            {/* Layer Panel */}
             {showLayers && (
-        <LayerPanel 
-          resetCamera={resetCamera} 
-          year={year}
-          onClose={() => setShowLayers(false)}
-        />
-      )}
+                <LayerPanel 
+                    resetCamera={resetCamera} 
+                    year={year}
+                    onClose={() => setShowLayers(false)}
+                />
+            )}
             <div
                 style={{
                     position: 'absolute',
