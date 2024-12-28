@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-duplicate-props */
 // import React, { useState, useRef, useEffect } from 'react';
 // import { Canvas, useFrame } from '@react-three/fiber';
 // import { Environment, OrbitControls, useGLTF } from '@react-three/drei';
@@ -669,10 +670,105 @@
 // export default BridgeScene;
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Environment, OrbitControls, useGLTF, PerspectiveCamera } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Environment, OrbitControls, useGLTF, PerspectiveCamera, Stage } from '@react-three/drei';
 import * as THREE from 'three';
 
+const Hotspot = ({ position, onClick, label }) => {
+    const [hovered, setHovered] = useState(false);
+    const { camera } = useThree();
+    const billboardRef = useRef();
+  
+    useFrame(() => {
+      if (billboardRef.current) {
+        billboardRef.current.lookAt(camera.position);
+      }
+    });
+  
+    return (
+      <group position={position}>
+        <group ref={billboardRef}>
+          <mesh
+            onClick={onClick}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
+          >
+            <circleGeometry args={[0.3, 32]} />
+            <meshBasicMaterial
+              color={hovered ? "#ff4444" : "#ffffff"}
+              transparent
+              opacity={0.8}
+            />
+          </mesh>
+          <sprite
+            position={[0, 0.5, 0]}
+            scale={[2, 1, 1]}
+          >
+            <spriteMaterial
+              transparent
+              opacity={hovered ? 1 : 0.8}
+            >
+              <canvasTexture
+                attach="map"
+                image={(() => {
+                  const canvas = document.createElement('canvas');
+                  const ctx = canvas.getContext('2d');
+                  canvas.width = 256;
+                  canvas.height = 128;
+                  ctx.fillStyle = '#000000';
+                  ctx.fillRect(0, 0, 256, 128);
+                  ctx.fillStyle = '#ffffff';
+                  ctx.font = '24px Arial';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(label, 128, 64);
+                  return canvas;
+                })()}
+              />
+            </spriteMaterial>
+          </sprite>
+        </group>
+      </group>
+    );
+  };
+  const HotspotsContainer = ({ setSelectedHotspot }) => {
+    const hotspots = [
+      {
+        id: 1,
+        position: [-13.003, 2, -281.684],
+        label: "Fence Damage",
+        description: "Severe rust damage on the bridge fence",
+        image: "/hotspot1.jpg"
+      },
+      {
+        id: 2,
+        position: [-5, 0, -140],
+        label: "Road Cracks",
+        description: "Deep cracks forming in the road surface",
+        image: "/hotspot2.jpg"
+      },
+      {
+        id: 3,
+        position: [-5, 4, -140],
+        label: "Light Failure",
+        description: "Street light showing signs of deterioration",
+        image: "/hotspot3.jpg"
+      },
+      // Add more hotspots as needed
+    ];
+  
+    return (
+      <>
+        {hotspots.map((hotspot) => (
+          <Hotspot
+            key={hotspot.id}
+            position={hotspot.position}
+            label={hotspot.label}
+            onClick={() => setSelectedHotspot(hotspot)}
+          />
+        ))}
+      </>
+    );
+  };
 export const GlowShader = {
     uniforms: {
         tDiffuse: { value: null },
@@ -1040,7 +1136,7 @@ export const MossShaderPillar = {
     `
 };
 
-function Model({ year }) {
+function Model({ year, setSelectedHotspot  }) {
     const { nodes, materials } = useGLTF('/Bridge.glb');
     const fenceMaterialRef = useRef();
     const pillarMaterialRef = useRef();
@@ -1157,8 +1253,8 @@ function Model({ year }) {
                         rustPattern = pow(rustPattern, 0.7);
                         
                   vec4 darkRust = vec4(0.32, 0.18, 0.08, 1.0);    // Much darker brown
-vec4 midRust = vec4((0.52, 0.28, 0.12, 0.53));    // Darker mid toneA
-vec4 lightRust = vec4(0.45, 0.28, 0.14, 0.94);  // Darker light tone
+vec4 midRust = vec4(0.0,0.0,0.0, 1.0);    // Darker mid toneA
+vec4 lightRust = vec4(0.45, 0.28, 0.14, 0.14);  // Darker light tone
                         
                         float threshold = 1.0 - (rustAmount * 2.0);
                         float adjustedPattern = smoothstep(threshold, 1.0, rustPattern);
@@ -1437,7 +1533,7 @@ const createMossMaterial = (baseMaterial) => {
             // Different colors for pillar
       vec4 darkColor = vec4(0.05, 0.08, 0.04, 0.85);    // Very dark moss green, almost black
 vec4 midColor = vec4(0.08, 0.12, 0.06, 0.0005);     // Dark murky green
-vec4 lightColor = vec4(0.12, 0.15, 0.08, 0.0);   // Slightly lighter but still very dark green
+vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very dark green
 
             
             float threshold = 1.0 - (rustAmount * 2.0);
@@ -1518,6 +1614,7 @@ vec4 lightColor = vec4(0.12, 0.15, 0.08, 0.0);   // Slightly lighter but still v
                 rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
                 scale={0.001}
             />
+                 <HotspotsContainer setSelectedHotspot={setSelectedHotspot} />
        <mesh
                 castShadow
                 receiveShadow
@@ -1567,14 +1664,209 @@ vec4 lightColor = vec4(0.12, 0.15, 0.08, 0.0);   // Slightly lighter but still v
     );
 }
 
+const ControlPanel = ({ setControlMode, controlMode }) => {
+    return (
+      <div style={{
+        position: 'absolute',
+        left: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'rgba(0, 0, 0, 0.7)',
+        padding: '10px',
+        borderRadius: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px'
+      }}>
+        <button 
+          onClick={() => setControlMode('orbit')}
+          style={{
+            padding: '10px',
+            background: controlMode === 'orbit' ? '#4CAF50' : '#333',
+            border: 'none',
+            borderRadius: '5px',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          Orbit
+        </button>
+        <button 
+          onClick={() => setControlMode('pan')}
+          style={{
+            padding: '10px',
+            background: controlMode === 'pan' ? '#4CAF50' : '#333',
+            border: 'none',
+            borderRadius: '5px',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          Pan
+        </button>
+        <button 
+          onClick={() => setControlMode('zoom')}
+          style={{
+            padding: '10px',
+            background: controlMode === 'zoom' ? '#4CAF50' : '#333',
+            border: 'none',
+            borderRadius: '5px',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          Zoom
+        </button>
+      </div>
+    );
+  };
+  
+  const LayerPanel = ({ resetCamera }) => {
+    const [selectedHotspot, setSelectedHotspot] = useState(null);
+  
+    const hotspots = [
+      { id: 1, name: 'Hotspot 1', position: [0, 0, 0] },
+      { id: 2, name: 'Hotspot 2', position: [2, 2, 0] },
+      // Add more hotspots as needed
+    ];
+  
+    return (
+      <div style={{
+        position: 'absolute',
+        right: '20px',
+        top: '20px',
+        background: 'rgba(0, 0, 0, 0.7)',
+        padding: '20px',
+        borderRadius: '10px',
+        color: 'white',
+        maxHeight: '80vh',
+        overflowY: 'auto'
+      }}>
+        <button 
+          onClick={resetCamera}
+          style={{
+            width: '100%',
+            padding: '10px',
+            marginBottom: '20px',
+            background: '#4CAF50',
+            border: 'none',
+            borderRadius: '5px',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          Reset View
+        </button>
+        
+        <h3>Layers</h3>
+        <div style={{ marginTop: '10px' }}>
+          {['Road', 'Fence', 'Pillars', 'Lights'].map(layer => (
+            <div key={layer} style={{
+              padding: '8px',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <input type="checkbox" defaultChecked />
+              <span>{layer}</span>
+            </div>
+          ))}
+        </div>
+  
+        {selectedHotspot && (
+          <div style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'white',
+            padding: '20px',
+            borderRadius: '10px',
+            zIndex: 1000
+          }}>
+            <button 
+              onClick={() => setSelectedHotspot(null)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '10px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+            <h3>{selectedHotspot.name}</h3>
+            <div style={{ width: '300px', height: '200px', background: '#eee' }}>
+              Image Placeholder
+            </div>
+            <p>Description text goes here...</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+  const CustomControls = ({ controlMode }) => {
+    const { camera, gl: { domElement } } = useThree();
+    const controls = useRef();
+  
+    // Remove this useEffect that was resetting the camera
+    // useEffect(() => {
+    //   if (controls.current) {
+    //     controls.current.reset();
+    //   }
+    // }, [controlMode]);
+  
+    useFrame(() => {
+      if (controls.current) {
+        controls.current.update();
+      }
+    });
+  
+    return (
+      <OrbitControls
+        ref={controls}
+        args={[camera, domElement]}
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
+        mouseButtons={{
+          LEFT: controlMode === 'orbit' 
+            ? THREE.MOUSE.ROTATE 
+            : controlMode === 'pan' 
+              ? THREE.MOUSE.PAN 
+              : THREE.MOUSE.ROTATE,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.PAN
+        }}
+        enableDamping={true}
+        dampingFactor={0.05}
+        enabled={true}
+        rotateSpeed={controlMode === 'orbit' ? 1 : 0}
+        zoomSpeed={controlMode === 'zoom' ? 1 : 0.5}
+        panSpeed={controlMode === 'pan' ? 2 : 1}
+        enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
+        enableRotate={controlMode === 'orbit'}
+      />
+    );
+  };
 const BridgeScene = () => {
     const [year, setYear] = useState(2000);
-
+    const [controlMode, setControlMode] = useState('orbit');
+    const cameraRef = useRef();
+    const [selectedHotspot, setSelectedHotspot] = useState(null);
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
         setYear(Math.round(value));
     };
-
+    const resetCamera = () => {
+        if (cameraRef.current) {
+          cameraRef.current.position.set(-10, 40, -18);
+          cameraRef.current.lookAt(0, 0, 0);
+        }
+      };
     return (
         <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
             <Canvas
@@ -1595,17 +1887,64 @@ const BridgeScene = () => {
                 />
                  <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 5]} intensity={1} />
-
-                <Model year={year} />
-                <OrbitControls 
-                    enablePan={true}
-                    enableZoom={true}
-                    enableRotate={true}
-                    maxDistance={500}
-                    minDistance={1}
-                />
+<Stage environment={null}>
+<Model year={year} setSelectedHotspot={setSelectedHotspot} />
+</Stage>
+              
+                {/* <OrbitControls 
+          enablePan={controlMode === 'pan'}
+          enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
+          enableRotate={controlMode === 'orbit'}
+          maxDistance={500}
+          minDistance={1}
+        /> */}
+        <CustomControls controlMode={controlMode} />
             </Canvas>
+            {selectedHotspot && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'white',
+          padding: '20px',
+          borderRadius: '10px',
+          zIndex: 1000,
+          boxShadow: '0 0 20px rgba(0,0,0,0.3)',
+          maxWidth: '500px',
+          width: '90%'
+        }}>
+          <button 
+            onClick={() => setSelectedHotspot(null)}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '10px',
+              background: 'none',
+              border: 'none',
+              fontSize: '20px',
+              cursor: 'pointer'
+            }}
+          >
+            ×
+          </button>
+          <h3>{selectedHotspot.label}</h3>
+          <div style={{
+            width: '100%',
+            height: '200px',
+            background: '#eee',
+            marginBottom: '15px',
+            backgroundImage: `url(${selectedHotspot.image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            borderRadius: '5px'
+          }} />
+          <p>{selectedHotspot.description}</p>
+        </div>
+      )}
 
+            <ControlPanel setControlMode={setControlMode} controlMode={controlMode} />
+            <LayerPanel resetCamera={resetCamera} />
             <div
                 style={{
                     position: 'absolute',
