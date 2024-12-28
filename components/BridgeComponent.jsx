@@ -3,69 +3,87 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, OrbitControls, useGLTF, PerspectiveCamera, Stage } from '@react-three/drei';
 import * as THREE from 'three';
 
+const MenuButton = ({ onClick }) => (
+    <button
+      onClick={onClick}
+      style={{
+        position: 'absolute',
+        right: '20px',
+        top: '20px',
+        background: 'rgba(0, 0, 0, 0.7)',
+        border: 'none',
+        borderRadius: '5px',
+        padding: '10px',
+        cursor: 'pointer',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px',
+        zIndex: 1000
+      }}
+    >
+      <span style={{ fontSize: '20px' }}>☰</span>
+      <span>Layers</span>
+    </button>
+  );
+
 const Hotspot = ({ position, onClick, label }) => {
     const [hovered, setHovered] = useState(false);
     const { camera } = useThree();
     const billboardRef = useRef();
-    
+  
     useFrame(() => {
-        if (billboardRef.current) {
-            billboardRef.current.lookAt(camera.position);
-        }
+      if (billboardRef.current) {
+        billboardRef.current.lookAt(camera.position);
+      }
     });
-
-    const handleInteraction = (event) => {
-        event.stopPropagation();
-        onClick();
-    };
-
+  
     return (
-        <group position={position}>
-            <group ref={billboardRef}>
-                <mesh
-                    onClick={handleInteraction}
-                    onPointerDown={handleInteraction}  // Add touch support
-                    onPointerOver={() => setHovered(true)}
-                    onPointerOut={() => setHovered(false)}
-                    onTouchStart={handleInteraction}   // Explicit touch support
-                >
-                    <circleGeometry args={[0.83, 32]} />
-                    <meshBasicMaterial
-                        color={hovered ? "#ff4444" : "#ffffff"}
-                        transparent
-                        opacity={1.0}
-                    />
-                </mesh>
-                <sprite
-                    position={[0, 3.95, 0]}
-                    scale={[12, 6, 12]}
-                >
-                    <spriteMaterial
-                        transparent
-                        opacity={hovered ? 1 : 0.8}
-                    >
-                        <canvasTexture
-                            attach="map"
-                            image={(() => {
-                                const canvas = document.createElement('canvas');
-                                const ctx = canvas.getContext('2d');
-                                canvas.width = 256;
-                                canvas.height = 128;
-                                ctx.fillStyle = '#000000';
-                                ctx.fillRect(0, 0, 256, 128);
-                                ctx.fillStyle = '#ffffff';
-                                ctx.font = '24px Arial';
-                                ctx.textAlign = 'center';
-                                ctx.fillText(label, 128, 64);
-                                return canvas;
-                            })()}
-                        />
-                    </spriteMaterial>
-                </sprite>
-            </group>
+      <group position={position}>
+        <group ref={billboardRef}>
+          <mesh
+            onClick={onClick}
+            onPointerDown={onClick}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
+          >
+            <circleGeometry args={[0.83, 32]} />
+            <meshBasicMaterial
+              color={hovered ? "#ff4444" : "#ffffff"}
+              transparent
+              opacity={1.0}
+            />
+          </mesh>
+          <sprite
+            position={[0, 3.95, 0]}
+            scale={[12, 6, 12]}
+          >
+            <spriteMaterial
+              transparent
+              opacity={hovered ? 1 : 0.8}
+            >
+              <canvasTexture
+                attach="map"
+                image={(() => {
+                  const canvas = document.createElement('canvas');
+                  const ctx = canvas.getContext('2d');
+                  canvas.width = 256;
+                  canvas.height = 128;
+                  ctx.fillStyle = '#000000';
+                  ctx.fillRect(0, 0, 256, 128);
+                  ctx.fillStyle = '#ffffff';
+                  ctx.font = '24px Arial';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(label, 128, 64);
+                  return canvas;
+                })()}
+              />
+            </spriteMaterial>
+          </sprite>
         </group>
+      </group>
     );
-};
+  };
   const HotspotsContainer = ({ setSelectedHotspot }) => {
     const hotspots = [
       {
@@ -1280,7 +1298,6 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
             controls.current.update();
         }
     });
-    
 
     return (
         <OrbitControls
@@ -1339,53 +1356,18 @@ const isTouchDevice = () => {
         (navigator.maxTouchPoints > 0) ||
         (navigator.msMaxTouchPoints > 0));
 };
-const MenuButton = ({ onClick }) => (
-    <button
-      onClick={onClick}
-      style={{
-        position: 'absolute',
-        right: '20px',
-        top: '20px',
-        background: 'rgba(0, 0, 0, 0.7)',
-        border: 'none',
-        borderRadius: '5px',
-        padding: '10px',
-        cursor: 'pointer',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '5px',
-        zIndex: 1000
-      }}
-    >
-      <span style={{ fontSize: '20px' }}>☰</span>
-      <span>Layers</span>
-    </button>
-  );
+
 const BridgeScene = () => {
     const [year, setYear] = useState(2000);
     const [isTouch, setIsTouch] = useState(false);
     const [controlMode, setControlMode] = useState('orbit');
     const cameraRef = useRef();
-    const [showLayers, setShowLayers] = useState(false);
+    const [showLayers, setShowLayers] = useState(true);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
         setYear(Math.round(value));
     };
-    // In your BridgeScene component
-useEffect(() => {
-    const preventDefault = (e) => e.preventDefault();
-    
-    // Prevent default touch behaviors
-    document.addEventListener('touchmove', preventDefault, { passive: false });
-    document.addEventListener('touchstart', preventDefault, { passive: false });
-    
-    return () => {
-        document.removeEventListener('touchmove', preventDefault);
-        document.removeEventListener('touchstart', preventDefault);
-    };
-}, []);
     useEffect(() => {
         setIsTouch(isTouchDevice());
     }, []);
@@ -1403,6 +1385,7 @@ useEffect(() => {
         }
       };
     return (
+        
         <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
             <Canvas
                 shadows
@@ -1440,48 +1423,36 @@ useEffect(() => {
                     {controlMode === 'pan' ? 'Drag to pan' : 'Pinch to zoom'}
                 </div>
             )}
-      {selectedHotspot && (
-    <div 
-        style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'white',
-            padding: '20px',
-            borderRadius: '10px',
-            zIndex: 9999,  // Increased z-index
-            boxShadow: '0 0 20px rgba(0,0,0,0.3)',
-            maxWidth: '500px',
-            width: '90%',
-            touchAction: 'auto',  // Enable touch events
-            WebkitTapHighlightColor: 'transparent'  // Remove tap highlight on mobile
-        }}
-    >
-        <button 
-            onClick={(e) => {
-                e.stopPropagation();
-                setSelectedHotspot(null);
-            }}
-            style={{
-                position: 'absolute',
-                right: '10px',
-                top: '10px',
-                background: 'none',
-                border: 'none',
-                fontSize: '24px',  // Increased size for better touch target
-                cursor: 'pointer',
-                padding: '10px',  // Increased padding for better touch target
-                color: '#333',
-                zIndex: 10000
-            }}
-        >
-            ×
-        </button>
-        <h3 style={{ marginTop: '10px', marginBottom: '15px' }}>
-            {selectedHotspot.label}
-        </h3>
+            {selectedHotspot && (
         <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'white',
+          padding: '20px',
+          borderRadius: '10px',
+          zIndex: 1000,
+          boxShadow: '0 0 20px rgba(0,0,0,0.3)',
+          maxWidth: '500px',
+          width: '90%'
+        }}>
+          <button 
+            onClick={() => setSelectedHotspot(null)}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '10px',
+              background: 'none',
+              border: 'none',
+              fontSize: '20px',
+              cursor: 'pointer'
+            }}
+          >
+            ×
+          </button>
+          <h3>{selectedHotspot.label}</h3>
+          <div style={{
             width: '100%',
             height: '200px',
             background: '#eee',
@@ -1490,16 +1461,10 @@ useEffect(() => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             borderRadius: '5px'
-        }} />
-        <p style={{ 
-            margin: 0,
-            lineHeight: '1.5',
-            color: '#333'
-        }}>
-            {selectedHotspot.description}
-        </p>
-    </div>
-)}
+          }} />
+          <p>{selectedHotspot.description}</p>
+        </div>
+      )}
 
             <ControlPanel setControlMode={setControlMode} controlMode={controlMode} />
             {!showLayers && (
@@ -1513,8 +1478,7 @@ useEffect(() => {
                     year={year}
                     onClose={() => setShowLayers(false)}
                 />
-            )}
-            <div
+            )}  <div
                 style={{
                     position: 'absolute',
                     bottom: '20px',
