@@ -1,7 +1,9 @@
+/* eslint-disable react/jsx-no-duplicate-props */
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {  OrbitControls, useGLTF, Stage } from '@react-three/drei';
 import * as THREE from 'three';
+import Image from 'next/image';
 
 
 const Icons = {
@@ -142,21 +144,21 @@ const Hotspot = ({ position, onClick, label }) => {
         position: [0.81, 30, 51.684],
         label: "Road Damage",
         description: "Severe cracks and damage seen on the road",
-        image: "/hotspot1.jpg"
+        image: "/road.png"
       },
       {
         id: 2,
         position: [-20, 20, 84],
         label: "Bridge Moss",
         description: "Deep moss of green and black forming in the bridge surface",
-        image: "/hotspot2.jpg"
+        image: "/bridge.png"
       },
       {
         id: 3,
         position: [-15, 32, 90],
         label: "Fence Rust",
         description: "Fence showing rust signs of deterioration",
-        image: "/hotspot3.jpg"
+        image: "/fence.png"
       },
       // Add more hotspots as needed
     ];
@@ -1387,7 +1389,6 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
                 const zoomDelta = newZoom - lastZoom.current;
                 
                 if (controls.current) {
-                    // Simulate dolly in/out based on touch movement
                     controls.current.object.position.multiplyScalar(1 - zoomDelta);
                     lastZoom.current = newZoom;
                 }
@@ -1437,24 +1438,22 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
             rotateSpeed={controlMode === 'orbit' ? 0.5 : 0}
             zoomSpeed={controlMode === 'zoom' ? 0.5 : 0.3}
             panSpeed={controlMode === 'pan' ? 0.8 : 0.5}
-            minPolarAngle={0}
-            maxPolarAngle={Math.PI / 1.5}
-            minDistance={2}
-            maxDistance={100}
+            minPolarAngle={0} // Limit vertical rotation (up)
+            maxPolarAngle={Math.PI / 2} // Limit vertical rotation (down) to 90 degrees
+            minAzimuthAngle={-Math.PI / 2} // Optional: Limit horizontal rotation
+            maxAzimuthAngle={Math.PI / 2} // Optional: Limit horizontal rotation
+            minDistance={5} // Minimum zoom distance
+            maxDistance={100} // Maximum zoom distance
             // Additional touch-specific settings
             enableTouchRotate={controlMode === 'orbit'}
             enableTouchPan={controlMode === 'pan'}
             enableTouchZoom={true}
-            touchStart={(event) => {
-                if (controlMode === 'zoom') {
-                    event.preventDefault();
-                }
-            }}
-            touchMove={(event) => {
-                if (controlMode === 'zoom') {
-                    event.preventDefault();
-                }
-            }}
+            // Ground collision prevention
+            target={[0, 0, 0]} // Set the target point
+            // Additional constraints
+            maxPolarAngle={Math.PI / 2} // This prevents going below the ground plane
+            enableDamping={true} // Optional: adds smooth movement
+            dampingFactor={0.05} // Optional: adjusts smoothness
         />
     );
 };
@@ -1533,48 +1532,83 @@ const BridgeScene = () => {
                     {controlMode === 'pan' ? 'Drag to pan' : 'Pinch to zoom'}
                 </div>
             )}
-            {selectedHotspot && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'white',
-          padding: '20px',
-          borderRadius: '10px',
-          zIndex: 1000,
-          boxShadow: '0 0 20px rgba(0,0,0,0.3)',
-          maxWidth: '500px',
-          width: '90%'
-        }}>
-          <button 
-            onClick={() => setSelectedHotspot(null)}
-            style={{
-              position: 'absolute',
-              right: '10px',
-              top: '10px',
-              background: 'none',
-              border: 'none',
-              fontSize: '20px',
-              cursor: 'pointer'
-            }}
-          >
-            ×
-          </button>
-          <h3>{selectedHotspot.label}</h3>
-          <div style={{
-            width: '100%',
-            height: '200px',
-            background: '#eee',
-            marginBottom: '15px',
-            backgroundImage: `url(${selectedHotspot.image})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            borderRadius: '5px'
-          }} />
-          <p>{selectedHotspot.description}</p>
-        </div>
-      )}
+          {selectedHotspot && (
+  <div style={{
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    background: 'white',
+    padding: '25px',
+    borderRadius: '15px',
+    zIndex: 1000,
+    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+    maxWidth: '500px',
+    width: '90%'
+  }}>
+    <button 
+      onClick={() => setSelectedHotspot(null)}
+      style={{
+        position: 'absolute',
+        right: '15px',
+        top: '15px',
+        background: 'rgba(0, 0, 0, 0.1)',
+        border: 'none',
+        borderRadius: '50%',
+        width: '30px',
+        height: '30px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '20px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        ':hover': {
+          background: 'rgba(0, 0, 0, 0.2)',
+        }
+      }}
+    >
+      ×
+    </button>
+    <h3 style={{
+      margin: '0 0 15px 0',
+      fontSize: '20px',
+      fontWeight: '600',
+      color: '#333'
+    }}>{selectedHotspot.label}</h3>
+    <div style={{
+      width: '100%',
+      height: '300px',
+      marginBottom: '20px',
+      borderRadius: '10px',
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
+      <Image 
+      width={300}
+      height={270}
+        src={selectedHotspot.image}
+        alt={selectedHotspot.label}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block'
+        }}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = '/placeholder-image.jpg'; // Fallback image
+        }}
+      />
+    </div>
+    <p style={{
+      margin: '0',
+      fontSize: '16px',
+      lineHeight: '1.6',
+      color: '#666'
+    }}>{selectedHotspot.description}</p>
+  </div>
+)}
 
             <ControlPanel setControlMode={setControlMode} controlMode={controlMode} />
             <MenuButton 
