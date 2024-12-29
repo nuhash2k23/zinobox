@@ -7,35 +7,39 @@ import Image from 'next/image';
 import { forwardRef, useCallback } from 'react';
 import gsap from 'gsap';
 
-
 const Icons = {
     orbit: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2C6.48 2 2 6.48 2 12" />
-            <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4" />
+        <svg width="39" height="31" viewBox="0 0 39 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="19.5774" cy="15.5" r="12" stroke="currentColor" strokeWidth="3"/>
+            <path d="M29.0773 4.9998C42.5773 -2.00025 39.0246 5.75986 22.0774 18.9998C6.07738 31.4996 -4.92264 32.9998 7.0774 21.4998" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
         </svg>
     ),
     pan: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 5l0 14M5 12h14M7 7l10 10M17 7L7 17" />
+        <svg width="28" height="32" viewBox="0 0 27 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M23.4474 4.58088V4.58088C22.6627 4.58088 21.8141 4.13065 21.323 3.51854C20.6752 2.71085 19.6393 2.18675 18.4737 2.18675V2.18675C17.6495 2.18675 16.7522 1.75338 16.1918 1.14896C15.54 0.445888 14.5752 0 13.5 0C12.4248 0 11.46 0.445909 10.8082 1.14897C10.2478 1.75341 9.35055 2.18675 8.52632 2.18675V2.18675C6.56739 2.18675 4.97368 3.66667 4.97368 5.48572V12.0931C4.97368 12.7889 4.24838 13.2736 3.55263 13.2736V13.2736C1.59371 13.2736 0 14.7535 0 16.5726V23.3567C0 28.1226 4.17548 32 9.30789 32H17.6921C22.8245 32 27 28.1226 27 23.3567V7.87985C27 6.06073 25.4063 4.58088 23.4474 4.58088ZM24.8684 23.3567C24.8684 27.0312 21.6491 30.0206 17.6921 30.0206H9.30789C5.3509 30.0206 2.13158 27.0312 2.13158 23.3567V16.5726C2.13158 15.8449 2.76906 15.253 3.55263 15.253C4.3362 15.253 4.97368 15.8449 4.97368 16.5726V20.7851C4.97368 21.3738 5.45085 21.8509 6.03947 21.8509V21.8509C6.62809 21.8509 7.10526 21.3738 7.10526 20.7851V5.48572C7.10526 4.7581 7.74275 4.16614 8.52632 4.16614C9.30988 4.16614 9.94737 4.7581 9.94737 5.48572V14.847C9.94737 15.4356 10.4245 15.9128 11.0132 15.9128V15.9128C11.6018 15.9128 12.0789 15.4356 12.0789 14.847V3.29897C12.0789 2.57135 12.7164 1.97938 13.5 1.97938C14.2836 1.97938 14.9211 2.57135 14.9211 3.29897V14.847C14.9211 15.4356 15.3982 15.9128 15.9868 15.9128V15.9128C16.5755 15.9128 17.0526 15.4356 17.0526 14.847V5.48572C17.0526 4.7581 17.6901 4.16614 18.4737 4.16614C19.2573 4.16614 19.8947 4.7581 19.8947 5.48572V14.847C19.8947 15.4356 20.3719 15.9128 20.9605 15.9128V15.9128C21.5491 15.9128 22.0263 15.4356 22.0263 14.847V7.87979C22.0263 7.15217 22.6638 6.5602 23.4474 6.5602C24.2309 6.5602 24.8684 7.15217 24.8684 7.87979V23.3567Z" fill="currentColor"/>
         </svg>
     ),
     zoom: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" />
-            <line x1="16" y1="16" x2="21" y2="21" />
-            <line x1="11" y1="8" x2="11" y2="14" />
-            <line x1="8" y1="11" x2="14" y2="11" />
+        <svg width="32" height="33" viewBox="0 0 32 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="10" stroke="currentColor" strokeWidth="2"/>
+            <rect x="18.222" y="21.547" width="3.57258" height="13.5833" rx="1.78629" transform="rotate(-42.3428 18.222 21.547)" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="10" y="5" width="2" height="12" rx="1" fill="currentColor"/>
+            <rect x="5" y="12" width="2" height="12" rx="1" transform="rotate(-90 5 12)" fill="currentColor"/>
+        </svg>
+    ),
+    layers: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M12 2L3 7L12 12L21 7L12 2Z" strokeLinejoin="round"/>
+            <path d="M3 12L12 17L21 12" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
+            <path d="M3 17L12 22L21 17" strokeLinecap="round" strokeLinejoin="round" opacity="0.3"/>
         </svg>
     ),
     close: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-      )
+    )
 };
-
 const CompassRotation = ({ setCompassRotation }) => {
     const { camera } = useThree();
   
@@ -53,10 +57,10 @@ const CompassUI = ({ rotation, onReset }) => {
             onClick={onReset}
             style={{
                 position: 'absolute',
-                top: '80px',
+                top: '40px',
                 right: '20px',
-                width: '70px',
-                height: '70px',
+                width: '100px',
+                height: '100px',
                 cursor: 'pointer',
                 transform: `rotate(${rotation}rad)`,
                 transition: 'transform 0.1s ease-out',
@@ -77,8 +81,8 @@ const CompassUI = ({ rotation, onReset }) => {
                 border: '2px solid rgba(255, 255, 255, 0.1)',
             }}>
                 <svg
-                    width="50"
-                    height="50"
+                    width="80"
+                    height="80"
                     viewBox="0 0 50 50"
                     fill="none"
                 >
@@ -163,48 +167,48 @@ const CompassUI = ({ rotation, onReset }) => {
         </div>
     );
 };
-  const MenuButton = ({ onClick, isOpen }) => (
+const MenuButton = ({ onClick, isOpen }) => (
     <button
-      onClick={onClick}
-      style={{
-        position: 'absolute',
-        right: '20px',
-        top: '20px',
-        background: 'rgba(0, 0, 0, 0.8)',
-        border: 'none',
-        borderRadius: '12px',
-        padding: '12px 16px',
-        cursor: 'pointer',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        zIndex: 1000,
-        backdropFilter: 'blur(10px)',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: isOpen ? 'translateX(calc(100% + 320px))' : 'translateX(0)',
-        opacity: isOpen ? 0 : 1,
-      }}
+        onClick={onClick}
+        style={{
+            position: 'absolute',
+            right: '20px', // Changed from right to left
+            top: '200px', // Increased from 20px
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '16px 20px', // Increased padding
+            cursor: 'pointer',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px', // Increased gap
+            zIndex: 1000,
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: isOpen ? 'translateX(calc(-100% - 320px))' : 'translateX(0)', // Modified transform
+            opacity: isOpen ? 0 : 1,
+        }}
     >
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        transform: `scale(${isOpen ? 0.8 : 1})`,
-        transition: 'transform 0.3s ease'
-      }}>
-        {Icons.layers}
-        <span style={{ 
-          fontSize: '14px',
-          fontWeight: '500',
-          letterSpacing: '0.5px'
-        }}>Layers</span>
-      </div>
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            transform: `scale(${isOpen ? 0.8 : 1})`,
+            transition: 'transform 0.3s ease'
+        }}>
+            <div style={{ transform: 'scale(1.4)' }}>{Icons.layers}</div> {/* Increased icon size */}
+            <span style={{ 
+                fontSize: '16px', // Increased font size
+                fontWeight: '600', // Made font weight bolder
+                letterSpacing: '0.01em',
+            }}>Layers</span>
+        </div>
     </button>
-  );  
+);
   
-  const Hotspot = ({ position, onClick, label }) => {
+const Hotspot = ({ position, onClick, label }) => {
     const [hovered, setHovered] = useState(false);
     const { camera } = useThree();
     const billboardRef = useRef();
@@ -214,16 +218,16 @@ const CompassUI = ({ rotation, onReset }) => {
     
     // Color constants
     const colors = {
-        primary: "#4CAF50",      // Green primary color (matching the app's theme)
+        primary: "#4CAF50",      // Green primary color
         secondary: "#45a049",    // Slightly darker green for hover
         background: "#2A2A2A",   // Dark grey for main fill
         stroke: "#ffffff",       // White for visibility
-        pulse: "#4CAF50"        // Green pulse (with opacity variations)
+        pulse: "#4CAF50"        // Green pulse
     };
 
     useEffect(() => {
         pulseScaleRef.current = 1;
-        pulseOpacityRef.current = 0.8;
+        pulseOpacityRef.current = 1.0;
     }, []);
 
     useFrame((state) => {
@@ -232,9 +236,9 @@ const CompassUI = ({ rotation, onReset }) => {
         }
 
         if (pulseRef.current) {
-            const pulseFactor = (Math.sin(state.clock.elapsedTime * 2) + 1) / 2;
-            pulseScaleRef.current = 1 + (pulseFactor * 0.4); // Slightly larger pulse
-            pulseOpacityRef.current = 0.5 - (pulseFactor * 0.3); // More visible pulse
+            const pulseFactor = (Math.sin(state.clock.elapsedTime * 1.5) + 1) / 2; // Slowed down pulse
+            pulseScaleRef.current = 1 + (pulseFactor * 0.5); // Larger pulse range
+            pulseOpacityRef.current = 0.7 - (pulseFactor * 0.4); // More visible pulse
             
             pulseRef.current.scale.x = pulseScaleRef.current;
             pulseRef.current.scale.y = pulseScaleRef.current;
@@ -247,11 +251,11 @@ const CompassUI = ({ rotation, onReset }) => {
             <group ref={billboardRef}>
                 {/* Outer pulsating ring */}
                 <mesh ref={pulseRef}>
-                    <ringGeometry args={[0.75, 0.8, 32]} />
+                    <ringGeometry args={[1.2, 1.3, 32]} /> {/* Larger pulse ring */}
                     <meshBasicMaterial
                         color={colors.pulse}
                         transparent
-                        opacity={0.5}
+                        opacity={0.95}
                         side={THREE.DoubleSide}
                     />
                 </mesh>
@@ -262,41 +266,41 @@ const CompassUI = ({ rotation, onReset }) => {
                     onPointerOver={() => setHovered(true)}
                     onPointerOut={() => setHovered(false)}
                 >
-                    <circleGeometry args={[0.75, 32]} />
+                    <circleGeometry args={[1.1, 32]} /> {/* Adjusted background size */}
                     <meshBasicMaterial
                         color={colors.background}
                         transparent
-                        opacity={0.85}
+                        opacity={0.6}
                     />
                 </mesh>
                 
-                {/* Main ring stroke */}
+                {/* Main outer ring */}
                 <mesh>
-                    <ringGeometry args={[0.7, 0.75, 32]} />
+                    <ringGeometry args={[0.95, 1.1, 32]} /> {/* Thicker main ring */}
                     <meshBasicMaterial
                         color={hovered ? colors.primary : colors.stroke}
                         transparent
-                        opacity={hovered ? 1 : 0.9}
+                        opacity={1}
                     />
                 </mesh>
 
                 {/* Center dot */}
                 <mesh>
-                    <circleGeometry args={[0.2, 32]} />
+                    <circleGeometry args={[0.35, 32]} /> {/* Larger center dot */}
                     <meshBasicMaterial
                         color={hovered ? colors.primary : colors.stroke}
                         transparent
-                        opacity={hovered ? 1 : 0.9}
+                        opacity={1}
                     />
                 </mesh>
 
-                {/* Additional inner ring for emphasis */}
+                {/* Inner ring */}
                 <mesh>
-                    <ringGeometry args={[0.3, 0.32, 32]} />
+                    <ringGeometry args={[0.45, 0.55, 32]} /> {/* Thicker inner ring */}
                     <meshBasicMaterial
                         color={hovered ? colors.secondary : colors.stroke}
                         transparent
-                        opacity={hovered ? 0.9 : 0.7}
+                        opacity={hovered ? 1 : 0.8}
                     />
                 </mesh>
             </group>
@@ -307,21 +311,21 @@ const CompassUI = ({ rotation, onReset }) => {
     const hotspots = [
       {
         id: 1,
-        position: [0.81, 30, 51.684],
+        position: [0.81, 32, 51.684],
         label: "Road Damage",
         description: "Severe cracks and damage seen on the road",
         image: "/road.png"
       },
       {
         id: 2,
-        position: [-20, 20, 84],
+        position: [-10, 25, 114],
         label: "Bridge Moss",
         description: "Deep moss of green and black forming in the bridge surface",
         image: "/bridge.png"
       },
       {
         id: 3,
-        position: [-15, 32, 90],
+        position: [-9, 32, 90],
         label: "Fence Rust",
         description: "Fence showing rust signs of deterioration",
         image: "/fence.png"
@@ -1238,16 +1242,30 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
 }
 
 const ControlPanel = ({ setControlMode, controlMode }) => {
+    const activeColor = '#52aaeb'; // Bright blue for active icon
+    const inactiveColor = '#FFFFFF'; // White for inactive icon
+
     return (
         <div style={{
             position: 'absolute',
-            left: '20px',
+            left: '0px',
             top: '50%',
+            paddingTop: '7.5vh',
+            paddingBottom: '7.5vh',
+        
             transform: 'translateY(-50%)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
-            background: 'transparent'
+            gap: '28px',
+            borderRadius: '24px',
+            borderTopLeftRadius:'0px',
+            borderBottomLeftRadius:'0px',
+            background: 'rgba(0, 0, 0,1)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '16px 12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            WebkitBackdropFilter: 'blur(10px)', // For Safari support
         }}>
             {[
                 { mode: 'orbit', icon: Icons.orbit },
@@ -1259,23 +1277,19 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
                     onClick={() => setControlMode(mode)}
                     onPointerDown={() => setControlMode(mode)}
                     style={{
-                        width: '40px',
-                        height: '40px',
+                        width: '44px',
+                        height: '44px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: controlMode === mode 
-                            ? 'rgba(76, 175, 80, 0.9)'
-                            : 'rgba(0, 0, 0, 0.5)',
+                        background: 'black',
                         border: 'none',
                         borderRadius: '50%',
-                        color: 'white',
+                        color: controlMode === mode ? activeColor : inactiveColor,
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         backdropFilter: 'blur(10px)',
-                        boxShadow: controlMode === mode 
-                            ? '0 0 10px rgba(76, 175, 80, 0.5)'
-                            : '0 2px 5px rgba(0,0,0,0.2)',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
                     }}
                 >
                     {icon}
@@ -1284,6 +1298,8 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
         </div>
     );
 };
+
+
   const getConditionDescription = (year) => {
     const age = year - 2000;
     if (age <= 5) {
@@ -1330,191 +1346,199 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
     const conditions = getConditionDescription(year);
     
     useEffect(() => {
-      setMounted(true);
-      return () => setMounted(false);
+        setMounted(true);
+        return () => setMounted(false);
     }, []);
-  
-    // Define layers here
-    const layers = {
-      'Road Condition': [
-        { 
-          id: 'A1', 
-          name: 'Road Cracks', 
-          icon: '🛣️',
-          condition: conditions.Crack 
-        },
-        { 
-          id: 'A2', 
-          name: 'Surface Damage', 
-          icon: '⚠️',
-          condition: conditions.Crack 
+
+    const LayerIcon = ({ type }) => {
+        switch(type) {
+            case 'road':
+                return (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M4 6L20 6M4 18L20 18" strokeLinecap="round"/>
+                        <path d="M4 12L8 12M16 12L20 12" strokeLinecap="round" opacity="0.5"/>
+                        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    </svg>
+                );
+            case 'structural':
+                return (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M3 21L21 21" strokeLinecap="round"/>
+                        <path d="M6 21V12M18 21V12" strokeLinecap="round"/>
+                        <path d="M12 21V4" strokeLinecap="round"/>
+                        <path d="M12 4L6 12L18 12L12 4Z" strokeLinejoin="round"/>
+                    </svg>
+                );
+            case 'environmental':
+                return (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21C16.9706 21 21 16.9706 21 12" strokeLinecap="round"/>
+                        <path d="M21 5C19.9391 5 19.9391 6.5 19 6.5C18.0609 6.5 18.0609 5 17 5C15.9391 5 15.9391 6.5 15 6.5" strokeLinecap="round"/>
+                    </svg>
+                );
+            default:
+                return null;
         }
-      ],
-      'Structural Issues': [
-        { 
-          id: 'B1', 
-          name: 'Fence Rust', 
-          icon: '🔧',
-          condition: conditions.Corrosion 
-        },
-        { 
-          id: 'B2', 
-          name: 'Pillar Damage', 
-          icon: '🏗️',
-          condition: conditions.Spalling 
-        }
-      ],
-      'Environmental Damage': [
-        { 
-          id: 'C1', 
-          name: 'Moss Growth', 
-          icon: '🌱',
-          condition: conditions.Debris 
-        },
-        { 
-          id: 'C2', 
-          name: 'Water Damage', 
-          icon: '💧',
-          condition: conditions.Spalling 
-        }
-      ]
     };
-  
+
     const panelStyle = {
-      position: 'absolute',
-      right: '20px',
-      top: '20px',
-      background: 'rgba(0, 0, 0, 0.85)',
-      padding: '20px',
-      borderRadius: '16px',
-      color: 'white',
-      maxHeight: '80vh',
-      overflowY: 'auto',
-      minWidth: '300px',
-      backdropFilter: 'blur(10px)',
-      boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
-      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-      transform: mounted ? 'translateX(0)' : 'translateX(100%)',
-      opacity: mounted ? 1 : 0,
+        position: 'absolute',
+        right: '0px',
+        top: '20px',
+        zIndex:"2000",
+        background: 'rgba(0, 0, 0, 0.85)',
+        padding: '24px',
+        borderRadius: '20px',
+        color: 'white',
+        maxHeight: '80vh',
+        overflowY: 'auto',
+        minWidth: '320px',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: mounted ? 'translateX(0)' : 'translateX(100%)',
+        opacity: mounted ? 1 : 0,
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     };
-  
-    const headerStyle = {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px',
-      borderBottom: '1px solid rgba(255,255,255,0.2)',
-      paddingBottom: '10px',
-      transform: mounted ? 'translateY(0)' : 'translateY(-20px)',
-      opacity: mounted ? 1 : 0,
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s',
-    };
-  
-    const closeButtonStyle = {
-      background: 'none',
-      border: 'none',
-      color: 'white',
-      cursor: 'pointer',
-      padding: '8px',
-      borderRadius: '50%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'all 0.2s ease',
-      ':hover': {
-        background: 'rgba(255, 255, 255, 0.1)',
-      }
-    };
-  
-    const categoryStyle = (index) => ({
-      marginBottom: '20px',
-      transform: mounted ? 'translateX(0)' : 'translateX(50px)',
-      opacity: mounted ? 1 : 0,
-      transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${0.1 + index * 0.1}s`,
-    });
-  
+
     return (
-      <div style={panelStyle}>
-        <div style={headerStyle}>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-            Structural Assessment
-          </h3>
-          <button 
-            onClick={onClose}
-            style={closeButtonStyle}
-          >
-            {Icons.close}
-          </button>
-        </div>
-  
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          padding: '15px',
-          borderRadius: '12px',
-          marginBottom: '20px',
-          transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-          opacity: mounted ? 1 : 0,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s',
-        }}>
-          <h4 style={{ 
-            margin: '0 0 8px 0', 
-            color: '#4CAF50',
-            fontSize: '16px',
-            fontWeight: '500'
-          }}>Overall Condition</h4>
-          <p style={{ 
-            margin: 0, 
-            fontSize: '14px',
-            lineHeight: '1.5'
-          }}>{conditions.overall}</p>
-        </div>
-  
-        {Object.entries(layers).map(([category, items], index) => (
-          <div key={category} style={categoryStyle(index)}>
-            <h4 style={{ 
-              color: '#ffffff', 
-              marginBottom: '12px',
-              fontSize: '16px',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
+        <div style={panelStyle}>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px',
+                paddingBottom: '16px',
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
             }}>
-              {category}
-            </h4>
-            {items.map((item, itemIndex) => (
-              <div key={item.id} style={{
-                padding: '12px',
-                borderRadius: '8px',
-                marginBottom: '8px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                transform: mounted ? 'translateX(0)' : 'translateX(30px)',
-                opacity: mounted ? 1 : 0,
-                transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${0.2 + (index * 0.1) + (itemIndex * 0.05)}s`,
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: '5px'
-                }}>
-                  <span style={{ marginRight: '10px' }}>{item.icon}</span>
-                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {Icons.layers}
+                    <h3 style={{ 
+                        margin: 0,
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        letterSpacing: '-0.01em',
+                    }}>Layers</h3>
                 </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#aaa',
-                  marginLeft: '25px',
-                  lineHeight: '1.4'
+                <button 
+                    onClick={onClose}
+                    style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        color: 'white',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                >
+                    {Icons.close}
+                </button>
+            </div>
+
+            <div style={{
+                background: 'rgba(76, 175, 80, 0.15)',
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '24px',
+            }}>
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    marginBottom: '8px',
+                    color: '#4CAF50',
                 }}>
-                  {item.condition}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <h4 style={{ 
+                        margin: 0,
+                        fontSize: '14px',
+                        fontWeight: '600',
+                    }}>Status Check</h4>
                 </div>
-              </div>
+                <p style={{ 
+                    margin: 0,
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                }}>{conditions.overall}</p>
+            </div>
+
+            {[
+                { title: 'Road Condition', type: 'road', items: [
+                    { id: 'A1', name: 'Surface Cracks', condition: conditions.Crack },
+                    { id: 'A2', name: 'Structural Integrity', condition: conditions.Spalling }
+                ]},
+                { title: 'Structural Health', type: 'structural', items: [
+                    { id: 'B1', name: 'Support Analysis', condition: conditions.Corrosion },
+                    { id: 'B2', name: 'Load Capacity', condition: conditions["Exposed Rebar"] }
+                ]},
+                { title: 'Environmental Impact', type: 'environmental', items: [
+                    { id: 'C1', name: 'Weather Damage', condition: conditions.Debris },
+                    { id: 'C2', name: 'Erosion Level', condition: conditions.Spalling }
+                ]}
+            ].map((category, index) => (
+                <div key={category.title} 
+                    style={{
+                        marginBottom: '24px',
+                        transform: mounted ? 'translateX(0)' : 'translateX(50px)',
+                        opacity: mounted ? 1 : 0,
+                        transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${0.1 + index * 0.1}s`,
+                    }}
+                >
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        marginBottom: '12px',
+                    }}>
+                        <LayerIcon type={category.type} />
+                        <h4 style={{
+                            margin: 0,
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                        }}>{category.title}</h4>
+                    </div>
+
+                    {category.items.map((item, itemIndex) => (
+                        <div key={item.id} 
+                            style={{
+                                padding: '12px',
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                borderRadius: '10px',
+                                marginBottom: '8px',
+                                transition: 'all 0.2s ease',
+                                cursor: 'pointer',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                        >
+                            <div style={{
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                marginBottom: '4px',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                            }}>{item.name}</div>
+                            <div style={{
+                                fontSize: '12px',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                lineHeight: '1.4',
+                            }}>{item.condition}</div>
+                        </div>
+                    ))}
+                </div>
             ))}
-          </div>
-        ))}
-      </div>
+        </div>
     );
-  };
+};
   const CustomControls = forwardRef(({ controlMode }, ref) => {
     const { camera, gl: { domElement } } = useThree();
     const controls = useRef();
@@ -1636,7 +1660,7 @@ const BridgeScene = () => {
                 y: 0,
                 z: 0,
                 duration: 1.5,
-                ease: "power3.inOut",
+                ease: "sine.in",
                 onUpdate: () => controlsRef.current.update()
             }, 0);
         }
@@ -1645,9 +1669,8 @@ const BridgeScene = () => {
 
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
-        setYear(Math.round(value));
+        setYear(value);
     };
-
     useEffect(() => {
         setIsTouch(isTouchDevice());
     }, []);
@@ -1668,8 +1691,9 @@ const BridgeScene = () => {
     );
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100vh', background:'white' }}>
           <Canvas
+        
     shadows
     camera={{ 
         position: [-15, 40, -18],
@@ -1713,81 +1737,100 @@ const BridgeScene = () => {
                 </div>
             )}
 
-            {selectedHotspot && (
-                <div style={{
-                    position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'white',
-                    padding: '25px',
-                    borderRadius: '15px',
-                    zIndex: 1000,
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-                    maxWidth: '500px',
-                    width: '90%'
-                }}>
-                    <button 
-                        onClick={() => setSelectedHotspot(null)}
-                        style={{
-                            position: 'absolute',
-                            right: '15px',
-                            top: '15px',
-                            background: 'rgba(0, 0, 0, 0.1)',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '30px',
-                            height: '30px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '20px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        ×
-                    </button>
-                    <h3 style={{
-                        margin: '0 0 15px 0',
-                        fontSize: '20px',
-                        fontWeight: '600',
-                        color: '#333'
-                    }}>{selectedHotspot.label}</h3>
-                    <div style={{
-                        width: '100%',
-                        height: '300px',
-                        marginBottom: '20px',
-                        borderRadius: '10px',
-                        overflow: 'hidden',
-                        position: 'relative'
-                    }}>
-                        <Image 
-                            width={300}
-                            height={270}
-                            src={selectedHotspot.image}
-                            alt={selectedHotspot.label}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                display: 'block'
-                            }}
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/placeholder-image.jpg';
-                            }}
-                        />
-                    </div>
-                    <p style={{
-                        margin: '0',
-                        fontSize: '16px',
-                        lineHeight: '1.6',
-                        color: '#666'
-                    }}>{selectedHotspot.description}</p>
-                </div>
-            )}
-
+{selectedHotspot && (
+    <div style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'rgba(0, 0, 0, 0.85)',
+        padding: '24px',
+        borderRadius: '20px',
+        zIndex: 1000,
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+        maxWidth: '500px',
+        width: '90%',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        color: 'white',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    }}>
+        <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px',
+        }}>
+            <h3 style={{
+                margin: 0,
+                fontSize: '20px',
+                fontWeight: '600',
+                letterSpacing: '-0.01em',
+                color: 'rgba(255, 255, 255, 0.95)',
+            }}>{selectedHotspot.label}</h3>
+            <button 
+                onClick={() => setSelectedHotspot(null)}
+                style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    color: 'white',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            >
+                {Icons.close}
+            </button>
+        </div>
+        <div style={{
+            width: '100%',
+            height: '300px',
+            marginBottom: '20px',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            position: 'relative',
+            background: 'rgba(0, 0, 0, 0.3)',
+        }}>
+            <Image 
+                width={300}
+                height={270}
+                src={selectedHotspot.image}
+                alt={selectedHotspot.label}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                }}
+                onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/placeholder-image.jpg';
+                }}
+            />
+        </div>
+        <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            padding: '16px',
+            borderRadius: '12px',
+            marginTop: '16px',
+        }}>
+            <p style={{
+                margin: 0,
+                fontSize: '15px',
+                lineHeight: '1.6',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontWeight: '400',
+            }}>{selectedHotspot.description}</p>
+        </div>
+    </div>
+)}
             <MenuButton 
                 onClick={() => setShowLayers(true)} 
                 isOpen={showLayers}
@@ -1801,59 +1844,98 @@ const BridgeScene = () => {
                 />
             )}
 
-            <div style={{
-                position: 'absolute',
-                bottom: '20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '80%',
-                maxWidth: '600px',
-                background: 'rgba(0, 0, 0, 0.7)',
-                padding: '20px',
-                borderRadius: '10px',
-                color: 'white',
+<div style={{
+    position: 'absolute',
+    bottom: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: '80%',
+    maxWidth: '600px',
+    background: 'rgba(0, 0, 0, 0.75)',
+    padding: '24px',
+    borderRadius: '16px',
+    color: 'white',
+    backdropFilter: 'blur(10px)',
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+}}>
+    <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '16px',
+        alignItems: 'center' 
+    }}>
+        <span style={{ 
+            fontSize: '15px', 
+            fontWeight: '500',
+            letterSpacing: '0.01em',
+            color: 'rgba(255, 255, 255, 0.95)',
+        }}>
+            {Math.floor(year)} {' '}
+            <span style={{ 
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontWeight: '400'
             }}>
-                <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: '10px',
-                    alignItems: 'center' 
-                }}>
-                    <span>Year: {year.toFixed(1)}</span>
-                    <input
-                        type="range"
-                        min={2000}
-                        max={2020}
-                        value={year}
-                        step="0.1"
-                        onChange={handleYearChange}
-                        style={{
-                            width: '100%',
-                            height: '20px',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            WebkitAppearance: 'none',
-                            background: `linear-gradient(to right, 
-                                #4CAF50 0%, 
-                                #4CAF50 ${((year - 2000) / 20) * 100}%, 
-                                #ddd ${((year - 2000) / 20) * 100}%, 
-                                #ddd 100%)`,
-                        }}
-                    />
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        width: '100%',
-                        fontSize: '0.8rem' 
-                    }}>
-                        <span>2000</span>
-                        <span>2005</span>
-                        <span>2010</span>
-                        <span>2015</span>
-                        <span>2020</span>
-                    </div>
-                </div>
-            </div>
+                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    [Math.floor((year % 1) * 12)]}
+            </span>
+        </span>
+        <input
+            type="range"
+            min={2000}
+            max={2020}
+            value={year}
+            step={1/12}
+            onChange={handleYearChange}
+            style={{
+                width: '100%',
+                height: '4px',
+                borderRadius: '2px',
+                cursor: 'pointer',
+                WebkitAppearance: 'none',
+                background: `linear-gradient(to right, 
+                    #4CAF50 0%, 
+                    #4CAF50 ${((year - 2000) / 20) * 100}%, 
+                    rgba(255, 255, 255, 0.2) ${((year - 2000) / 20) * 100}%, 
+                    rgba(255, 255, 255, 0.2) 100%)`,
+                '&::-webkit-slider-thumb': {
+                    WebkitAppearance: 'none',
+                    height: '16px',
+                    width: '16px',
+                    borderRadius: '50%',
+                    background: '#ffffff',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                },
+                '&::-moz-range-thumb': {
+                    height: '16px',
+                    width: '16px',
+                    borderRadius: '50%',
+                    background: '#ffffff',
+                    cursor: 'pointer',
+                    border: 'none',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                },
+            }}
+        />
+        <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            width: '100%',
+            fontSize: '13px',
+            fontWeight: '400',
+            color: 'rgba(255, 255, 255, 0.6)',
+            letterSpacing: '0.01em',
+            paddingTop: '4px'
+        }}>
+            <span>2000</span>
+            <span>2005</span>
+            <span>2010</span>
+            <span>2015</span>
+            <span>2020</span>
+        </div>
+    </div>
+</div>
         </div>
     );
 };
