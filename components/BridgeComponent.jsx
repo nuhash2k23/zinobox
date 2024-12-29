@@ -4,40 +4,100 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {  OrbitControls, useGLTF, Stage } from '@react-three/drei';
 import * as THREE from 'three';
 import Image from 'next/image';
+import { forwardRef, useCallback } from 'react';
+import gsap from 'gsap';
 
 
 const Icons = {
     orbit: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="4 4"/>
-        <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2C6.48 2 2 6.48 2 12" />
+            <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4" />
+        </svg>
     ),
     pan: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5 9L2 12M2 12L5 15M2 12H22M15 5L12 2M12 2L9 5M12 2V22M15 19L12 22M12 22L9 19M19 9L22 12M22 12L19 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 5l0 14M5 12h14M7 7l10 10M17 7L7 17" />
+        </svg>
     ),
     zoom: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M10 7V13M7 10H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-    ),
-    layers: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 12L11.7317 16.8649C11.9006 16.9534 12.0994 16.9534 12.2683 16.8649L22 12M2 17L11.7317 21.8649C11.9006 21.9534 12.0994 21.9534 12.2683 21.8649L22 17M2 7L11.7317 2.13505C11.9006 2.04663 12.0994 2.04663 12.2683 2.13505L22 7L12.2683 11.8649C12.0994 11.9534 11.9006 11.9534 11.7317 11.8649L2 7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16" y1="16" x2="21" y2="21" />
+            <line x1="11" y1="8" x2="11" y2="14" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+        </svg>
     ),
     close: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    )
-  };
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )
+};
 
-
+const CompassRotation = ({ setCompassRotation }) => {
+    const { camera } = useThree();
+  
+    useFrame(() => {
+      const angle = Math.atan2(camera.position.x, camera.position.z);
+      setCompassRotation(angle);
+    });
+  
+    return null;
+};
+  
+const CompassUI = ({ rotation }) => {  // Removed onReset prop
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: '80px',
+          right: '20px',
+          width: '60px',
+          height: '60px',
+          transform: `rotate(${rotation}rad)`,
+          transition: 'transform 0.1s ease-out',
+          zIndex: 1000,
+        }}
+      >
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          borderRadius: '50%',
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        }}>
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 2L12 22" stroke="#FF4444" strokeWidth="2"/>
+            <path d="M12 2L8 6" stroke="#FF4444" strokeWidth="2"/>
+            <path d="M12 2L16 6" stroke="#FF4444" strokeWidth="2"/>
+            <path d="M12 22L10 18" stroke="white" strokeWidth="2"/>
+            <path d="M12 22L14 18" stroke="white" strokeWidth="2"/>
+            <text x="12" y="5" textAnchor="middle" fill="white" fontSize="3">N</text>
+            <text x="12" y="21" textAnchor="middle" fill="white" fontSize="3">S</text>
+            <text x="21" y="13" textAnchor="middle" fill="white" fontSize="3">E</text>
+            <text x="3" y="13" textAnchor="middle" fill="white" fontSize="3">W</text>
+            <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="1" fill="none"/>
+          </svg>
+        </div>
+      </div>
+    );
+};
   const MenuButton = ({ onClick, isOpen }) => (
     <button
       onClick={onClick}
@@ -79,64 +139,105 @@ const Icons = {
     </button>
   );
   
-
-const Hotspot = ({ position, onClick, label }) => {
+  const Hotspot = ({ position, onClick, label }) => {
     const [hovered, setHovered] = useState(false);
     const { camera } = useThree();
     const billboardRef = useRef();
-  
-    useFrame(() => {
-      if (billboardRef.current) {
-        billboardRef.current.lookAt(camera.position);
-      }
+    const pulseRef = useRef();
+    const pulseScaleRef = useRef();
+    const pulseOpacityRef = useRef();
+    
+    // Color constants
+    const colors = {
+        primary: "#4CAF50",      // Green primary color (matching the app's theme)
+        secondary: "#45a049",    // Slightly darker green for hover
+        background: "#2A2A2A",   // Dark grey for main fill
+        stroke: "#ffffff",       // White for visibility
+        pulse: "#4CAF50"        // Green pulse (with opacity variations)
+    };
+
+    useEffect(() => {
+        pulseScaleRef.current = 1;
+        pulseOpacityRef.current = 0.8;
+    }, []);
+
+    useFrame((state) => {
+        if (billboardRef.current) {
+            billboardRef.current.lookAt(camera.position);
+        }
+
+        if (pulseRef.current) {
+            const pulseFactor = (Math.sin(state.clock.elapsedTime * 2) + 1) / 2;
+            pulseScaleRef.current = 1 + (pulseFactor * 0.4); // Slightly larger pulse
+            pulseOpacityRef.current = 0.5 - (pulseFactor * 0.3); // More visible pulse
+            
+            pulseRef.current.scale.x = pulseScaleRef.current;
+            pulseRef.current.scale.y = pulseScaleRef.current;
+            pulseRef.current.material.opacity = pulseOpacityRef.current;
+        }
     });
-  
+
     return (
-      <group position={position}>
-        <group ref={billboardRef}>
-          <mesh
-            onClick={onClick}
-            onPointerDown={onClick}
-            onPointerOver={() => setHovered(true)}
-            onPointerOut={() => setHovered(false)}
-          >
-            <circleGeometry args={[0.83, 32]} />
-            <meshBasicMaterial
-              color={hovered ? "#ff4444" : "#ffffff"}
-              transparent
-              opacity={1.0}
-            />
-          </mesh>
-          <sprite
-            position={[0, 3.95, 0]}
-            scale={[12, 6, 12]}
-          >
-            <spriteMaterial
-              transparent
-              opacity={hovered ? 1 : 0.8}
-            >
-              <canvasTexture
-                attach="map"
-                image={(() => {
-                  const canvas = document.createElement('canvas');
-                  const ctx = canvas.getContext('2d');
-                  canvas.width = 256;
-                  canvas.height = 128;
-                  ctx.fillStyle = '#000000';
-                  ctx.fillRect(0, 0, 256, 128);
-                  ctx.fillStyle = '#ffffff';
-                  ctx.font = '24px Arial';
-                  ctx.textAlign = 'center';
-                  ctx.fillText(label, 128, 64);
-                  return canvas;
-                })()}
-              />
-            </spriteMaterial>
-          </sprite>
+        <group position={position}>
+            <group ref={billboardRef}>
+                {/* Outer pulsating ring */}
+                <mesh ref={pulseRef}>
+                    <ringGeometry args={[0.75, 0.8, 32]} />
+                    <meshBasicMaterial
+                        color={colors.pulse}
+                        transparent
+                        opacity={0.5}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+
+                {/* Background fill */}
+                <mesh
+                    onClick={onClick}
+                    onPointerOver={() => setHovered(true)}
+                    onPointerOut={() => setHovered(false)}
+                >
+                    <circleGeometry args={[0.75, 32]} />
+                    <meshBasicMaterial
+                        color={colors.background}
+                        transparent
+                        opacity={0.85}
+                    />
+                </mesh>
+                
+                {/* Main ring stroke */}
+                <mesh>
+                    <ringGeometry args={[0.7, 0.75, 32]} />
+                    <meshBasicMaterial
+                        color={hovered ? colors.primary : colors.stroke}
+                        transparent
+                        opacity={hovered ? 1 : 0.9}
+                    />
+                </mesh>
+
+                {/* Center dot */}
+                <mesh>
+                    <circleGeometry args={[0.2, 32]} />
+                    <meshBasicMaterial
+                        color={hovered ? colors.primary : colors.stroke}
+                        transparent
+                        opacity={hovered ? 1 : 0.9}
+                    />
+                </mesh>
+
+                {/* Additional inner ring for emphasis */}
+                <mesh>
+                    <ringGeometry args={[0.3, 0.32, 32]} />
+                    <meshBasicMaterial
+                        color={hovered ? colors.secondary : colors.stroke}
+                        transparent
+                        opacity={hovered ? 0.9 : 0.7}
+                    />
+                </mesh>
+            </group>
         </group>
-      </group>
     );
-  };
+};
   const HotspotsContainer = ({ setSelectedHotspot }) => {
     const hotspots = [
       {
@@ -1072,68 +1173,51 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
 }
 
 const ControlPanel = ({ setControlMode, controlMode }) => {
-    const buttonStyle = (mode) => ({
-      padding: '12px',
-      background: controlMode === mode 
-        ? 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)'
-        : 'rgba(255, 255, 255, 0.1)',
-      border: 'none',
-      borderRadius: '12px',
-      color: 'white',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      transition: 'all 0.3s ease',
-      boxShadow: controlMode === mode 
-        ? '0 4px 15px rgba(76, 175, 80, 0.3)'
-        : 'none',
-      transform: controlMode === mode 
-        ? 'scale(1.05)'
-        : 'scale(1)',
-      ':hover': {
-        background: controlMode === mode 
-          ? 'linear-gradient(135deg, #45a049 0%, #409444 100%)'
-          : 'rgba(255, 255, 255, 0.15)'
-      }
-    });
-  
     return (
-      <div style={{
-        position: 'absolute',
-        left: '20px',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        background: 'rgba(0, 0, 0, 0.8)',
-        padding: '12px',
-        borderRadius: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        backdropFilter: 'blur(10px)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
-      }}>
-        {[
-          { mode: 'orbit', icon: Icons.orbit, label: 'Orbit' },
-          { mode: 'pan', icon: Icons.pan, label: 'Pan' },
-          { mode: 'zoom', icon: Icons.zoom, label: 'Zoom' }
-        ].map(({ mode, icon, label }) => (
-          <button 
-            key={mode}
-            onClick={() => setControlMode(mode)}
-            style={buttonStyle(mode)}
-          >
-            {icon}
-            <span style={{
-              fontSize: '14px',
-              fontWeight: '500',
-              letterSpacing: '0.5px'
-            }}>{label}</span>
-          </button>
-        ))}
-      </div>
+        <div style={{
+            position: 'absolute',
+            left: '20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            background: 'transparent'
+        }}>
+            {[
+                { mode: 'orbit', icon: Icons.orbit },
+                { mode: 'pan', icon: Icons.pan },
+                { mode: 'zoom', icon: Icons.zoom }
+            ].map(({ mode, icon }) => (
+                <button 
+                    key={mode}
+                    onClick={() => setControlMode(mode)}
+                    style={{
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: controlMode === mode 
+                            ? 'rgba(76, 175, 80, 0.9)'
+                            : 'rgba(0, 0, 0, 0.5)',
+                        border: 'none',
+                        borderRadius: '50%',
+                        color: 'white',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: controlMode === mode 
+                            ? '0 0 10px rgba(76, 175, 80, 0.5)'
+                            : '0 2px 5px rgba(0,0,0,0.2)',
+                    }}
+                >
+                    {icon}
+                </button>
+            ))}
+        </div>
     );
-  };
+};
   const getConditionDescription = (year) => {
     const age = year - 2000;
     if (age <= 5) {
@@ -1365,99 +1449,69 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
       </div>
     );
   };
-  const CustomControls = ({ controlMode }) => {
+  const CustomControls = forwardRef(({ controlMode }, ref) => {
     const { camera, gl: { domElement } } = useThree();
     const controls = useRef();
-    const touchStart = useRef({ y: 0 });
-    const lastZoom = useRef(0);
 
+    // Update controls configuration whenever control mode changes
     useEffect(() => {
-        const handleTouchStart = (e) => {
-            e.preventDefault();
-            if (controlMode === 'zoom') {
-                touchStart.current.y = e.touches[0].clientY;
-                lastZoom.current = 0;
-            }
+        if (!controls.current) return;
+
+        // Configure based on mode without resetting
+        controls.current.enableRotate = controlMode === 'orbit';
+        controls.current.enablePan = controlMode === 'pan';
+        controls.current.enableZoom = controlMode === 'zoom' || controlMode === 'orbit';
+
+        // Update mouse buttons
+        controls.current.mouseButtons = {
+            LEFT: controlMode === 'orbit' ? THREE.MOUSE.ROTATE :
+                  controlMode === 'pan' ? THREE.MOUSE.PAN :
+                  THREE.MOUSE.DOLLY,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.PAN
         };
 
-        const handleTouchMove = (e) => {
-            e.preventDefault();
-            if (controlMode === 'zoom' && e.touches.length === 1) {
-                const deltaY = touchStart.current.y - e.touches[0].clientY;
-                const zoomSpeed = 0.01;
-                const newZoom = deltaY * zoomSpeed;
-                const zoomDelta = newZoom - lastZoom.current;
-                
-                if (controls.current) {
-                    controls.current.object.position.multiplyScalar(1 - zoomDelta);
-                    lastZoom.current = newZoom;
-                }
-            }
+        // Update touch controls
+        controls.current.touches = {
+            ONE: controlMode === 'orbit' ? THREE.TOUCH.ROTATE :
+                 controlMode === 'pan' ? THREE.TOUCH.PAN :
+                 THREE.TOUCH.DOLLY,
+            TWO: THREE.TOUCH.DOLLY_PAN
         };
 
-        domElement.addEventListener('touchstart', handleTouchStart, { passive: false });
-        domElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+        // Set speeds
+        controls.current.rotateSpeed = controlMode === 'orbit' ? 1 : 0;
+        controls.current.panSpeed = controlMode === 'pan' ? 1.5 : 1;
+        controls.current.zoomSpeed = controlMode === 'zoom' ? 1.5 : 1;
 
-        return () => {
-            domElement.removeEventListener('touchstart', handleTouchStart);
-            domElement.removeEventListener('touchmove', handleTouchMove);
-        };
-    }, [controlMode, domElement]);
+        controls.current.update();
+    }, [controlMode]);
 
-    useFrame(() => {
-        if (controls.current) {
-            controls.current.update();
+    // Set up ref and initial configuration
+    useEffect(() => {
+        if (controls.current && ref) {
+            ref.current = controls.current;
         }
+    }, [ref]);
+
+    // Handle continuous updates
+    useFrame(() => {
+        controls.current?.update();
     });
 
     return (
         <OrbitControls
             ref={controls}
             args={[camera, domElement]}
-            enablePan={controlMode === 'pan'}
-            enableZoom={controlMode === 'zoom' || controlMode === 'orbit'}
-            enableRotate={controlMode === 'orbit'}
-            mouseButtons={{
-                LEFT: controlMode === 'orbit'
-                    ? THREE.MOUSE.ROTATE
-                    : controlMode === 'pan'
-                        ? THREE.MOUSE.PAN
-                        : THREE.MOUSE.DOLLY,
-                MIDDLE: THREE.MOUSE.DOLLY,
-                RIGHT: THREE.MOUSE.PAN
-            }}
-            touches={{
-                ONE: controlMode === 'orbit'
-                    ? THREE.TOUCH.ROTATE
-                    : controlMode === 'pan'
-                        ? THREE.TOUCH.PAN
-                        : THREE.TOUCH.DOLLY,
-                TWO: THREE.TOUCH.DOLLY_PAN
-            }}
-            enabled={true}
-            rotateSpeed={controlMode === 'orbit' ? 0.5 : 0}
-            zoomSpeed={controlMode === 'zoom' ? 0.5 : 0.3}
-            panSpeed={controlMode === 'pan' ? 0.8 : 0.5}
-            minPolarAngle={0} // Limit vertical rotation (up)
-            maxPolarAngle={Math.PI / 2} // Limit vertical rotation (down) to 90 degrees
-            minAzimuthAngle={-Math.PI / 2} // Optional: Limit horizontal rotation
-            maxAzimuthAngle={Math.PI / 2} // Optional: Limit horizontal rotation
-            minDistance={5} // Minimum zoom distance
-            maxDistance={100} // Maximum zoom distance
-            // Additional touch-specific settings
-            enableTouchRotate={controlMode === 'orbit'}
-            enableTouchPan={controlMode === 'pan'}
-            enableTouchZoom={true}
-            // Ground collision prevention
-            target={[0, 0, 0]} // Set the target point
-            // Additional constraints
-            maxPolarAngle={Math.PI / 2} // This prevents going below the ground plane
-            enableDamping={true} // Optional: adds smooth movement
-            dampingFactor={0.05} // Optional: adjusts smoothness
+            enableDamping={true}
+            dampingFactor={0.05}
+            minDistance={5}
+            maxDistance={200}
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI / 2}
         />
     );
-};
-
+});
 const isTouchDevice = () => {
     if (typeof window === 'undefined') return false;
     
@@ -1470,16 +1524,23 @@ const BridgeScene = () => {
     const [year, setYear] = useState(2000);
     const [isTouch, setIsTouch] = useState(false);
     const [controlMode, setControlMode] = useState('orbit');
-    const cameraRef = useRef();
+    const [compassRotation, setCompassRotation] = useState(0);
+    const controlsRef = useRef();
     const [showLayers, setShowLayers] = useState(false);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
+
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
         setYear(Math.round(value));
     };
+
     useEffect(() => {
         setIsTouch(isTouchDevice());
     }, []);
+
+
+
+
     const ControlButtons = () => (
         <ControlPanel 
             setControlMode={setControlMode} 
@@ -1487,36 +1548,38 @@ const BridgeScene = () => {
             isTouch={isTouch}
         />
     );
-    const resetCamera = () => {
-        if (cameraRef.current) {
-          cameraRef.current.position.set(-10, 40, -18);
-          cameraRef.current.lookAt(0, 0, 0);
-        }
-      };
-    return (
-        
-        <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
-            <Canvas
-                shadows
-                camera={{ 
-                    position: [-15, 40, -18],
-                    fov: 75,
-                    near: 0.01,
-                    far: 10000
-                }}
-            >
-         
-             
-          <directionalLight position={[10, 10, 5]} intensity={2.6} />
-          <directionalLight position={[-10,- 10,- 5]} intensity={2.6} />
-<Stage environment={null} adjustCamera={false}>
-<Model year={year} setSelectedHotspot={setSelectedHotspot} />
-</Stage>
-              
 
-        <CustomControls controlMode={controlMode} />
-            </Canvas>
+    return (
+        <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
+          <Canvas
+    shadows
+    camera={{ 
+        position: [-15, 40, -18],
+        fov: 75,
+        near: 0.1,
+        far: 1000
+    }}
+    gl={{ 
+        antialias: true,
+        alpha: true
+    }}
+>
+<CompassRotation setCompassRotation={setCompassRotation} />
+    <directionalLight position={[10, 10, 5]} intensity={2.6} />
+    <directionalLight position={[-10, -10, -5]} intensity={2.6} />
+    <Stage environment={null} adjustCamera={false}>
+        <Model year={year} setSelectedHotspot={setSelectedHotspot} />
+    </Stage>
+    <CustomControls ref={controlsRef} controlMode={controlMode} />
+</Canvas>
+
+            <CompassUI 
+                rotation={compassRotation}
+              
+            />
+
             <ControlButtons />
+
             {isTouch && controlMode !== 'orbit' && (
                 <div style={{
                     position: 'absolute',
@@ -1532,110 +1595,107 @@ const BridgeScene = () => {
                     {controlMode === 'pan' ? 'Drag to pan' : 'Pinch to zoom'}
                 </div>
             )}
-          {selectedHotspot && (
-  <div style={{
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    background: 'white',
-    padding: '25px',
-    borderRadius: '15px',
-    zIndex: 1000,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-    maxWidth: '500px',
-    width: '90%'
-  }}>
-    <button 
-      onClick={() => setSelectedHotspot(null)}
-      style={{
-        position: 'absolute',
-        right: '15px',
-        top: '15px',
-        background: 'rgba(0, 0, 0, 0.1)',
-        border: 'none',
-        borderRadius: '50%',
-        width: '30px',
-        height: '30px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '20px',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        ':hover': {
-          background: 'rgba(0, 0, 0, 0.2)',
-        }
-      }}
-    >
-      ×
-    </button>
-    <h3 style={{
-      margin: '0 0 15px 0',
-      fontSize: '20px',
-      fontWeight: '600',
-      color: '#333'
-    }}>{selectedHotspot.label}</h3>
-    <div style={{
-      width: '100%',
-      height: '300px',
-      marginBottom: '20px',
-      borderRadius: '10px',
-      overflow: 'hidden',
-      position: 'relative'
-    }}>
-      <Image 
-      width={300}
-      height={270}
-        src={selectedHotspot.image}
-        alt={selectedHotspot.label}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          display: 'block'
-        }}
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = '/placeholder-image.jpg'; // Fallback image
-        }}
-      />
-    </div>
-    <p style={{
-      margin: '0',
-      fontSize: '16px',
-      lineHeight: '1.6',
-      color: '#666'
-    }}>{selectedHotspot.description}</p>
-  </div>
-)}
 
-            <ControlPanel setControlMode={setControlMode} controlMode={controlMode} />
-            <MenuButton 
-        onClick={() => setShowLayers(true)} 
-        isOpen={showLayers}
-      />
-
-      {showLayers && (
-        <LayerPanel 
-          resetCamera={resetCamera} 
-          year={year}
-          onClose={() => setShowLayers(false)}
-        />
-      )}  <div
-                style={{
-                    position: 'absolute',
-                    bottom: '20px',
+            {selectedHotspot && (
+                <div style={{
+                    position: 'fixed',
+                    top: '50%',
                     left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '80%',
-                    maxWidth: '600px',
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    padding: '20px',
-                    borderRadius: '10px',
-                    color: 'white',
-                }}
-            >
+                    transform: 'translate(-50%, -50%)',
+                    background: 'white',
+                    padding: '25px',
+                    borderRadius: '15px',
+                    zIndex: 1000,
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                    maxWidth: '500px',
+                    width: '90%'
+                }}>
+                    <button 
+                        onClick={() => setSelectedHotspot(null)}
+                        style={{
+                            position: 'absolute',
+                            right: '15px',
+                            top: '15px',
+                            background: 'rgba(0, 0, 0, 0.1)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '30px',
+                            height: '30px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        ×
+                    </button>
+                    <h3 style={{
+                        margin: '0 0 15px 0',
+                        fontSize: '20px',
+                        fontWeight: '600',
+                        color: '#333'
+                    }}>{selectedHotspot.label}</h3>
+                    <div style={{
+                        width: '100%',
+                        height: '300px',
+                        marginBottom: '20px',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        position: 'relative'
+                    }}>
+                        <Image 
+                            width={300}
+                            height={270}
+                            src={selectedHotspot.image}
+                            alt={selectedHotspot.label}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                display: 'block'
+                            }}
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/placeholder-image.jpg';
+                            }}
+                        />
+                    </div>
+                    <p style={{
+                        margin: '0',
+                        fontSize: '16px',
+                        lineHeight: '1.6',
+                        color: '#666'
+                    }}>{selectedHotspot.description}</p>
+                </div>
+            )}
+
+            <MenuButton 
+                onClick={() => setShowLayers(true)} 
+                isOpen={showLayers}
+            />
+
+            {showLayers && (
+                <LayerPanel 
+                    resetCamera={resetCamera} 
+                    year={year}
+                    onClose={() => setShowLayers(false)}
+                />
+            )}
+
+            <div style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '80%',
+                maxWidth: '600px',
+                background: 'rgba(0, 0, 0, 0.7)',
+                padding: '20px',
+                borderRadius: '10px',
+                color: 'white',
+            }}>
                 <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
@@ -1680,6 +1740,7 @@ const BridgeScene = () => {
         </div>
     );
 };
+
 
 useGLTF.preload('/Bridge.glb');
 
