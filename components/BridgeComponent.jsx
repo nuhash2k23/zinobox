@@ -1,26 +1,34 @@
 /* eslint-disable react/jsx-no-duplicate-props */
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import {  OrbitControls, useGLTF, Stage } from '@react-three/drei';
+import {  OrbitControls, useGLTF, Stage, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import Image from 'next/image';
 import { forwardRef, useCallback } from 'react';
 import gsap from 'gsap';
+import styles from "@/styles/scrollsection.module.css";
 
+
+//icons
 const Icons = {
+    home: (
+        <svg width="36" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9.55228 21 10 20.5523 10 20V16C10 15.4477 10.4477 15 11 15H13C13.5523 15 14 15.4477 14 16V20C14 20.5523 14.4477 21 15 21M9 21H15" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+    ),
     orbit: (
-        <svg width="39" height="31" viewBox="0 0 39 31" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="19.5774" cy="15.5" r="12" stroke="currentColor" strokeWidth="3"/>
-            <path d="M29.0773 4.9998C42.5773 -2.00025 39.0246 5.75986 22.0774 18.9998C6.07738 31.4996 -4.92264 32.9998 7.0774 21.4998" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+        <svg width="36" height="34" viewBox="0 0 39 31" fillOpacity={0} fill="red" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="19.5774" cy="15.5" r="12" stroke="currentColor" strokeWidth="2.3"/>
+            <path d="M29.0773 4.9998C42.5773 -2.00025 39.0246 5.75986 22.0774 18.9998C6.07738 31.4996 -4.92264 32.9998 7.0774 21.4998" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round"/>
         </svg>
     ),
     pan: (
-        <svg width="28" height="32" viewBox="0 0 27 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="26" height="32" viewBox="0 0 27 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M23.4474 4.58088V4.58088C22.6627 4.58088 21.8141 4.13065 21.323 3.51854C20.6752 2.71085 19.6393 2.18675 18.4737 2.18675V2.18675C17.6495 2.18675 16.7522 1.75338 16.1918 1.14896C15.54 0.445888 14.5752 0 13.5 0C12.4248 0 11.46 0.445909 10.8082 1.14897C10.2478 1.75341 9.35055 2.18675 8.52632 2.18675V2.18675C6.56739 2.18675 4.97368 3.66667 4.97368 5.48572V12.0931C4.97368 12.7889 4.24838 13.2736 3.55263 13.2736V13.2736C1.59371 13.2736 0 14.7535 0 16.5726V23.3567C0 28.1226 4.17548 32 9.30789 32H17.6921C22.8245 32 27 28.1226 27 23.3567V7.87985C27 6.06073 25.4063 4.58088 23.4474 4.58088ZM24.8684 23.3567C24.8684 27.0312 21.6491 30.0206 17.6921 30.0206H9.30789C5.3509 30.0206 2.13158 27.0312 2.13158 23.3567V16.5726C2.13158 15.8449 2.76906 15.253 3.55263 15.253C4.3362 15.253 4.97368 15.8449 4.97368 16.5726V20.7851C4.97368 21.3738 5.45085 21.8509 6.03947 21.8509V21.8509C6.62809 21.8509 7.10526 21.3738 7.10526 20.7851V5.48572C7.10526 4.7581 7.74275 4.16614 8.52632 4.16614C9.30988 4.16614 9.94737 4.7581 9.94737 5.48572V14.847C9.94737 15.4356 10.4245 15.9128 11.0132 15.9128V15.9128C11.6018 15.9128 12.0789 15.4356 12.0789 14.847V3.29897C12.0789 2.57135 12.7164 1.97938 13.5 1.97938C14.2836 1.97938 14.9211 2.57135 14.9211 3.29897V14.847C14.9211 15.4356 15.3982 15.9128 15.9868 15.9128V15.9128C16.5755 15.9128 17.0526 15.4356 17.0526 14.847V5.48572C17.0526 4.7581 17.6901 4.16614 18.4737 4.16614C19.2573 4.16614 19.8947 4.7581 19.8947 5.48572V14.847C19.8947 15.4356 20.3719 15.9128 20.9605 15.9128V15.9128C21.5491 15.9128 22.0263 15.4356 22.0263 14.847V7.87979C22.0263 7.15217 22.6638 6.5602 23.4474 6.5602C24.2309 6.5602 24.8684 7.15217 24.8684 7.87979V23.3567Z" fill="currentColor"/>
         </svg>
     ),
     zoom: (
-        <svg width="32" height="33" viewBox="0 0 32 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="32" height="30" viewBox="0 0 32 33" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="11" cy="11" r="10" stroke="currentColor" strokeWidth="2"/>
             <rect x="18.222" y="21.547" width="3.57258" height="13.5833" rx="1.78629" transform="rotate(-42.3428 18.222 21.547)" stroke="currentColor" strokeWidth="1.5"/>
             <rect x="10" y="5" width="2" height="12" rx="1" fill="currentColor"/>
@@ -40,6 +48,10 @@ const Icons = {
         </svg>
     )
 };
+
+
+
+//compass
 const CompassRotation = ({ setCompassRotation }) => {
     const { camera } = useThree();
   
@@ -153,7 +165,7 @@ const CompassUI = ({ rotation, onReset }) => {
                     })}
                 </svg>
             </div>
-            {/* Glow effect */}
+           
             <div style={{
                 position: 'absolute',
                 top: '0',
@@ -167,6 +179,10 @@ const CompassUI = ({ rotation, onReset }) => {
         </div>
     );
 };
+
+
+
+//menu
 const MenuButton = ({ onClick, isOpen }) => (
     <button
         onClick={onClick}
@@ -208,6 +224,9 @@ const MenuButton = ({ onClick, isOpen }) => (
     </button>
 );
   
+
+
+//hotspot
 const Hotspot = ({ position, onClick, label }) => {
     const [hovered, setHovered] = useState(false);
     const { camera } = useThree();
@@ -219,9 +238,9 @@ const Hotspot = ({ position, onClick, label }) => {
     const colors = {
         primary: "#4CAF50",
         secondary: "#45a049",
-        background: "#2A2A2A",
+        background: "#000000",
         stroke: "#ffffff",
-        pulse: "#4CAF50"
+        pulse: "yellow"
     };
 
     useEffect(() => {
@@ -319,30 +338,35 @@ const Hotspot = ({ position, onClick, label }) => {
         </group>
     );
 };
+
+
+
+
   const HotspotsContainer = ({ setSelectedHotspot }) => {
     const hotspots = [
       {
         id: 1,
-        position: [0.81, 32, 51.684],
+        position: [0.81, 32, 11.684],
         label: "Road Damage",
         description: "Severe cracks and damage seen on the road",
         image: "/road.png"
       },
       {
         id: 2,
-        position: [-10, 25, 114],
+        position: [17, 25, 124],
         label: "Bridge Moss",
         description: "Deep moss of green and black forming in the bridge surface",
         image: "/bridge.png"
       },
       {
         id: 3,
-        position: [-9, 32, 90],
+        position: [-11, 32, 90],
         label: "Fence Rust",
         description: "Fence showing rust signs of deterioration",
         image: "/fence.png"
       },
-      // Add more hotspots as needed
+     
+      
     ];
   
     return (
@@ -358,6 +382,11 @@ const Hotspot = ({ position, onClick, label }) => {
       </>
     );
   };
+
+
+
+
+
 export const GlowShader = {
     uniforms: {
         tDiffuse: { value: null },
@@ -388,6 +417,10 @@ export const GlowShader = {
         }
     `
 };
+
+
+
+
 
 export const RoadCrackShader = {
     uniforms: {
@@ -523,6 +556,10 @@ export const RoadCrackShader = {
     `
 };
 
+
+
+
+
 // Rust Shader for Fence
 export const RustShaderFence = {
     uniforms: {
@@ -625,6 +662,10 @@ export const RustShaderFence = {
     `
 };
 
+
+
+
+
 // Moss Shader for Pillars
 export const MossShaderPillar = {
     uniforms: {
@@ -725,6 +766,10 @@ export const MossShaderPillar = {
     `
 };
 
+
+
+
+//3dmodel
 function Model({ year, setSelectedHotspot  }) {
     const { nodes, materials } = useGLTF('/Bridge.glb');
     const fenceMaterialRef = useRef();
@@ -868,6 +913,8 @@ vec4 lightRust = vec4(0.45, 0.28, 0.14, 0.14);  // Darker light tone
 
                 return material;
             };
+
+
 const createRoadMaterial = (baseMaterial) => {
     const material = new THREE.ShaderMaterial({
         uniforms: {
@@ -1032,7 +1079,7 @@ const createRoadMaterial = (baseMaterial) => {
     });
     return material;
 };
-          // In your Model component, modify the createMossMaterial function:
+          
 
 const createMossMaterial = (baseMaterial) => {
     const material = new THREE.MeshPhysicalMaterial({
@@ -1149,7 +1196,7 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
     return material;
 };
 
-            // Create materials
+        
             fenceMaterialRef.current = createRustMaterial(materials['Material.002']);
             pillarMaterialRef.current = createMossMaterial(materials['Scene_-_Root']);
             roadMaterialRef.current = createRoadMaterial(materials['road_road_0016_01_tiled.001']);
@@ -1157,29 +1204,10 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
     }, [materials]);
 
     useFrame(() => {
-        const rustAmount = (year - 2000) / 20;
+        const rustAmount = (year - 2000) / 25; // Updated from 20 to 25
         if (lightMaterialRef.current) {
-            // Probability of light failure increases with time
-            const failureChance = rustAmount * 0.1;
-            
-            lightStates.current = lightStates.current.map((state, index) => {
-                if (state === 1 && Math.random() < failureChance) {
-                    return 0; // Turn off the light
-                }
-                return state;
-            });
-
-            // Update light intensity
-            const flickerAmount = Math.random() * 0.2 + 0.8;
-            lightMaterialRef.current.uniforms.glowIntensity.value = flickerAmount;
-            
-            // Random flickering for working lights
-            lightStates.current.forEach((state, index) => {
-                if (state === 1 && Math.random() < 0.1) {
-                    lightMaterialRef.current.uniforms.isOn.value = 
-                        Math.random() < 0.9 ? 1.0 : 0.0;
-                }
-            });
+            lightMaterialRef.current.uniforms.glowIntensity.value = 1.0;
+            lightMaterialRef.current.uniforms.isOn.value = 1.0;
         }
         if (fenceMaterialRef.current?.userData.shader) {
             fenceMaterialRef.current.userData.shader.uniforms.rustAmount.value = rustAmount;
@@ -1193,7 +1221,17 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
     });
 
     return (
-        <group dispose={null} scale={0.5}>
+        <group dispose={null} scale={2} position={[0,-20,0]}>
+            <Environment 
+  files={'/overcast_soil_puresky_2k.hdr'}
+  background={true} 
+  blur={0} 
+
+  preset={null} 
+  environmentIntensity={0}
+  backgroundRotation={[0, Math.PI, 0]}
+/>
+
             <mesh
                 castShadow
                 receiveShadow
@@ -1242,7 +1280,7 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
                 rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
                 scale={0.001}
             >
-                {/* Add point light for extra glow */}
+               
                 <pointLight
                     color="#ffeecc"
                     intensity={1}
@@ -1255,18 +1293,17 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
     );
 }
 
-const ControlPanel = ({ setControlMode, controlMode }) => {
-    const activeColor = '#52aaeb'; // Bright blue for active icon
-    const inactiveColor = '#FFFFFF'; // White for inactive icon
+const ControlPanel = ({ setControlMode, controlMode, onHomeClick }) => {
+    const activeColor = '#52aaeb';
+    const inactiveColor = '#FFFFFF'; 
 
     return (
         <div style={{
             position: 'absolute',
-            left: '0px',
+            left: '-10px',
             top: '50%',
-            paddingTop: '7.5vh',
+            paddingTop: '3.5vh',
             paddingBottom: '7.5vh',
-        
             transform: 'translateY(-50%)',
             display: 'flex',
             flexDirection: 'column',
@@ -1274,19 +1311,49 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
             borderRadius: '24px',
             borderTopLeftRadius:'0px',
             borderBottomLeftRadius:'0px',
-            background: 'rgba(0,0,0,0.63)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(0,0,0,0.72)',
+            backdropFilter: 'blur(5px)',
             padding: '16px 12px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-            WebkitBackdropFilter: 'blur(10px)', // For Safari support
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.32)',
+            WebkitBackdropFilter: 'blur(10px)',
+            scale:"0.87"
         }}>
+            <button 
+               
+                onClick={onHomeClick}
+                onPointerDown={onHomeClick}
+                style={{
+                    width: '44px',
+                    height: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'none',
+                    border: 'none',
+                    transform:'TranslateY(10px)',
+                    borderRadius: '50%',
+                    color: controlMode === 'home' ? activeColor : inactiveColor,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                }}
+            >
+                {Icons.home}
+            </button>
+
+            <div style={{
+                width: '28px',
+                height: '1.8px',
+                background: 'rgba(255, 255, 255, 0.82)',
+                margin: '0px auto',
+            }} />
+
             {[
                 { mode: 'orbit', icon: Icons.orbit },
                 { mode: 'pan', icon: Icons.pan },
                 { mode: 'zoom', icon: Icons.zoom }
             ].map(({ mode, icon }) => (
                 <button 
+                    
                     key={mode}
                     onClick={() => setControlMode(mode)}
                     onPointerDown={() => setControlMode(mode)}
@@ -1297,13 +1364,13 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: 'none',
+                     transform:'TranslateY(-8px)',
+
                         border: 'none',
                         borderRadius: '50%',
                         color: controlMode === mode ? activeColor : inactiveColor,
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
-                        backdropFilter: 'blur(10px)',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
                     }}
                 >
                     {icon}
@@ -1312,48 +1379,55 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
         </div>
     );
 };
-
-
-  const getConditionDescription = (year) => {
+const getConditionDescription = (year) => {
     const age = year - 2000;
     if (age <= 5) {
-      return {
-        Corrosion: "Minor surface oxidation",
-        Crack: "Hairline cracks visible",
-        Debris: "Minimal accumulation",
-        "Exposed Rebar": "No exposure visible",
-        Spalling: "Surface intact",
-        overall: "Good structural condition"
-      };
+        return {
+            Corrosion: "Minor surface oxidation",
+            Crack: "Hairline cracks visible",
+            Debris: "Minimal accumulation",
+            "Exposed Rebar": "No exposure visible",
+            Spalling: "Surface intact",
+            overall: "Good structural condition"
+        };
     } else if (age <= 10) {
-      return {
-        Corrosion: "Moderate rust formation",
-        Crack: "Notable crack development",
-        Debris: "Moderate debris buildup",
-        "Exposed Rebar": "Initial rebar visibility",
-        Spalling: "Early concrete deterioration",
-        overall: "Fair condition, maintenance recommended"
-      };
+        return {
+            Corrosion: "Moderate rust formation",
+            Crack: "Notable crack development",
+            Debris: "Moderate debris buildup",
+            "Exposed Rebar": "Initial rebar visibility",
+            Spalling: "Early concrete deterioration",
+            overall: "Fair condition, maintenance recommended"
+        };
     } else if (age <= 15) {
-      return {
-        Corrosion: "Significant corrosion present",
-        Crack: "Deep cracks forming",
-        Debris: "Substantial debris accumulation",
-        "Exposed Rebar": "Multiple exposed sections",
-        Spalling: "Advanced concrete degradation",
-        overall: "Poor condition, repairs needed"
-      };
+        return {
+            Corrosion: "Significant corrosion present",
+            Crack: "Deep cracks forming",
+            Debris: "Substantial debris accumulation",
+            "Exposed Rebar": "Multiple exposed sections",
+            Spalling: "Advanced concrete degradation",
+            overall: "Poor condition, repairs needed"
+        };
+    } else if (age <= 20) {
+        return {
+            Corrosion: "Severe structural rust",
+            Crack: "Critical crack formation",
+            Debris: "Heavy debris obstruction",
+            "Exposed Rebar": "Widespread rebar exposure",
+            Spalling: "Severe concrete failure",
+            overall: "Critical condition, immediate attention required"
+        };
     } else {
-      return {
-        Corrosion: "Severe structural rust",
-        Crack: "Critical crack formation",
-        Debris: "Heavy debris obstruction",
-        "Exposed Rebar": "Widespread rebar exposure",
-        Spalling: "Severe concrete failure",
-        overall: "Critical condition, immediate attention required"
-      };
+        return {
+            Corrosion: "Extreme structural deterioration",
+            Crack: "Extensive structural cracks",
+            Debris: "Critical debris accumulation",
+            "Exposed Rebar": "Complete rebar exposure",
+            Spalling: "Complete concrete failure",
+            overall: "Emergency condition, structural integrity compromised"
+        };
     }
-  };
+};
   
   const LayerPanel = ({ resetCamera, year, onClose }) => {
     const [mounted, setMounted] = useState(false);
@@ -1368,7 +1442,7 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
         switch(type) {
             case 'road':
                 return (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <svg width="20" height="20" viewBox="0 0 24 24"  fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M4 6L20 6M4 18L20 18" strokeLinecap="round"/>
                         <path d="M4 12L8 12M16 12L20 12" strokeLinecap="round" opacity="0.5"/>
                         <circle cx="12" cy="12" r="2" fill="currentColor"/>
@@ -1561,14 +1635,16 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
     useEffect(() => {
         if (!controls.current) return;
 
-        // Configure based on mode without resetting
-        controls.current.enableRotate = controlMode === 'orbit';
+        // Treat 'home' mode the same as 'orbit'
+        const isOrbitMode = controlMode === 'orbit' || controlMode === 'home';
+
+        controls.current.enableRotate = isOrbitMode;
         controls.current.enablePan = controlMode === 'pan';
-        controls.current.enableZoom = controlMode === 'zoom' || controlMode === 'orbit';
+        controls.current.enableZoom = controlMode === 'zoom' || isOrbitMode;
 
         // Update mouse buttons
         controls.current.mouseButtons = {
-            LEFT: controlMode === 'orbit' ? THREE.MOUSE.ROTATE :
+            LEFT: isOrbitMode ? THREE.MOUSE.ROTATE :
                   controlMode === 'pan' ? THREE.MOUSE.PAN :
                   THREE.MOUSE.DOLLY,
             MIDDLE: THREE.MOUSE.DOLLY,
@@ -1577,14 +1653,14 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
 
         // Update touch controls
         controls.current.touches = {
-            ONE: controlMode === 'orbit' ? THREE.TOUCH.ROTATE :
+            ONE: isOrbitMode ? THREE.TOUCH.ROTATE :
                  controlMode === 'pan' ? THREE.TOUCH.PAN :
                  THREE.TOUCH.DOLLY,
             TWO: THREE.TOUCH.DOLLY_PAN
         };
 
         // Set speeds
-        controls.current.rotateSpeed = controlMode === 'orbit' ? 1 : 0;
+        controls.current.rotateSpeed = isOrbitMode ? 1 : 0;
         controls.current.panSpeed = controlMode === 'pan' ? 1.5 : 1;
         controls.current.zoomSpeed = controlMode === 'zoom' ? 1.5 : 1;
 
@@ -1609,8 +1685,8 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
             args={[camera, domElement]}
             enableDamping={true}
             dampingFactor={0.05}
-            minDistance={5}
-            maxDistance={200}
+            minDistance={1}
+            maxDistance={1500}
             minPolarAngle={0}
             maxPolarAngle={Math.PI / 2}
         />
@@ -1627,19 +1703,52 @@ const isTouchDevice = () => {
 const BridgeScene = () => {
     const [year, setYear] = useState(2000);
     const [isTouch, setIsTouch] = useState(false);
-    const [controlMode, setControlMode] = useState('orbit');
+    const [controlMode, setControlMode] = useState('home');
     const [compassRotation, setCompassRotation] = useState(0);
     const controlsRef = useRef();
     const [showLayers, setShowLayers] = useState(false);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
 
+    const handleHomeClick = useCallback(() => {
+        setControlMode('home');
+        if (controlsRef.current) {
+            // Position animation
+            gsap.to(controlsRef.current.object.position, {
+                x: 50,
+                y: 50,
+                z: 70,
+                duration: 1.5,
+                ease: "power3.inOut"
+            });
+            
+            // Rotation animation
+            gsap.to(controlsRef.current.object.rotation, {
+                x: 0,
+                y: Math.PI / 4,
+                z: 0,
+                duration: 1.5,
+                ease: "power3.inOut"
+            });
+            
+            // Target animation (where the camera looks at)
+            gsap.to(controlsRef.current.target, {
+                x: 0,
+                y: 0,
+                z: 0,
+                duration: 1.5,
+                ease: "power3.inOut",
+                onUpdate: () => controlsRef.current.update()
+            });
+        }
+    }, []);
+
 
     const handleCompassReset = useCallback(() => {
         if (controlsRef.current) {
-            // Store current control mode
+          
             const currentMode = controlMode;
     
-            // Temporarily enable all controls for smooth animation
+            
             if (controlsRef.current) {
                 controlsRef.current.enableRotate = true;
                 controlsRef.current.enablePan = true;
@@ -1650,7 +1759,7 @@ const BridgeScene = () => {
             const tl = gsap.timeline({
                 onComplete: () => {
                     if (controlsRef.current) {
-                        // Restore control mode settings
+                     
                         controlsRef.current.enableRotate = currentMode === 'orbit';
                         controlsRef.current.enablePan = currentMode === 'pan';
                         controlsRef.current.enableZoom = currentMode === 'zoom' || currentMode === 'orbit';
@@ -1659,20 +1768,20 @@ const BridgeScene = () => {
                 }
             });
     
-            // Animate camera position
+      
             tl.to(controlsRef.current.object.position, {
-                x: 0,
-                y: 40,
-                z: 100,
+                x: 1,
+                y: 60,
+                z: 820,
                 duration: 1.5,
-                ease: "power3.inOut"
+                ease: "sine.in"
             }, 0);
     
-            // Animate target (look-at point)
+      
             tl.to(controlsRef.current.target, {
                 x: 0,
                 y: 0,
-                z: 0,
+                z: 300,
                 duration: 1.5,
                 ease: "sine.in",
                 onUpdate: () => controlsRef.current.update()
@@ -1697,10 +1806,11 @@ const BridgeScene = () => {
     };
 
     const ControlButtons = () => (
-        <ControlPanel 
+          <ControlPanel 
             setControlMode={setControlMode} 
             controlMode={controlMode}
             isTouch={isTouch}
+            onHomeClick={handleHomeClick}
         />
     );
 
@@ -1710,10 +1820,11 @@ const BridgeScene = () => {
         
     shadows
     camera={{ 
-        position: [-15, 40, -18],
-        fov: 75,
+        position: [50, 50, 70],
+        fov: 65,
         near: 0.1,
-        far: 1000
+        far: 1000,
+        
     }}
     gl={{ 
         antialias: true,
@@ -1721,16 +1832,30 @@ const BridgeScene = () => {
     }}
 >
 <CompassRotation setCompassRotation={setCompassRotation} />
-    <directionalLight position={[10, 10, 5]} intensity={2.6} />
-    <directionalLight position={[-10, -10, -5]} intensity={2.6} />
-    <Stage environment={null} adjustCamera={false}>
-        <Model year={year} setSelectedHotspot={setSelectedHotspot} />
-    </Stage>
+    <directionalLight position={[10, 10, 5]} intensity={3.96} />
+    <directionalLight position={[-10, -10, -5]} intensity={3.96} />
+    <Stage 
+    adjustCamera={false} 
+    environment={null} 
+    center={true}
+    shadows={{ 
+        type: 'contact', 
+        opacity: 0.8, 
+        blur: 1.5,
+        color: "#000000" 
+    }}
+    intensity={1.5}  // Increase light intensity
+    preset="rembrandt" // This preset gives dramatic shadows
+    shadowBias={0.01} // Adjust shadow bias
+>
+    <Model year={year} setSelectedHotspot={setSelectedHotspot} />
+</Stage>
     <CustomControls ref={controlsRef} controlMode={controlMode} />
 </Canvas>
+
 <CompassUI 
     rotation={compassRotation}
-    onReset={handleCompassReset}  // Add this line back
+    onReset={handleCompassReset} 
 />
 
             <ControlButtons />
@@ -1884,20 +2009,26 @@ const BridgeScene = () => {
             letterSpacing: '0.01em',
             color: 'rgba(255, 255, 255, 0.95)',
         }}>
-            {Math.floor(year)} {' '}
             <span style={{ 
-                color: 'rgba(255, 255, 255, 0.7)',
-                fontWeight: '400'
+                color: 'rgba(255, 255, 255, 0.95)',
+                fontWeight: '500'
             }}>
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                {['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December']
                     [Math.floor((year % 1) * 12)]}
+            </span>
+            {' '}
+            <span style={{ 
+                color: 'rgba(255, 255, 255, 0.95)',
+                fontWeight: '500'
+            }}>
+                {Math.floor(year)}
             </span>
         </span>
         <input
             type="range"
             min={2000}
-            max={2020}
+            max={2025}
             value={year}
             step={1/12}
             onChange={handleYearChange}
@@ -1909,8 +2040,8 @@ const BridgeScene = () => {
                 WebkitAppearance: 'none',
                 background: `linear-gradient(to right, 
                     #4CAF50 0%, 
-                    #4CAF50 ${((year - 2000) / 20) * 100}%, 
-                    rgba(255, 255, 255, 0.2) ${((year - 2000) / 20) * 100}%, 
+                    #4CAF50 ${((year - 2000) / 25) * 100}%, 
+                    rgba(255, 255, 255, 0.2) ${((year - 2000) / 25) * 100}%, 
                     rgba(255, 255, 255, 0.2) 100%)`,
                 '&::-webkit-slider-thumb': {
                     WebkitAppearance: 'none',
@@ -1947,6 +2078,7 @@ const BridgeScene = () => {
             <span>2010</span>
             <span>2015</span>
             <span>2020</span>
+            <span>2025</span>
         </div>
     </div>
 </div>
