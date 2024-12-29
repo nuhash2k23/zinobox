@@ -216,13 +216,12 @@ const Hotspot = ({ position, onClick, label }) => {
     const pulseScaleRef = useRef();
     const pulseOpacityRef = useRef();
     
-    // Color constants
     const colors = {
-        primary: "#4CAF50",      // Green primary color
-        secondary: "#45a049",    // Slightly darker green for hover
-        background: "#2A2A2A",   // Dark grey for main fill
-        stroke: "#ffffff",       // White for visibility
-        pulse: "#4CAF50"        // Green pulse
+        primary: "#4CAF50",
+        secondary: "#45a049",
+        background: "#2A2A2A",
+        stroke: "#ffffff",
+        pulse: "#4CAF50"
     };
 
     useEffect(() => {
@@ -236,9 +235,9 @@ const Hotspot = ({ position, onClick, label }) => {
         }
 
         if (pulseRef.current) {
-            const pulseFactor = (Math.sin(state.clock.elapsedTime * 1.5) + 1) / 2; // Slowed down pulse
-            pulseScaleRef.current = 1 + (pulseFactor * 0.5); // Larger pulse range
-            pulseOpacityRef.current = 0.7 - (pulseFactor * 0.4); // More visible pulse
+            const pulseFactor = (Math.sin(state.clock.elapsedTime * 1.5) + 1) / 2;
+            pulseScaleRef.current = 1 + (pulseFactor * 0.5);
+            pulseOpacityRef.current = 0.7 - (pulseFactor * 0.4);
             
             pulseRef.current.scale.x = pulseScaleRef.current;
             pulseRef.current.scale.y = pulseScaleRef.current;
@@ -249,58 +248,71 @@ const Hotspot = ({ position, onClick, label }) => {
     return (
         <group position={position}>
             <group ref={billboardRef}>
-                {/* Outer pulsating ring */}
-                <mesh ref={pulseRef}>
-                    <ringGeometry args={[1.2, 1.3, 32]} /> {/* Larger pulse ring */}
-                    <meshBasicMaterial
-                        color={colors.pulse}
-                        transparent
-                        opacity={0.95}
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
-
                 {/* Background fill */}
                 <mesh
                     onClick={onClick}
                     onPointerOver={() => setHovered(true)}
                     onPointerOut={() => setHovered(false)}
+                    renderOrder={1}
                 >
-                    <circleGeometry args={[1.1, 32]} /> {/* Adjusted background size */}
+                    <circleGeometry args={[1.1, 32]} />
                     <meshBasicMaterial
                         color={colors.background}
                         transparent
                         opacity={0.6}
-                    />
-                </mesh>
-                
-                {/* Main outer ring */}
-                <mesh>
-                    <ringGeometry args={[0.95, 1.1, 32]} /> {/* Thicker main ring */}
-                    <meshBasicMaterial
-                        color={hovered ? colors.primary : colors.stroke}
-                        transparent
-                        opacity={1}
+                        depthWrite={false}
+                        depthTest={true}
                     />
                 </mesh>
 
-                {/* Center dot */}
-                <mesh>
-                    <circleGeometry args={[0.35, 32]} /> {/* Larger center dot */}
+                {/* Main outer ring */}
+                <mesh renderOrder={2}>
+                    <ringGeometry args={[0.95, 1.1, 32]} />
                     <meshBasicMaterial
                         color={hovered ? colors.primary : colors.stroke}
                         transparent
                         opacity={1}
+                        depthWrite={false}
+                        depthTest={true}
+                        side={THREE.DoubleSide}
                     />
                 </mesh>
 
                 {/* Inner ring */}
-                <mesh>
-                    <ringGeometry args={[0.45, 0.55, 32]} /> {/* Thicker inner ring */}
+                <mesh renderOrder={3}>
+                    <ringGeometry args={[0.45, 0.55, 32]} />
                     <meshBasicMaterial
                         color={hovered ? colors.secondary : colors.stroke}
                         transparent
                         opacity={hovered ? 1 : 0.8}
+                        depthWrite={false}
+                        depthTest={true}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+
+                {/* Center dot */}
+                <mesh renderOrder={4}>
+                    <circleGeometry args={[0.35, 32]} />
+                    <meshBasicMaterial
+                        color={hovered ? colors.primary : colors.stroke}
+                        transparent
+                        opacity={1}
+                        depthWrite={false}
+                        depthTest={true}
+                    />
+                </mesh>
+
+                {/* Outer pulsating ring */}
+                <mesh ref={pulseRef} renderOrder={0}>
+                    <ringGeometry args={[1.2, 1.3, 32]} />
+                    <meshBasicMaterial
+                        color={colors.pulse}
+                        transparent
+                        opacity={0.95}
+                        depthWrite={false}
+                        depthTest={true}
+                        side={THREE.DoubleSide}
                     />
                 </mesh>
             </group>
@@ -1262,7 +1274,7 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
             borderRadius: '24px',
             borderTopLeftRadius:'0px',
             borderBottomLeftRadius:'0px',
-            background: 'rgba(0, 0, 0,1)',
+            background: 'rgba(0,0,0,0.63)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             padding: '16px 12px',
@@ -1284,7 +1296,7 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'black',
+                        background: 'none',
                         border: 'none',
                         borderRadius: '50%',
                         color: controlMode === mode ? activeColor : inactiveColor,
