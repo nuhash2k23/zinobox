@@ -47,55 +47,120 @@ const CompassRotation = ({ setCompassRotation }) => {
     return null;
 };
   
-const CompassUI = ({ rotation }) => {  // Removed onReset prop
+const CompassUI = ({ rotation, onReset }) => {
     return (
-      <div
-        style={{
-          position: 'absolute',
-          top: '80px',
-          right: '20px',
-          width: '60px',
-          height: '60px',
-          transform: `rotate(${rotation}rad)`,
-          transition: 'transform 0.1s ease-out',
-          zIndex: 1000,
-        }}
-      >
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          borderRadius: '50%',
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        }}>
-          <svg
-            width="40"
-            height="40"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 2L12 22" stroke="#FF4444" strokeWidth="2"/>
-            <path d="M12 2L8 6" stroke="#FF4444" strokeWidth="2"/>
-            <path d="M12 2L16 6" stroke="#FF4444" strokeWidth="2"/>
-            <path d="M12 22L10 18" stroke="white" strokeWidth="2"/>
-            <path d="M12 22L14 18" stroke="white" strokeWidth="2"/>
-            <text x="12" y="5" textAnchor="middle" fill="white" fontSize="3">N</text>
-            <text x="12" y="21" textAnchor="middle" fill="white" fontSize="3">S</text>
-            <text x="21" y="13" textAnchor="middle" fill="white" fontSize="3">E</text>
-            <text x="3" y="13" textAnchor="middle" fill="white" fontSize="3">W</text>
-            <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="1" fill="none"/>
-          </svg>
+        <div
+            onClick={onReset}
+            style={{
+                position: 'absolute',
+                top: '80px',
+                right: '20px',
+                width: '70px',
+                height: '70px',
+                cursor: 'pointer',
+                transform: `rotate(${rotation}rad)`,
+                transition: 'transform 0.1s ease-out',
+                zIndex: 1000,
+            }}
+        >
+            <div style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                background: 'rgba(0, 0, 0, 0.8)',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+            }}>
+                <svg
+                    width="50"
+                    height="50"
+                    viewBox="0 0 50 50"
+                    fill="none"
+                >
+                    {/* Outer ring */}
+                    <circle 
+                        cx="25" 
+                        cy="25" 
+                        r="23" 
+                        stroke="rgba(255, 255, 255, 0.2)" 
+                        strokeWidth="1"
+                    />
+                    
+                    {/* Inner ring */}
+                    <circle 
+                        cx="25" 
+                        cy="25" 
+                        r="20" 
+                        stroke="rgba(255, 255, 255, 0.15)" 
+                        strokeWidth="0.5"
+                    />
+
+                    {/* Cardinal direction lines */}
+                    <line x1="25" y1="5" x2="25" y2="45" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="0.5"/>
+                    <line x1="5" y1="25" x2="45" y2="25" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="0.5"/>
+
+                    {/* North Arrow */}
+                    <path
+                        d="M25 7L29 18L25 15L21 18L25 7Z"
+                        fill="#FF4444"
+                        stroke="#FF4444"
+                        strokeWidth="1"
+                    />
+
+                    {/* South Arrow */}
+                    <path
+                        d="M25 43L28 37L25 39L22 37L25 43Z"
+                        fill="white"
+                        stroke="white"
+                        strokeWidth="0.5"
+                    />
+
+                    {/* Cardinal direction markers */}
+                    <g style={{ fontSize: "8px", fontFamily: "Arial, sans-serif", fontWeight: "bold" }}>
+                        <text x="25" y="14" textAnchor="middle" fill="#FF4444" dominantBaseline="middle">N</text>
+                        <text x="25" y="38" textAnchor="middle" fill="white" dominantBaseline="middle">S</text>
+                        <text x="38" y="26" textAnchor="middle" fill="white" dominantBaseline="middle">E</text>
+                        <text x="12" y="26" textAnchor="middle" fill="white" dominantBaseline="middle">W</text>
+                    </g>
+
+                    {/* Tick marks */}
+                    {[...Array(8)].map((_, i) => {
+                        const angle = (i * Math.PI) / 4;
+                        const x1 = 25 + 18 * Math.sin(angle);
+                        const y1 = 25 - 18 * Math.cos(angle);
+                        const x2 = 25 + 20 * Math.sin(angle);
+                        const y2 = 25 - 20 * Math.cos(angle);
+                        return (
+                            <line
+                                key={i}
+                                x1={x1}
+                                y1={y1}
+                                x2={x2}
+                                y2={y2}
+                                stroke="rgba(255, 255, 255, 0.3)"
+                                strokeWidth="1"
+                            />
+                        );
+                    })}
+                </svg>
+            </div>
+            {/* Glow effect */}
+            <div style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                boxShadow: '0 0 15px rgba(255, 68, 68, 0.1)',
+                pointerEvents: 'none',
+            }} />
         </div>
-      </div>
     );
 };
   const MenuButton = ({ onClick, isOpen }) => (
@@ -1529,6 +1594,54 @@ const BridgeScene = () => {
     const [showLayers, setShowLayers] = useState(false);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
 
+
+    const handleCompassReset = useCallback(() => {
+        if (controlsRef.current) {
+            // Store current control mode
+            const currentMode = controlMode;
+    
+            // Temporarily enable all controls for smooth animation
+            if (controlsRef.current) {
+                controlsRef.current.enableRotate = true;
+                controlsRef.current.enablePan = true;
+                controlsRef.current.enableZoom = true;
+            }
+    
+            // Create timeline for synchronized animations
+            const tl = gsap.timeline({
+                onComplete: () => {
+                    if (controlsRef.current) {
+                        // Restore control mode settings
+                        controlsRef.current.enableRotate = currentMode === 'orbit';
+                        controlsRef.current.enablePan = currentMode === 'pan';
+                        controlsRef.current.enableZoom = currentMode === 'zoom' || currentMode === 'orbit';
+                        controlsRef.current.update();
+                    }
+                }
+            });
+    
+            // Animate camera position
+            tl.to(controlsRef.current.object.position, {
+                x: 0,
+                y: 40,
+                z: 100,
+                duration: 1.5,
+                ease: "power3.inOut"
+            }, 0);
+    
+            // Animate target (look-at point)
+            tl.to(controlsRef.current.target, {
+                x: 0,
+                y: 0,
+                z: 0,
+                duration: 1.5,
+                ease: "power3.inOut",
+                onUpdate: () => controlsRef.current.update()
+            }, 0);
+        }
+    }, [controlMode]);
+
+
     const handleYearChange = (event) => {
         const value = parseFloat(event.target.value);
         setYear(Math.round(value));
@@ -1576,11 +1689,10 @@ const BridgeScene = () => {
     </Stage>
     <CustomControls ref={controlsRef} controlMode={controlMode} />
 </Canvas>
-
-            <CompassUI 
-                rotation={compassRotation}
-              
-            />
+<CompassUI 
+    rotation={compassRotation}
+    onReset={handleCompassReset}  // Add this line back
+/>
 
             <ControlButtons />
 
