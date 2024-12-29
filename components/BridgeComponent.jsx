@@ -57,7 +57,7 @@ const CompassUI = ({ rotation, onReset }) => {
             onClick={onReset}
             style={{
                 position: 'absolute',
-                top: '180px',
+                top: '130px',
                 right: '30px',
                 width: '70px',
                 height: '70px',
@@ -173,7 +173,7 @@ const MenuButton = ({ onClick, isOpen }) => (
         style={{
             position: 'absolute',
             right: '20px', // Changed from right to left
-            top: '100px', // Increased from 20px
+            top: '50px', // Increased from 20px
             background: 'rgba(0, 0, 0, 0.8)',
             border: 'none',
             borderRadius: '12px',
@@ -1186,7 +1186,9 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
                 castShadow
                 receiveShadow
                 geometry={nodes.lightstand.geometry}
-                material={materials.Material}
+                material={pillarMaterialRef.current || materials['Scene_-_Root']}
+
+
                 position={[-13.003, 0, -281.684]}
                 rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
                 scale={0.001}
