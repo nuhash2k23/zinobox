@@ -202,7 +202,7 @@ const CompassUI = ({ rotation, onReset }) => {
         }}>Layers</span>
       </div>
     </button>
-  );
+  );  
   
   const Hotspot = ({ position, onClick, label }) => {
     const [hovered, setHovered] = useState(false);
@@ -1257,6 +1257,7 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
                 <button 
                     key={mode}
                     onClick={() => setControlMode(mode)}
+                    onPointerDown={() => setControlMode(mode)}
                     style={{
                         width: '40px',
                         height: '40px',
