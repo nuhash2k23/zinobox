@@ -57,10 +57,10 @@ const CompassUI = ({ rotation, onReset }) => {
             onClick={onReset}
             style={{
                 position: 'absolute',
-                top: '40px',
-                right: '20px',
-                width: '100px',
-                height: '100px',
+                top: '180px',
+                right: '30px',
+                width: '70px',
+                height: '70px',
                 cursor: 'pointer',
                 transform: `rotate(${rotation}rad)`,
                 transition: 'transform 0.1s ease-out',
@@ -173,11 +173,11 @@ const MenuButton = ({ onClick, isOpen }) => (
         style={{
             position: 'absolute',
             right: '20px', // Changed from right to left
-            top: '200px', // Increased from 20px
+            top: '100px', // Increased from 20px
             background: 'rgba(0, 0, 0, 0.8)',
             border: 'none',
             borderRadius: '12px',
-            padding: '16px 20px', // Increased padding
+            padding: '8px 10px', // Increased padding
             cursor: 'pointer',
             color: 'white',
             display: 'flex',
@@ -195,12 +195,12 @@ const MenuButton = ({ onClick, isOpen }) => (
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            transform: `scale(${isOpen ? 0.8 : 1})`,
+            transform: `scale(${isOpen ? 0.8 : 0.81})`,
             transition: 'transform 0.3s ease'
         }}>
             <div style={{ transform: 'scale(1.4)' }}>{Icons.layers}</div> {/* Increased icon size */}
             <span style={{ 
-                fontSize: '16px', // Increased font size
+                fontSize: '12px', // Increased font size
                 fontWeight: '600', // Made font weight bolder
                 letterSpacing: '0.01em',
             }}>Layers</span>
@@ -1691,7 +1691,7 @@ const BridgeScene = () => {
     );
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100vh', background:'white' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100vh', background:'black' }}>
           <Canvas
         
     shadows
