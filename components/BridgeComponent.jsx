@@ -1519,7 +1519,7 @@ const ControlPanel = ({ setControlMode, controlMode }) => {
     const { camera, gl: { domElement } } = useThree();
     const controls = useRef();
 
-    // Update controls configuration whenever control mode changes
+    // Update controls cofiguration whenever control mode changes
     useEffect(() => {
         if (!controls.current) return;
 
