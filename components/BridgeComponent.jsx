@@ -1539,7 +1539,11 @@ const BridgeScene = () => {
     }, []);
 
 
-
+    const resetCamera = () => {
+        if (controlsRef.current) {
+            controlsRef.current.reset();
+        }
+    };
 
     const ControlButtons = () => (
         <ControlPanel 
