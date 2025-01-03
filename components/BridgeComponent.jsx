@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import Image from 'next/image';
 import { forwardRef, useCallback } from 'react';
 import gsap from 'gsap';
-import styles from "@/styles/scrollsection.module.css";
+
 
 
 //icons
@@ -187,37 +187,35 @@ const MenuButton = ({ onClick, isOpen }) => (
     <button
         onClick={onClick}
         style={{
-            position: 'absolute',
-            right: '20px', // Changed from right to left
-            top: '50px', // Increased from 20px
+            position: 'fixed',
+            right: '20px',
+            top: '50px',
             background: 'rgba(0, 0, 0, 0.8)',
             border: 'none',
             borderRadius: '12px',
-            padding: '8px 10px', // Increased padding
+            padding: '8px 10px',
             cursor: 'pointer',
             color: 'white',
             display: 'flex',
             alignItems: 'center',
-            gap: '16px', // Increased gap
+            gap: '16px',
             zIndex: 1000,
             backdropFilter: 'blur(10px)',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: isOpen ? 'translateX(calc(-100% - 320px))' : 'translateX(0)', // Modified transform
             opacity: isOpen ? 0 : 1,
+            transition: 'opacity 0.3s ease',
+            pointerEvents: isOpen ? 'none' : 'auto',
         }}
     >
         <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            transform: `scale(${isOpen ? 0.8 : 0.81})`,
-            transition: 'transform 0.3s ease'
         }}>
-            <div style={{ transform: 'scale(1.4)' }}>{Icons.layers}</div> {/* Increased icon size */}
+            <div>{Icons.layers}</div>
             <span style={{ 
-                fontSize: '12px', // Increased font size
-                fontWeight: '600', // Made font weight bolder
+                fontSize: '12px',
+                fontWeight: '600',
                 letterSpacing: '0.01em',
             }}>Layers</span>
         </div>
@@ -775,30 +773,14 @@ function Model({ year, setSelectedHotspot  }) {
     const fenceMaterialRef = useRef();
     const pillarMaterialRef = useRef();
     const roadMaterialRef = useRef();
-    const lightMaterialRef = useRef();
-    const lightStates = useRef([]);
+ 
 
     useEffect(() => {
-        lightStates.current = Array(10).fill(1);
+     
         
         if (materials) {
 
-            const createGlowMaterial = () => {
-                const material = new THREE.ShaderMaterial({
-                    uniforms: {
-                        glowColor: { value: new THREE.Color(1, 1, 0.7) },
-                        glowIntensity: { value: 1.0 },
-                        isOn: { value: 1.0 }
-                    },
-                    vertexShader: GlowShader.vertexShader,
-                    fragmentShader: GlowShader.fragmentShader,
-                    transparent: true,
-                    blending: THREE.AdditiveBlending
-                });
-                return material;
-            };
-
-            lightMaterialRef.current = createGlowMaterial();
+       
         
             // Create Rust Material (for fence)
             const createRustMaterial = (baseMaterial) => {
@@ -1205,10 +1187,7 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
 
     useFrame(() => {
         const rustAmount = (year - 2000) / 25; // Updated from 20 to 25
-        if (lightMaterialRef.current) {
-            lightMaterialRef.current.uniforms.glowIntensity.value = 1.0;
-            lightMaterialRef.current.uniforms.isOn.value = 1.0;
-        }
+     
         if (fenceMaterialRef.current?.userData.shader) {
             fenceMaterialRef.current.userData.shader.uniforms.rustAmount.value = rustAmount;
         }
@@ -1275,7 +1254,7 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
                 castShadow
                 receiveShadow
                 geometry={nodes.light.geometry}
-                material={lightMaterialRef.current || materials['Material.001']}
+                material={ materials['Material.001']}
                 position={[-13.003, 0, -281.684]}
                 rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
                 scale={0.001}
@@ -1470,22 +1449,21 @@ const getConditionDescription = (year) => {
     };
 
     const panelStyle = {
-        position: 'absolute',
-        right: '0px',
+        position: 'fixed',
+        right: '20px',
         top: '20px',
-        zIndex:"2000",
+        zIndex: 2000,
         background: 'rgba(0, 0, 0, 0.85)',
         padding: '24px',
         borderRadius: '20px',
         color: 'white',
         maxHeight: '80vh',
         overflowY: 'auto',
-        minWidth: '320px',
+        width: '320px',
         backdropFilter: 'blur(10px)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: mounted ? 'translateX(0)' : 'translateX(100%)',
         opacity: mounted ? 1 : 0,
+        transition: 'opacity 0.3s ease',
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     };
 

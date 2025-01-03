@@ -37,8 +37,8 @@ export default function Home() {
       {/* <Canvasbox/> */}
      {/* <Canvasboxeng/> */}
      {/* <GradientCanvas/> */}
-     {/* <Scene/> */}
-     <BridgeScene/>
+     <Scene/>
+     {/* <BridgeScene/> */}
      </main>
       </>
     </>

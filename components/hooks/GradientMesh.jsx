@@ -463,7 +463,7 @@ export default function Model() {
         vec3 darkestBlue = vec3(0.0, 0.019, 0.157);  // #000528
         vec3 mediumBlue = vec3(0.0, 0.037, 0.580);   // #000994
         
-        float t = time * 0.362;
+        float t = time * 0.5;
     
         vec2 distortedUV = uv;
         distortedUV += vec2(
