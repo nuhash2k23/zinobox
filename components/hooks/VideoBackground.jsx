@@ -11,7 +11,7 @@ import { fragment } from '../hooks/fragment';  // Add this import
 export default function VideoBackground() {
   const { viewport } = useThree();
   const brushTexture = useTexture('/brush.png');
-  const videoTexture = useVideoTexture('/chrome_hz8pfb2QSr.mp4', {
+  const videoTexture = useVideoTexture('/video.mp4', {
     loop: true,
     muted: true,
     start: true,

@@ -1,9 +1,6 @@
 import { Canvas } from '@react-three/fiber';
-
-import GradientMesh from '../hooks/GradientMesh';
 import useDimension from '../hooks/useDimension';
 import { OrthographicCamera } from '@react-three/drei';
-import styles from "@/styles/scrollsection.module.css";
 import VideoBackground from './VideoBackground';
 
 export default function Scene() {
@@ -17,7 +14,8 @@ export default function Scene() {
   const frustumSize = 2;
 
   return (
-    <div className={styles.divv}>
+    <div className='divv'> 
+
      <Canvas
         gl={{ antialias: true }}
      
@@ -34,9 +32,8 @@ export default function Scene() {
           ]}
           position={[0, 0, 2]}
         />
-        <GradientMesh/>
-        {/* <Model /> */}
-        {/* <VideoBackground /> */}
+
+        <VideoBackground />
       </Canvas>
     </div>
   );

@@ -263,7 +263,7 @@ const Hotspot = ({ position, onClick, label }) => {
     });
 
     return (
-        <group position={position}>
+        <group position={position} scale={0.22}>
             <group ref={billboardRef}>
                 {/* Background fill */}
                 <mesh
@@ -342,29 +342,28 @@ const Hotspot = ({ position, onClick, label }) => {
 
   const HotspotsContainer = ({ setSelectedHotspot }) => {
     const hotspots = [
-      {
-        id: 1,
-        position: [0.81, 32, 11.684],
-        label: "Road Damage",
-        description: "Severe cracks and damage seen on the road",
-        image: "/road.png"
-      },
-      {
-        id: 2,
-        position: [17, 25, 124],
-        label: "Bridge Moss",
-        description: "Deep moss of green and black forming in the bridge surface",
-        image: "/bridge.png"
-      },
-      {
-        id: 3,
-        position: [-11, 32, 90],
-        label: "Fence Rust",
-        description: "Fence showing rust signs of deterioration",
-        image: "/fence.png"
-      },
-     
-      
+        {
+            id: 1,
+            position: [10, 6.5, 0], // Road surface damage
+            label: "Road Damage",
+            description: "Severe cracks and deterioration visible on the road surface, indicating structural wear and potential safety concerns.",
+            image: "/road.png"
+        },
+        {
+            id: 2,
+            position: [4, 4.1, 0], // Bridge structure
+            label: "Bridge Rust",
+            description: "Significant rust formation on the bridge's main support structure, particularly visible at connection points and stress areas.",
+            image: "/bridge.png"
+        },
+        {
+            id: 3,
+            position: [14,4.5,1.5], // Concrete pillar
+            label: "Pillar Deterioration",
+            description: "Deep moss growth and concrete degradation on the support pillars, potentially compromising structural integrity.",
+            image: "/pillar.png"
+        },
+  
     ];
   
     return (
@@ -417,137 +416,93 @@ export const GlowShader = {
 };
 
 
-
-
-
 export const RoadCrackShader = {
     uniforms: {
         baseTexture: { value: null },
+        normalMap: { value: null },
+        normalScale: { value: new THREE.Vector2(1, 1) },
         crackAmount: { value: 0.0 },
-        noiseScale: { value: 2.0 },
-        crackDepth: { value: 0.15 },
+        noiseScale: { value: 2.8 },
         crackWidth: { value: 0.8 }
     },
     vertexShader: `
         varying vec2 vUv;
         varying vec3 vNormal;
-        uniform float crackAmount;
-        uniform float crackDepth;
-
-        // Improved noise function for more natural-looking cracks
-        float hash(vec2 p) {
-            p = fract(p * vec2(234.34, 435.345));
-            p += dot(p, p + 34.23);
-            return fract(p.x * p.y);
-        }
-
-        float noise(vec2 p) {
-            vec2 i = floor(p);
-            vec2 f = fract(p);
-            f = f * f * (3.0 - 2.0 * f);
-            
-            float a = hash(i);
-            float b = hash(i + vec2(1.0, 0.0));
-            float c = hash(i + vec2(0.0, 1.0));
-            float d = hash(i + vec2(1.0, 1.0));
-            
-            return mix(
-                mix(a, b, f.x),
-                mix(c, d, f.x),
-                f.y
-            );
-        }
-
-        float fbm(vec2 p) {
-            float value = 0.0;
-            float amplitude = 0.5;
-            float frequency = 1.0;
-            for(int i = 0; i < 6; i++) {
-                value += amplitude * noise(p * frequency);
-                frequency *= 2.0;
-                amplitude *= 0.5;
-            }
-            return value;
-        }
+        varying vec3 vViewPosition;
+        attribute vec4 tangent;
+        varying vec3 vTangent;
+        varying vec3 vBitangent;
 
         void main() {
             vUv = uv;
-            vNormal = normal;
-            
-            // Calculate displacement
-            vec2 noiseCoord = uv * 10.0;
-            float crack = fbm(noiseCoord);
-            float displacement = 0.0;
-            
-            // Create sharp cracks
-            float crackThreshold = 1.0 - crackAmount * 0.5;
-            if (crack > crackThreshold) {
-                displacement = (crack - crackThreshold) * crackDepth * crackAmount;
-            }
-            
-            // Apply displacement along normal
-            vec3 newPosition = position - normal * displacement;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+            vec3 objectNormal = vec3(normal);
+            vec3 transformedNormal = normalMatrix * objectNormal;
+            vNormal = normalize(transformedNormal);
+
+            // Handle tangents for normal mapping
+            vec3 objectTangent = vec3(tangent.xyz);
+            vec3 transformedTangent = normalMatrix * objectTangent;
+            vTangent = normalize(transformedTangent);
+            vBitangent = normalize(cross(vNormal, vTangent) * tangent.w);
+
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
         }
     `,
     fragmentShader: `
         uniform sampler2D baseTexture;
+        uniform sampler2D normalMap;
+        uniform vec2 normalScale;
         uniform float crackAmount;
         uniform float crackWidth;
         uniform float noiseScale;
         
         varying vec2 vUv;
         varying vec3 vNormal;
+        varying vec3 vViewPosition;
+        varying vec3 vTangent;
+        varying vec3 vBitangent;
 
-        float hash(vec2 p) {
-            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-        }
-
-        float noise(vec2 p) {
-            vec2 i = floor(p);
-            vec2 f = fract(p);
-            f = f * f * (3.0 - 2.0 * f);
-            return mix(
-                mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-                mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-                f.y
-            );
-        }
-
-        float fbm(vec2 p) {
-            float value = 0.0;
-            float amplitude = 0.5;
-            float frequency = 1.0;
-            for(int i = 0; i < 6; i++) {
-                value += amplitude * noise(p * frequency);
-                frequency *= 2.0;
-                amplitude *= 0.5;
-            }
-            return value;
-        }
+        // Your existing noise functions here...
 
         void main() {
+            // Sample base color
             vec4 baseColor = texture2D(baseTexture, vUv);
             
-            // Generate crack pattern
-            vec2 noiseCoord = vUv * noiseScale * 10.0;
+            // Normal mapping
+            vec3 normalMapValue = texture2D(normalMap, vUv).xyz * 2.0 - 1.0;
+            normalMapValue.xy *= normalScale;
+            mat3 tbn = mat3(vTangent, vBitangent, vNormal);
+            vec3 finalNormal = normalize(tbn * normalMapValue);
+
+            // Your existing crack logic here...
+            vec2 noiseCoord = vUv * noiseScale * 5.0;
             float crack = fbm(noiseCoord);
+            float woodGrain = fbm(noiseCoord * 3.0);
             
-            // Create sharp cracks with darker edges
-            float crackThreshold = 1.0 - crackAmount * 0.5;
-            float crackEdge = smoothstep(crackThreshold - 0.02, crackThreshold, crack);
+            float crackThreshold = 0.9 - crackAmount * 0.34;
+            float edgeWidth = 0.1 * crackAmount;
+            float innerCrack = smoothstep(crackThreshold - edgeWidth, crackThreshold, crack);
+            float outerCrack = smoothstep(crackThreshold, crackThreshold + edgeWidth, crack);
             
-            // Darken the cracks
-            vec3 crackColor = vec3(0.2, 0.2, 0.2);
-            vec3 edgeColor = vec3(0.3, 0.3, 0.3);
-            
-            // Mix colors based on crack pattern
             vec3 finalColor = baseColor.rgb;
+
+            // Calculate lighting based on normal map
+            vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+            float diffuse = max(dot(finalNormal, lightDir), 0.0);
+            
+            // Apply your crack and color modifications
             if (crack > crackThreshold) {
-                finalColor = mix(crackColor, baseColor.rgb, 0.2);
-            } else if (crack > crackThreshold - 0.05) {
-                finalColor = mix(edgeColor, baseColor.rgb, crackEdge);
+                vec3 crackColor = vec3(0.1);
+                finalColor = mix(crackColor, finalColor, 0.2);
+            } else if (crack > crackThreshold - edgeWidth) {
+                vec3 edgeColor = vec3(0.2);
+                finalColor = mix(finalColor, edgeColor, innerCrack);
             }
+            
+            // Apply lighting
+            finalColor *= (diffuse * 0.7 + 0.3);
             
             gl_FragColor = vec4(finalColor, 1.0);
         }
@@ -558,132 +513,27 @@ export const RoadCrackShader = {
 
 
 
+
+
 // Rust Shader for Fence
 export const RustShaderFence = {
     uniforms: {
         baseTexture: { value: null },
         rustAmount: { value: 0.0 },
-        noiseScale: { value: 4.0 },
-        metalness: { value: .8 },
-        roughness: { value: .2 }
+        noiseScale: { value: 0.10 },
+        metalness: { value: .28 },
+        roughness: { value: .52 }
     },
     vertexShader: `
         varying vec2 vUv;
         void main() {
             vUv = uv;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-    fragmentShader: `
-        uniform sampler2D baseTexture;
-        uniform float rustAmount;
-        uniform float noiseScale;
-        uniform float metalness;
-        uniform float roughness;
-        varying vec2 vUv;
-
-        float hash(vec2 p) {
-            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-        }
-
-        float noise(vec2 p) {
-            vec2 i = floor(p);
-            vec2 f = fract(p);
-            f = f * f * (3.0 - 2.0 * f);
-            
-            float a = hash(i);
-            float b = hash(i + vec2(1.0, 0.0));
-            float c = hash(i + vec2(0.0, 1.0));
-            float d = hash(i + vec2(1.0, 1.0));
-            
-            return mix(
-                mix(a, b, f.x),
-                mix(c, d, f.x),
-                f.y
-            );
-        }
-
-        float fbm(vec2 p) {
-            float value = 0.0;
-            float amplitude = 0.5;
-            float frequency = 1.0;
-            for(int i = 0; i < 8; i++) {
-                value += amplitude * noise(p * frequency);
-                frequency *= 2.2;
-                amplitude *= 0.6;
             }
-            return value;
-        }
-
-        void main() {
-            vec4 baseColor = texture2D(baseTexture, vUv);
-        
-            float uniqueSeed = 0.7;
-            vec2 uv = vUv * noiseScale + uniqueSeed;
-            
-            float n1 = fbm(uv * 2.0);
-            float n2 = fbm(uv * 4.0 + vec2(5.2, 1.3));
-            float n3 = fbm(uv * 8.0 + vec2(9.4, 2.6));
-            
-            float rustPattern = (n1 * 0.6 + n2 * 0.25 + n3 * 0.15) * 1.8;
-            rustPattern = pow(rustPattern, 0.65);
-            
-            vec4 darkRust = vec4(0.52, 0.28, 0.12, 0.8);
-            vec4 midRust = vec4(0.58, 0.32, 0.15, 0.5);
-            vec4 lightRust = vec4(0.65, 0.38, 0.18, 0.3);
-            
-            float threshold = smoothstep(0.3, 0.9, rustAmount);
-            float adjustedPattern = mix(rustPattern, 1.0, threshold);
-            
-            vec4 rustMix = mix(
-                darkRust,
-                mix(midRust, lightRust, n2),
-                n1 * n3 * 0.8
-            );
-            
-            float finalMix = rustAmount * adjustedPattern;
-            finalMix = mix(finalMix, 1.0, pow(rustAmount, 0.5));
-            
-            vec4 finalColor = baseColor;
-            finalColor.rgb = mix(
-                baseColor.rgb, 
-                rustMix.rgb, 
-                finalMix * rustMix.a
-            );
-            
-            finalColor.a = baseColor.a;
-            
-            finalColor.rgb = mix(finalColor.rgb, finalColor.rgb * (1.0 - roughness), metalness);
-            
-            gl_FragColor = finalColor;
-        }
-    `
-};
-
-
-
-
-
-// Moss Shader for Pillars
-export const MossShaderPillar = {
-    uniforms: {
-        baseTexture: { value: null },
-        mossAmount: { value: 0.0 },
-        noiseScale: { value: 12.0 },
-        metalness: { value: 0.6 },
-        roughness: { value: 0.8 }
-    },
-    vertexShader: `
-        varying vec2 vUv;
-        varying vec3 vPosition;
-        void main() {
-            vUv = uv;
-            vPosition = position;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
+            `,
+         
     fragmentShader: `
-        uniform sampler2D baseTexture;
+       uniform sampler2D baseTexture;
         uniform float mossAmount;
         uniform float noiseScale;
         uniform float metalness;
@@ -731,11 +581,112 @@ export const MossShaderPillar = {
             float mossPattern = (n1 * 0.5 + n2 * 0.3 + n3 * 0.2) * 1.8;
             mossPattern = pow(mossPattern, 0.8);
             
-            vec4 darkMoss = vec4(0.15, 0.35, 0.15, 0.9);
-            vec4 midMoss = vec4(0.25, 0.45, 0.20, 0.7);
-            vec4 lightMoss = vec4(0.35, 0.55, 0.25, 0.5);
+    
+         vec4 darkRust = vec4(0.52, 0.28, 0.12, 0.8);
+            vec4 midRust = vec4(0.58, 0.32, 0.15, 0.0);
+            vec4 lightRust = vec4(0.65, 0.38, 0.18, 0.02);
             
-            float heightFactor = clamp(vPosition.y * 0.1, 0.0, 1.0);
+            vec4 mossMix = mix(
+                darkMoss,
+                mix(midMoss, lightMoss, n2),
+                n1 * n3
+            );
+            
+            float finalMix = mossAmount * adjustedPattern;
+            finalMix = pow(finalMix, 1.2);
+            
+            vec4 finalColor = baseColor;
+            finalColor.rgb = mix(
+                baseColor.rgb, 
+                mossMix.rgb, 
+                finalMix * mossMix.a
+            );
+            
+            finalColor.a = baseColor.a;
+            
+            finalColor.rgb = mix(finalColor.rgb, finalColor.rgb * (1.0 - roughness), metalness);
+            
+            gl_FragColor = finalColor;
+        }
+    `
+};
+
+
+
+
+
+// Moss Shader for Pillars
+export const MossShaderPillar = {
+    uniforms: {
+        baseTexture: { value: null },
+        mossAmount: { value: 0.0 },
+        noiseScale: { value: 12.0 },
+        metalness: { value: 0.6 },
+        roughness: { value: 0.8 }
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        void main() {
+            vUv = uv;
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform sampler2D baseTexture;
+        uniform float mossAmount;
+        uniform float noiseScale;
+        uniform float metalness;
+        uniform float roughness;
+        varying vec2 vUv;
+        varying vec3 vPosition;
+
+        float hash(vec2 p) {
+            p = fract(p * vec2(443.897, 441.423));
+            p += dot(p, p + 9.19);
+            return fract(p.x * p.y);
+        }
+
+        float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            f = f * f * (3.0 - 2.60 * f);
+            return mix(
+                mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+                mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+                f.y
+            );
+        }
+
+        float fbm(vec2 p) {
+            float value = 0.0;
+            float amplitude = 0.5;
+            float frequency = 1.0;
+            for(int i = 0; i < 6; i++) {
+                value += amplitude * noise(p * frequency);
+                frequency *= 99.0;
+                amplitude *= 10.5;
+            }
+            return value;
+        }
+
+        void main() {
+            vec4 baseColor = texture2D(baseTexture, vUv);
+            
+            vec2 uv = vUv * noiseScale;
+            float n1 = fbm(uv * 2.0);
+            float n2 = fbm(uv * 3.0 + vec2(2.1, 4.3));
+            float n3 = fbm(uv * 4.0 + vec2(6.4, 1.6));
+            
+            float mossPattern = (n1 * 0.5 + n2 * 0.3 + n3 * 0.2) * 1.8;
+            mossPattern = pow(mossPattern, 0.8);
+            
+            vec4 darkMoss = vec4(0.15, 0.35, 0.15, 0.9);
+            vec4 midMoss = vec4(0.25, 0.45, 0.20, 0.57);
+            vec4 lightMoss = vec4(0.35, 0.55, 0.25, 0.95);
+            
+            float heightFactor = clamp(vPosition.y * 0.9, 0.0, 1.0);
             float threshold = 1.0 - (mossAmount * 2.0 * heightFactor);
             float adjustedPattern = smoothstep(threshold, 1.0, mossPattern);
             
@@ -769,7 +720,7 @@ export const MossShaderPillar = {
 
 //3dmodel
 function Model({ year, setSelectedHotspot  }) {
-    const { nodes, materials } = useGLTF('/Bridge.glb');
+    const { nodes, materials } = useGLTF('/nycbridge.glb');
     const fenceMaterialRef = useRef();
     const pillarMaterialRef = useRef();
     const roadMaterialRef = useRef();
@@ -779,24 +730,37 @@ function Model({ year, setSelectedHotspot  }) {
      
         
         if (materials) {
-
+  // Check if normal maps exist
+  console.log('Normal maps:', {
+    road: materials['Wood_Plank.003'].normalMap,
+    bridge: materials['High_Bridge.003'].normalMap,
+    // ... check other materials
+});
        
         
             // Create Rust Material (for fence)
             const createRustMaterial = (baseMaterial) => {
                 const material = new THREE.MeshPhysicalMaterial({
                     map: baseMaterial.map,
-                    metalness: 0.91,
-                    roughness: 0.42,
-                    clearcoat: 0.0,
-                    clearcoatRoughness: 0.0,
+                    metalness: 0.92,
+                    roughness: 1.0,
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.40,
                     transparent: true,
                     opacity: 1,
+                    side: THREE.DoubleSide,
+                    // Add these properties
+                    depthWrite: true,
+                    depthTest: true,
+                    alphaTest: 0.5,
+                    polygonOffset: true,
+                    polygonOffsetFactor: -1,
+                    polygonOffsetUnits: -1
                 });
 
                 material.onBeforeCompile = (shader) => {
                     shader.uniforms.rustAmount = { value: 0.0 };
-                    shader.uniforms.noiseScale = { value: 0.15 };
+                    shader.uniforms.noiseScale = { value: 0.05 };
                     shader.uniforms.baseTexture = { value: baseMaterial.map };
 
                     shader.vertexShader = shader.vertexShader.replace(
@@ -868,12 +832,12 @@ function Model({ year, setSelectedHotspot  }) {
                         float rustPattern = (n1 * 0.5 + n2 * 0.3 + n3 * 0.2) * 6.5;
                         rustPattern = pow(rustPattern, 0.7);
                         
-                  vec4 darkRust = vec4(0.32, 0.18, 0.08, 1.0);    // Much darker brown
-vec4 midRust = vec4(0.0,0.0,0.0, 0.30);    // Darker mid toneA
-vec4 lightRust = vec4(0.45, 0.28, 0.14, 0.14);  // Darker light tone
+                  vec4 darkRust = vec4(0.53, 0.27, 0.08, 0.30);    // Much darker brown
+vec4 midRust = vec4(0.76, 0.47, 0.24, 1.0);    // Darker mid toneA
+vec4 lightRust = vec4(0.75, 0.75, 0.75, 1.0);  // Darker light tone
                         
                         float threshold = 1.0 - (rustAmount * 2.0);
-                        float adjustedPattern = smoothstep(threshold, 1.0, rustPattern);
+                        float adjustedPattern = smoothstep(threshold, 1.40, rustPattern);
                         
                         vec4 rustMix = mix(
                             darkRust,
@@ -882,7 +846,7 @@ vec4 lightRust = vec4(0.45, 0.28, 0.14, 0.14);  // Darker light tone
                         );
                         
                         float finalMix = rustAmount * adjustedPattern;
-                        finalMix = pow(finalMix, .5);
+                        finalMix = pow(finalMix, 5.5);
                         
                         vec4 baseColor = vec4(diffuseColor.rgb, diffuseColor.a);
                         diffuseColor = mix(baseColor, rustMix, finalMix * rustMix.a);
@@ -895,183 +859,134 @@ vec4 lightRust = vec4(0.45, 0.28, 0.14, 0.14);  // Darker light tone
 
                 return material;
             };
-
-
-const createRoadMaterial = (baseMaterial) => {
-    const material = new THREE.ShaderMaterial({
-        uniforms: {
-            baseTexture: { value: baseMaterial.map },
-            crackAmount: { value: 0.0 },
-            noiseScale: { value: 2.0 },
-            crackDepth: { value: 0.15 },
-            crackWidth: { value: 0.08 }
-        },
-        vertexShader: `
-            varying vec2 vUv;
-            varying vec3 vNormal;
-            varying float vDisplacement;
-            uniform float crackAmount;
-            uniform float crackDepth;
-            uniform float noiseScale;
-
-            float hash(vec2 p) {
-                p = fract(p * vec2(234.34, 435.345));
-                p += dot(p, p + 34.23);
-                return fract(p.x * p.y);
-            }
-
-            float noise(vec2 p) {
-                vec2 i = floor(p);
-                vec2 f = fract(p);
-                f = f * f * (3.0 - 2.0 * f);
-                
-                float a = hash(i);
-                float b = hash(i + vec2(1.0, 0.0));
-                float c = hash(i + vec2(0.0, 1.0));
-                float d = hash(i + vec2(1.0, 1.0));
-                
-                return mix(
-                    mix(a, b, f.x),
-                    mix(c, d, f.x),
-                    f.y
-                );
-            }
-
-            float fbm(vec2 p) {
-                float value = 0.10;
-                float amplitude = 0.5;
-                float frequency = 1.0;
-                for(int i = 0; i < 6; i++) {
-                    value += amplitude * noise(p * frequency);
-                    frequency *= 2.0;
-                    amplitude *= 0.5;
-                }
-                return value;
-            }
-
-            void main() {
-                vUv = uv;
-                vNormal = normal;
-                
-                // Enhanced crack pattern
-                vec2 noiseCoord = uv * noiseScale * 5.0;
-                float crack = fbm(noiseCoord);
-                float crackPattern = smoothstep(0.4, 0.6, crack);
-                
-                // Calculate displacement
-                float displacement = 0.0;
-                float crackThreshold = 1.0 - crackAmount * 0.5;
-                
-                if (crack > crackThreshold) {
-                    // Enhanced displacement calculation
-                    float crackStrength = (crack - crackThreshold) / (1.0 - crackThreshold);
-                    displacement = crackStrength * crackDepth * crackAmount * 2.0;
-                    
-                    // Add variation to displacement
-                    displacement *= (1.0 + fbm(noiseCoord * 2.0) * 0.5);
-                }
-                
-                vDisplacement = displacement;
-                
-                // Apply displacement along normal and add some random offset
-                vec3 newPosition = position - normal * displacement * 0.95;
-                newPosition += normal * fbm(noiseCoord * 13.0) * displacement * 0.42;
-                
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform sampler2D baseTexture;
-            uniform float crackAmount;
-            uniform float crackWidth;
-            uniform float noiseScale;
+            const createRoadMaterial = (baseMaterial) => {
+                const material = new THREE.MeshPhysicalMaterial({
+                    map: baseMaterial.map,
+                    normalMap: baseMaterial.normalMap,
+                    normalScale: new THREE.Vector2(1, 1),
+                    metalness: 0.0,
+                    roughness: 1.0,
+                    clearcoat: 0.8,
+                    clearcoatRoughness: 0.60,
+                    transparent: true,
+                    opacity: 1,
+                    side: THREE.DoubleSide
+                });
             
-            varying vec2 vUv;
-            varying vec3 vNormal;
-            varying float vDisplacement;
-
-            float hash(vec2 p) {
-                return fract(sin(dot(p, vec2(127.1, 311.7))) * 758.5453123);
-            }
-
-            float noise(vec2 p) {
-                vec2 i = floor(p);
-                vec2 f = fract(p);
-                f = f * f * (3.0 - 2.0 * f);
-                return mix(
-                    mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-                    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-                    f.y
-                );
-            }
-
-            float fbm(vec2 p) {
-                float value = 0.0;
-                float amplitude = 0.5;
-                float frequency = 1.80;
-                for(int i = 0; i < 6; i++) {
-                    value += amplitude * noise(p * frequency);
-                    frequency *= 2.0;
-                    amplitude *= 0.5;
-                }
-                return value;
-            }
-
-            void main() {
-                vec4 baseColor = texture2D(baseTexture, vUv);
-                
-                // Enhanced crack pattern
-                vec2 noiseCoord = vUv * noiseScale * 5.0;
-                float crack = fbm(noiseCoord);
-                
-                // Calculate crack edges
-                float crackThreshold = 0.9 - crackAmount * 0.34;
-                float edgeWidth = 0.1 * crackAmount;
-                float innerCrack = smoothstep(crackThreshold - edgeWidth, crackThreshold, crack);
-                float outerCrack = smoothstep(crackThreshold, crackThreshold + edgeWidth, crack);
-                
-                // Create sharp black edges
-                vec3 crackColor = vec3(0.0, 0.0, 0.0);  // Pure black
-                vec3 edgeColor = vec3(0.07, 0.07, 0.07);   // Very dark grey
-                
-                // Mix colors based on crack pattern
-                vec3 finalColor = baseColor.rgb;
-                
-                // Apply edge coloring
-                if (crack > crackThreshold) {
-                    // Inner part of crack
-                    finalColor = mix(crackColor, edgeColor, outerCrack);
-                } else if (crack > crackThreshold - edgeWidth) {
-                    // Edge of crack
-                    finalColor = mix(baseColor.rgb, crackColor, innerCrack);
-                }
-                
-                // Add depth shading based on displacement
-                float shadowIntensity = vDisplacement * 2.0;
-                finalColor = mix(finalColor, crackColor, shadowIntensity);
-                
-                // Add some ambient occlusion effect
-                float ao = 4.0 - (vDisplacement * 1.05);
-                finalColor *= ao;
-                
-                gl_FragColor = vec4(finalColor, 1.0);
-            }
-        `,
-        transparent: true
-    });
-    return material;
-};
+                material.onBeforeCompile = (shader) => {
+                    // Add custom uniforms
+                    shader.uniforms = {
+                        ...shader.uniforms,
+                        crackAmount: { value: 0.0 },
+                        noiseScale: { value: 0.085 },
+                        crackWidth: { value: 0.08 }
+                    };
+            
+                    // Store uniforms reference
+                    material.userData.uniforms = shader.uniforms;
+            
+                    // Add noise functions to the top of fragment shader
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        '#include <common>',
+                        `
+                        #include <common>
+            
+                        uniform float crackAmount;
+                        uniform float noiseScale;
+                        uniform float crackWidth;
+                        varying vec2 vUvCrack;
+            
+                        // Noise functions
+                        float hash(vec2 p) {
+                            return fract(sin(dot(p, vec2(127.1, 311.7))) * 758.5453123);
+                        }
+            
+                        float noise(vec2 p) {
+                            vec2 i = floor(p);
+                            vec2 f = fract(p);
+                            f = f * f * (3.0 - 2.0 * f);
+                            return mix(
+                                mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+                                mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+                                f.y
+                            );
+                        }
+            
+                        float fbm(vec2 p) {
+                            float value = 0.0;
+                            float amplitude = 0.5;
+                            float frequency = 1.80;
+                            for(int i = 0; i < 6; i++) {
+                                value += amplitude * noise(p * frequency);
+                                frequency *= 2.0;
+                                amplitude *= 0.5;
+                            }
+                            return value;
+                        }
+                        `
+                    );
+            
+                    // Add varying to vertex shader
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <common>',
+                        `
+                        #include <common>
+                        varying vec2 vUvCrack;
+                        `
+                    );
+            
+                    // Assign UV in vertex shader
+                    shader.vertexShader = shader.vertexShader.replace(
+                        '#include <begin_vertex>',
+                        `
+                        #include <begin_vertex>
+                        vUvCrack = uv;
+                        `
+                    );
+            
+                    // Add crack effect in fragment shader
+                    shader.fragmentShader = shader.fragmentShader.replace(
+                        '#include <color_fragment>',
+                        `
+                        #include <color_fragment>
+                        
+                        vec2 noiseCoord = vUvCrack * noiseScale * 5.0;
+                        float crack = fbm(noiseCoord);
+                        
+                        float crackThreshold = 0.9 - crackAmount * 0.34;
+                        float edgeWidth = 0.06 * crackAmount;
+                        float innerCrack = smoothstep(crackThreshold - edgeWidth, crackThreshold, crack);
+                        float outerCrack = smoothstep(crackThreshold, crackThreshold + edgeWidth, crack);
+                        
+                        vec3 crackColor = vec3(0,0,0);
+                        vec3 edgeColor = vec3(0.02);
+                        
+                        if (crack > crackThreshold) {
+                            diffuseColor.rgb = mix(crackColor, edgeColor, outerCrack);
+                        } else if (crack > crackThreshold - edgeWidth) {
+                            diffuseColor.rgb = mix(diffuseColor.rgb, crackColor, innerCrack);
+                        }
+                        `
+                    );
+            
+                    material.userData.shader = shader;
+                };
+            
+                material.needsUpdate = true;
+                return material;
+            };
           
 
 const createMossMaterial = (baseMaterial) => {
     const material = new THREE.MeshPhysicalMaterial({
         map: baseMaterial.map,
-        metalness: 0.01,
+        metalness: 0.51,
         roughness: 1.0,
         clearcoat: 1.0,
         clearcoatRoughness: 1.0,
         transparent: true,
         opacity: 1,
+        side: THREE.DoubleSide 
     });
 
     material.onBeforeCompile = (shader) => {
@@ -1151,7 +1066,7 @@ const createMossMaterial = (baseMaterial) => {
             // Different colors for pillar
       vec4 darkColor = vec4(0.05, 0.08, 0.04, 1.0);    // Very dark moss green, almost black
 vec4 midColor = vec4(0.08, 0.12, 0.06, 0.0005);     // Dark murky green
-vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very dark green
+vec4 lightColor = vec4(0.0,0.0,0.0, 0.30);   // Slightly lighter but still very dark green
 
             
             float threshold = 1.0 - (rustAmount * 2.0);
@@ -1179,29 +1094,54 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
 };
 
         
-            fenceMaterialRef.current = createRustMaterial(materials['Material.002']);
-            pillarMaterialRef.current = createMossMaterial(materials['Scene_-_Root']);
-            roadMaterialRef.current = createRoadMaterial(materials['road_road_0016_01_tiled.001']);
+roadMaterialRef.current = createRoadMaterial(materials['Wood_Plank.003']);
+fenceMaterialRef.current = {
+    bridge: createRustMaterial(materials['High_Bridge.003']),
+    bridgePart: createRustMaterial(materials['highway_railing_trim_transparent.003'])
+};
+pillarMaterialRef.current = {
+    brick: createMossMaterial(materials['Bridge_Stone.003']),
+    ring: createMossMaterial(materials['Bridge_Trim.002']),
+    upshade: createMossMaterial(materials['Concrete.003']),
+    upupshade: createMossMaterial(materials['Bricks.003']),
+    upupupshade: createMossMaterial(materials['lotta_walls.003'])
+};
+         
         }
     }, [materials]);
 
     useFrame(() => {
-        const rustAmount = (year - 2000) / 25; // Updated from 20 to 25
-     
-        if (fenceMaterialRef.current?.userData.shader) {
-            fenceMaterialRef.current.userData.shader.uniforms.rustAmount.value = rustAmount;
-        }
-        if (pillarMaterialRef.current?.userData.shader) {
-            pillarMaterialRef.current.userData.shader.uniforms.rustAmount.value = rustAmount;
-        }
-        if (roadMaterialRef.current) {
-            roadMaterialRef.current.uniforms.crackAmount.value = rustAmount;
-        }
+        const rustAmount = (year - 2000) / 20;
+        
+        // Update rust shaders
+        Object.values(fenceMaterialRef.current || {}).forEach(material => {
+            if (material?.userData.shader) {
+                material.userData.shader.uniforms.rustAmount.value = rustAmount;
+            }
+        });
+        
+        // Update moss shaders
+        Object.values(pillarMaterialRef.current || {}).forEach(material => {
+            if (material?.userData.shader) {
+                material.userData.shader.uniforms.rustAmount.value = rustAmount;
+            }
+        });
+        
+        // Update road shader
+           // Update road material
+    if (roadMaterialRef.current?.userData?.uniforms) {
+        roadMaterialRef.current.userData.uniforms.crackAmount.value = rustAmount;
+    }
     });
 
+
+
     return (
-        <group dispose={null} scale={2} position={[0,-20,0]}>
-            <Environment 
+        
+           
+
+<group dispose={null} scale={12.0}>
+<Environment 
   files={'/overcast_soil_puresky_2k.hdr'}
   background={true} 
   blur={0} 
@@ -1210,65 +1150,83 @@ vec4 lightColor = vec4(0.0,0.0,0.0, 1.0);   // Slightly lighter but still very d
   environmentIntensity={0}
   backgroundRotation={[0, Math.PI, 0]}
 />
+ <group>     <HotspotsContainer setSelectedHotspot={setSelectedHotspot} /></group>
+<mesh
+                castShadow
+                receiveShadow
+                geometry={nodes.upshade.geometry}
+                material={pillarMaterialRef.current?.upshade || materials['Concrete.003']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                side={THREE.DoubleSide}  // Add this line
+            />
+            <mesh
+                castShadow
+                receiveShadow
+                geometry={nodes.brick.geometry}
+                material={pillarMaterialRef.current?.brick || materials['Bridge_Stone.003']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                side={THREE.DoubleSide}  // Add this line
+            />
+            <mesh
+                castShadow
+                receiveShadow
+                geometry={nodes.ring.geometry}
+                material={pillarMaterialRef.current?.ring || materials['Bridge_Trim.002']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                side={THREE.DoubleSide}  // Add this line
+            />
 
             <mesh
                 castShadow
                 receiveShadow
-                geometry={nodes.lightstand.geometry}
-                material={pillarMaterialRef.current || materials['Scene_-_Root']}
-
-
-                position={[-13.003, 0, -281.684]}
-                rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-                scale={0.001}
+                geometry={nodes.upupupshade.geometry}
+                material={pillarMaterialRef.current?.upupupshade || materials['lotta_walls.003']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                side={THREE.DoubleSide}  // Add this line
             />
-                 <HotspotsContainer setSelectedHotspot={setSelectedHotspot} />
-       <mesh
+            <mesh
                 castShadow
                 receiveShadow
                 geometry={nodes.road.geometry}
-                material={roadMaterialRef.current || materials['road_road_0016_01_tiled.001']}
-                position={[-13.003, 0, -281.684]}
-                rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-                scale={0.001}
+                material={roadMaterialRef.current || materials['Wood_Plank.003']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                scale={[1,1,1]}
+                side={THREE.DoubleSide}  // Add this line
             />
             <mesh
                 castShadow
                 receiveShadow
-                geometry={nodes.fence.geometry}
-                material={fenceMaterialRef.current || materials['Material.002']}
-                position={[-13.003, 0, -281.684]}
-                rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-                scale={0.001}
+                geometry={nodes.upupshade.geometry}
+                material={pillarMaterialRef.current?.upupshade || materials['Bricks.003']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                side={THREE.DoubleSide}  // Add this line
+            />
+             <mesh
+                castShadow
+                receiveShadow
+                geometry={nodes.bridge.geometry}
+                material={fenceMaterialRef.current?.bridge || materials['High_Bridge.003']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                renderOrder={1}
             />
             <mesh
                 castShadow
                 receiveShadow
-                geometry={nodes.rectpillar.geometry}
-                material={pillarMaterialRef.current || materials['Scene_-_Root']}
-                position={[-13.003, 0, -281.684]}
-                rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-                scale={0.001}
+                geometry={nodes.bridgepart.geometry}
+                material={fenceMaterialRef.current?.bridgePart || materials['highway_railing_trim_transparent.003']}
+                position={[0, 4.443, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                renderOrder={2}
             />
-        <mesh
-                castShadow
-                receiveShadow
-                geometry={nodes.light.geometry}
-                material={ materials['Material.001']}
-                position={[-13.003, 0, -281.684]}
-                rotation={[-Math.PI / 2, 0.008, -Math.PI / 2]}
-                scale={0.001}
-            >
-               
-                <pointLight
-                    color="#ffeecc"
-                    intensity={1}
-                    distance={5}
-                    decay={2}
-                    castShadow
-                />
-            </mesh>
-        </group>
+               {/* <HotspotsContainer setSelectedHotspot={setSelectedHotspot} /> */}
+</group>
     );
 }
 
@@ -1692,9 +1650,9 @@ const BridgeScene = () => {
         if (controlsRef.current) {
             // Position animation
             gsap.to(controlsRef.current.object.position, {
-                x: 50,
-                y: 50,
-                z: 70,
+                x:100,
+                y: 120,
+                z: 60,
                 duration: 1.5,
                 ease: "power3.inOut"
             });
@@ -1749,8 +1707,8 @@ const BridgeScene = () => {
       
             tl.to(controlsRef.current.object.position, {
                 x: 1,
-                y: 60,
-                z: 820,
+                y: 20,
+                z: 500,
                 duration: 1.5,
                 ease: "sine.in"
             }, 0);
@@ -1798,7 +1756,7 @@ const BridgeScene = () => {
         
     shadows
     camera={{ 
-        position: [50, 50, 70],
+        position: [100, 120, 60],
         fov: 65,
         near: 0.1,
         far: 1000,
@@ -1806,11 +1764,15 @@ const BridgeScene = () => {
     }}
     gl={{ 
         antialias: true,
-        alpha: true
+        alpha: true,
+        logarithmicDepthBuffer: true,  // Add this
+        stencil: false,
+        depth: true
     }}
 >
 <CompassRotation setCompassRotation={setCompassRotation} />
     <directionalLight position={[10, 10, 5]} intensity={3.96} />
+    <ambientLight intensity={4.4}/>
     <directionalLight position={[-10, -10, -5]} intensity={3.96} />
     <Stage 
     adjustCamera={false} 
@@ -1822,7 +1784,7 @@ const BridgeScene = () => {
         blur: 1.5,
         color: "#000000" 
     }}
-    intensity={1.5}  // Increase light intensity
+    intensity={0}  // Increase light intensity
     preset="rembrandt" // This preset gives dramatic shadows
     shadowBias={0.01} // Adjust shadow bias
 >
@@ -2065,6 +2027,6 @@ const BridgeScene = () => {
 };
 
 
-useGLTF.preload('/Bridge.glb');
+useGLTF.preload('/nycbridge.glb');
 
 export default BridgeScene;
