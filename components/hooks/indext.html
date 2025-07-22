@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000;
+            overflow: hidden;
+        }
+        #scene-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+        }
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.9) 140%);
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="scene-container"></div>
+    <div class="vignette"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+let scene, camera, renderer, composer;
+const PARTICLE_COUNT = 15000; // Increased particle count
+const curves = [];
+const particleGroups = [];
+
+const colorPalettes = {
+    bright: [
+        {r: 1.0, g: 0.8, b: 0.3},  // Golden
+        {r: 0.3, g: 0.7, b: 1.0},  // Bright Blue
+        {r: 1.0, g: 0.4, b: 0.4},  // Coral
+        {r: 0.5, g: 1.0, b: 0.8},  // Cyan
+        {r: 1.0, g: 1.0, b: 1.0},  // White
+        {r: 0.8, g: 0.5, b: 1.0}   // Purple
+    ],
+    dim: [
+        {r: 0.3, g: 0.2, b: 0.5},  // Deep Purple
+        {r: 0.2, g: 0.3, b: 0.4},  // Dark Blue
+        {r: 0.4, g: 0.2, b: 0.3},  // Dark Red
+        {r: 0.2, g: 0.2, b: 0.3}   // Dark Purple
+    ]
+};
+
+function createBezierCurves() {
+    const origin = new THREE.Vector3(-60, 30, -20); // Emergence point
+    
+    for (let i = 0; i < 12; i++) {
+        const startPoint = origin.clone().add(new THREE.Vector3(
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10
+        ));
+        
+        const endPoint = new THREE.Vector3(
+            100 + Math.random() * 60,
+            -30 + (Math.random() - 0.5) * 80,
+            (Math.random() - 0.5) * 80
+        );
+        
+        const control1 = new THREE.Vector3(
+            startPoint.x * 0.3 + (Math.random() - 0.5) * 60,
+            (Math.random() - 0.5) * 60,
+            (Math.random() - 0.5) * 60
+        );
+        
+        const control2 = new THREE.Vector3(
+            endPoint.x * 0.7 + (Math.random() - 0.5) * 60,
+            (Math.random() - 0.5) * 60,
+            (Math.random() - 0.5) * 60
+        );
+
+        const curve = new THREE.CubicBezierCurve3(
+            startPoint,
+            control1,
+            control2,
+            endPoint
+        );
+        curves.push(curve);
+    }
+}
+
+function createGradientTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+
+    const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#000033');
+    gradient.addColorStop(0.3, '#000066');
+    gradient.addColorStop(0.6, '#000044');
+    gradient.addColorStop(1, '#000022');
+
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+}function init() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        powerPreference: "high-performance"
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000);
+    document.getElementById('scene-container').appendChild(renderer.domElement);
+
+    createBezierCurves();
+
+    const gradientTexture = createGradientTexture();
+    scene.background = gradientTexture;
+
+    curves.forEach((curve) => {
+        const particlesPerCurve = Math.floor(PARTICLE_COUNT / curves.length);
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particlesPerCurve * 3);
+        const colors = new Float32Array(particlesPerCurve * 3);
+        const sizes = new Float32Array(particlesPerCurve);
+        const progressArray = new Float32Array(particlesPerCurve);
+        const initialOffsets = new Float32Array(particlesPerCurve * 3);
+
+        for(let i = 0; i < particlesPerCurve; i++) {
+            const progress = Math.random() * -1; // Start with negative progress for staggered emergence
+            progressArray[i] = progress;
+            
+            const offset = {
+                x: (Math.random() - 0.5) * 12,
+                y: (Math.random() - 0.5) * 12,
+                z: (Math.random() - 0.5) * 12
+            };
+
+            initialOffsets[i * 3] = offset.x;
+            initialOffsets[i * 3 + 1] = offset.y;
+            initialOffsets[i * 3 + 2] = offset.z;
+
+            const point = curve.getPoint(0);
+            positions[i * 3] = point.x;
+            positions[i * 3 + 1] = point.y;
+            positions[i * 3 + 2] = point.z;
+
+            const isBright = Math.random() > 0.6; // More bright stars
+            const palette = isBright ? colorPalettes.bright : colorPalettes.dim;
+            const color = palette[Math.floor(Math.random() * palette.length)];
+            
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
+
+            // Varied sizes with more large stars
+            sizes[i] = Math.random() > 0.95 ? 
+                      2.5 + Math.random() * 2 : 
+                      0.5 + Math.random() * 1;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        const material = new THREE.PointsMaterial({
+            size: 0.5,
+            vertexColors: true,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            opacity: 0.8,
+            depthWrite: false
+        });
+
+        const particleSystem = new THREE.Points(geometry, material);
+        scene.add(particleSystem);
+
+        particleGroups.push({
+            system: particleSystem,
+            progress: progressArray,
+            curve: curve,
+            speed: 0.001 + Math.random() * 0.001, // Slower, more consistent speeds
+            initialOffsets: initialOffsets,
+            time: Math.random() * 1000
+        });
+    });
+
+    // Enhanced post-processing
+    composer = new THREE.EffectComposer(renderer);
+    const renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    
+    const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        2.5,    // Increased bloom intensity
+        0.4,    // Radius
+        0.1     // Threshold
+    );
+    composer.addPass(bloomPass);
+
+    // Position camera to focus on emergence point
+    camera.position.set(-90, 40, 60);
+    camera.lookAt(-60, 30, -20); // Look at emergence point
+
+    window.addEventListener('resize', onWindowResize, false);
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate(currentTime) {
+    requestAnimationFrame(animate);
+
+    // Subtle camera movement
+    camera.position.y += Math.sin(currentTime * 0.0005) * 0.02;
+    camera.position.x += Math.cos(currentTime * 0.0003) * 0.02;
+    camera.lookAt(-60, 30, -20);
+
+    particleGroups.forEach(group => {
+        const positions = group.system.geometry.attributes.position.array;
+        const colors = group.system.geometry.attributes.color.array;
+        const progress = group.progress;
+        group.time += 0.016;
+        
+        for(let i = 0; i < progress.length; i++) {
+            if(progress[i] < 0) {
+                progress[i] += group.speed * 0.5;
+                continue;
+            }
+
+            progress[i] += group.speed;
+            
+            if(progress[i] > 1) {
+                progress[i] = Math.random() * -0.5; // Reset with random delay
+                continue;
+            }
+
+            const point = group.curve.getPoint(progress[i]);
+            const offset = group.initialOffsets;
+            const progressFactor = Math.min(1, (progress[i] * 2));
+            
+            // Smooth emergence effect
+            const emergenceFactor = Math.sin(progressFactor * Math.PI);
+            
+            const wobbleX = Math.sin(group.time + i * 0.1) * 0.3 * progressFactor;
+            const wobbleY = Math.cos(group.time + i * 0.1) * 0.3 * progressFactor;
+            const wobbleZ = Math.sin(group.time + i * 0.2) * 0.3 * progressFactor;
+
+            positions[i * 3] = point.x + offset[i * 3] * progressFactor + wobbleX;
+            positions[i * 3 + 1] = point.y + offset[i * 3 + 1] * progressFactor + wobbleY;
+            positions[i * 3 + 2] = point.z + offset[i * 3 + 2] * progressFactor + wobbleZ;
+
+            // Fade in/out based on progress
+            for(let j = 0; j < 3; j++) {
+                colors[i * 3 + j] *= emergenceFactor;
+            }
+        }
+
+        group.system.geometry.attributes.position.needsUpdate = true;
+        group.system.geometry.attributes.color.needsUpdate = true;
+    });
+
+    scene.background.offset.x += 0.0005;
+    scene.background.needsUpdate = true;
+
+    composer.render();
+}
+
+init();
+animate(0);
+</script>
+</body>
+</html>

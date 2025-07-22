@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name */
 /* eslint-disable react/jsx-no-duplicate-props */
 import React, { useState, useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -7,7 +8,14 @@ import Image from 'next/image';
 import { forwardRef, useCallback } from 'react';
 import gsap from 'gsap';
 
-
+const hdrOptions = [
+    { name: 'Overcast', value: '/overcast_soil_puresky_2k.hdr', icon: '☁️' },
+    { name: 'Sunset', value: '/sunset.hdr', icon: '🌅' },
+    { name: 'Night', value: '/night.hdr', icon: '🌙' },
+    { name: 'Dawn', value: '/dawn.hdr', icon: '🌄' },
+    { name: 'Cloudy', value: '/cloudy.hdr', icon: '⛅' }
+  ];
+  
 
 //icons
 const Icons = {
@@ -1142,10 +1150,9 @@ pillarMaterialRef.current = {
 
 <group dispose={null} scale={12.0}>
 <Environment 
-  files={'/overcast_soil_puresky_2k.hdr'}
+  files={selectedHdr}
   background={true} 
   blur={0} 
-
   preset={null} 
   environmentIntensity={0}
   backgroundRotation={[0, Math.PI, 0]}
@@ -1636,6 +1643,108 @@ const isTouchDevice = () => {
         (navigator.msMaxTouchPoints > 0));
 };
 
+const HdrSelector = ({ selected, onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+  
+    return (
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        left: '20px',
+        zIndex: 1000,
+      }}>
+        <div style={{
+          position: 'relative',
+        }}>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            style={{
+              background: 'rgba(0, 0, 0, 0.85)',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              width: '160px',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>{hdrOptions.find(opt => opt.value === selected)?.icon}</span>
+              <span>{hdrOptions.find(opt => opt.value === selected)?.name}</span>
+            </div>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{
+                transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+              }}
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+  
+          {isOpen && (
+            <div style={{
+              position: 'absolute',
+              bottom: '100%',
+              marginBottom: '8px',
+              background: 'rgba(0, 0, 0, 0.85)',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              width: '160px',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+            }}>
+              {hdrOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'background 0.2s ease',
+                    ':hover': {
+                      background: 'rgba(255, 255, 255, 0.1)',
+                    },
+                  }}
+                >
+                  <span>{option.icon}</span>
+                  <span>{option.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
 const BridgeScene = () => {
     const [year, setYear] = useState(2000);
     const [isTouch, setIsTouch] = useState(false);
@@ -1644,6 +1753,9 @@ const BridgeScene = () => {
     const controlsRef = useRef();
     const [showLayers, setShowLayers] = useState(false);
     const [selectedHotspot, setSelectedHotspot] = useState(null);
+    const [selectedHdr, setSelectedHdr] = useState(hdrOptions[0].value);
+    const [isHdrOpen, setIsHdrOpen] = useState(false);
+
 
     const handleHomeClick = useCallback(() => {
         setControlMode('home');
@@ -2022,6 +2134,10 @@ const BridgeScene = () => {
         </div>
     </div>
 </div>
+<HdrSelector 
+  selected={selectedHdr}
+  onChange={setSelectedHdr}
+/>
         </div>
     );
 };

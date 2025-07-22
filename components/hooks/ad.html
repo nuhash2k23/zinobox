@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL Blue Squares Grid</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #0a0a14;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        // Vertex shader source
+        const vertexShaderSource = `
+            precision mediump float;
+            attribute vec2 a_position;
+            attribute vec2 a_offset;
+            uniform vec2 u_resolution;
+            uniform float u_time;
+            varying vec2 v_worldPos;
+            
+            void main() {
+                vec2 position = a_position + a_offset;
+                v_worldPos = position;
+                vec2 clipSpace = ((position / u_resolution) * 2.0) - 1.0;
+                gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+            }
+        `;
+
+        // Fragment shader source
+        const fragmentShaderSource = `
+            precision mediump float;
+            uniform vec2 u_resolution;
+            uniform float u_time;
+            varying vec2 v_worldPos;
+            
+            // Simple noise function
+            float noise(vec2 p) {
+                return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+            }
+            
+            float smoothNoise(vec2 p) {
+                vec2 f = fract(p);
+                vec2 u = f * f * (3.0 - 2.0 * f);
+                
+                float a = noise(floor(p));
+                float b = noise(floor(p) + vec2(1.0, 0.0));
+                float c = noise(floor(p) + vec2(0.0, 1.0));
+                float d = noise(floor(p) + vec2(1.0, 1.0));
+                
+                return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+            }
+            
+            // Distance to square function for glow
+            float squareDistance(vec2 p, vec2 center, float size) {
+                vec2 d = abs(p - center) - size;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+            }
+            
+            void main() {
+                vec2 uv = v_worldPos / u_resolution;
+                vec2 pixelPos = v_worldPos;
+                
+                // Calculate which grid cell we're in
+                float gridSpacing = 4.0;
+                vec2 gridCell = floor(pixelPos / gridSpacing);
+                vec2 cellCenter = (gridCell + 0.5) * gridSpacing;
+                
+                // Distance to the nearest square
+                float distToSquare = squareDistance(pixelPos, cellCenter, 1.5);
+                
+                // Create moving island patterns - larger scale, smoother movement
+                vec2 wavePos1 = uv * 3.0 + vec2(sin(u_time * 0.3) * 2.0, cos(u_time * 0.25) * 1.5);
+                vec2 wavePos2 = uv * 2.5 + vec2(cos(u_time * 0.4) * 1.8, sin(u_time * 0.35) * 1.2);
+                vec2 wavePos3 = uv * 4.0 + vec2(sin(u_time * 0.2) * 1.0, cos(u_time * 0.15) * 0.8);
+                
+                float island1 = smoothNoise(wavePos1);
+                float island2 = smoothNoise(wavePos2);
+                float island3 = smoothNoise(wavePos3);
+                
+                // Combine islands with smooth thresholds for retro look
+                float combinedIslands = island1 * 0.4 + island2 * 0.35 + island3 * 0.25;
+                combinedIslands = smoothstep(0.3, 0.9, combinedIslands);
+                
+                // Add retro scan line effect
+                float scanLine = sin(uv.y * u_resolution.y * 0.8 + u_time * 2.0) * 0.1 + 1.0;
+                
+                // Create retro pulsing waves across the screen
+                float retroWave = sin(uv.x * 6.0 + u_time * 1.5) * sin(uv.y * 4.0 + u_time * 1.2);
+                retroWave = retroWave * 0.3 + 0.7;
+                
+                // Moving hotspot centers with retro circular motion
+                vec2 center1 = vec2(0.5 + 0.3 * sin(u_time * 0.4), 0.5 + 0.3 * cos(u_time * 0.4));
+                vec2 center2 = vec2(0.5 + 0.25 * cos(u_time * 0.6 + 2.0), 0.5 + 0.25 * sin(u_time * 0.6 + 2.0));
+                vec2 center3 = vec2(0.5 + 0.2 * sin(u_time * 0.5 + 4.0), 0.5 + 0.2 * cos(u_time * 0.5 + 4.0));
+                
+                float dist1 = 1.0 - smoothstep(0.1, 0.5, distance(uv, center1));
+                float dist2 = 1.0 - smoothstep(0.1, 0.4, distance(uv, center2));
+                float dist3 = 1.0 - smoothstep(0.1, 0.35, distance(uv, center3));
+                
+                float movingHotspots = max(dist1, max(dist2 * 0.8, dist3 * 0.6));
+                
+                // Base grid illumination for retro visibility
+                float baseIllumination = 0.15;
+                
+                // Calculate island intensity
+                float islandIntensity = combinedIslands * 0.7 + movingHotspots * 0.6 + baseIllumination;
+                islandIntensity *= retroWave * scanLine;
+                
+                // Smooth glow layers around squares
+                float coreGlow = (1.0 - smoothstep(0.0, 2.0, distToSquare)) * islandIntensity;
+                float midGlow = (1.0 - smoothstep(0.0, 5.0, distToSquare)) * islandIntensity * 0.6;
+                float outerGlow = (1.0 - smoothstep(0.0, 10.0, distToSquare)) * islandIntensity * 0.3;
+                
+                // Wide area glow for retro island effect
+                float areaGlow = (1.0 - smoothstep(0.0, 16.0, distToSquare)) * combinedIslands * 0.4;
+                
+                // Combine all glow effects
+                float totalIntensity = coreGlow + midGlow + outerGlow + areaGlow;
+                totalIntensity = clamp(totalIntensity, 0.0, 1.5);
+                
+                // Retro cyan/blue color palette
+                vec3 darkBlue = vec3(0.05, 0.1, 0.3);
+                vec3 baseBlue = vec3(0.1, 0.3, 0.7);
+                vec3 brightBlue = vec3(0.2, 0.6, 1.0);
+                vec3 hotCyan = vec3(0.4, 0.8, 1.0);
+                vec3 whiteCyan = vec3(0.7, 0.9, 1.0);
+                
+                // Color mixing based on intensity
+                vec3 finalColor = darkBlue;
+                finalColor = mix(finalColor, baseBlue, smoothstep(0.1, 0.3, totalIntensity));
+                finalColor = mix(finalColor, brightBlue, smoothstep(0.3, 0.6, totalIntensity));
+                finalColor = mix(finalColor, hotCyan, smoothstep(0.6, 0.9, totalIntensity));
+                finalColor = mix(finalColor, whiteCyan, smoothstep(0.9, 1.2, totalIntensity));
+                
+                // Add retro glow boost
+                finalColor *= (0.8 + totalIntensity * 0.7);
+                
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            
+            return shader;
+        }
+
+        function createProgram(gl, vertexShader, fragmentShader) {
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program linking error:', gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+            
+            return program;
+        }
+
+        function setupWebGL() {
+            const canvas = document.getElementById('canvas');
+            const gl = canvas.getContext('webgl');
+            
+            if (!gl) {
+                console.error('WebGL not supported');
+                return;
+            }
+
+            // Create shaders
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+            
+            if (!vertexShader || !fragmentShader) {
+                console.error('Failed to create shaders');
+                return;
+            }
+            
+            const program = createProgram(gl, vertexShader, fragmentShader);
+            
+            if (!program) {
+                console.error('Failed to create WebGL program');
+                return;
+            }
+
+            // Get attribute and uniform locations
+            const positionLocation = gl.getAttribLocation(program, 'a_position');
+            const offsetLocation = gl.getAttribLocation(program, 'a_offset');
+            const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+            const timeLocation = gl.getUniformLocation(program, 'u_time');
+
+            // Create square geometry (two triangles)
+            const squareSize = 3; // Much smaller squares
+            const gap = 1; // Smaller gap between squares
+            const positions = new Float32Array([
+                0, 0,
+                squareSize, 0,
+                0, squareSize,
+                squareSize, 0,
+                squareSize, squareSize,
+                0, squareSize
+            ]);
+
+            // Create position buffer
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+
+                // Calculate grid dimensions
+                const gridSpacing = squareSize + gap;
+                const cols = Math.ceil(canvas.width / gridSpacing) + 1;
+                const rows = Math.ceil(canvas.height / gridSpacing) + 1;
+
+                // Create offset data for grid
+                const offsets = [];
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        offsets.push(col * gridSpacing, row * gridSpacing);
+                    }
+                }
+
+                // Create offset buffer
+                const offsetBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, offsetBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(offsets), gl.STATIC_DRAW);
+
+                return { offsetBuffer, instanceCount: rows * cols };
+            }
+
+            let { offsetBuffer, instanceCount } = resize();
+            window.addEventListener('resize', () => {
+                const result = resize();
+                offsetBuffer = result.offsetBuffer;
+                instanceCount = result.instanceCount;
+            });
+
+            function render(time) {
+                time *= 0.001; // Convert to seconds
+
+                // Enable blending for glow effects
+                gl.enable(gl.BLEND);
+                gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+                gl.clearColor(0.02, 0.02, 0.05, 1);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                gl.useProgram(program);
+
+                // Set uniforms
+                gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+                gl.uniform1f(timeLocation, time);
+
+                // Bind position attribute
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.enableVertexAttribArray(positionLocation);
+                gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+                // Bind offset attribute
+                gl.bindBuffer(gl.ARRAY_BUFFER, offsetBuffer);
+                gl.enableVertexAttribArray(offsetLocation);
+                gl.vertexAttribPointer(offsetLocation, 2, gl.FLOAT, false, 0, 0);
+
+                // Enable instancing by setting divisor
+                if (gl.vertexAttribDivisor) {
+                    gl.vertexAttribDivisor(offsetLocation, 1);
+                    gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instanceCount);
+                } else {
+                    // Fallback for browsers without instancing support
+                    for (let i = 0; i < instanceCount; i++) {
+                        const offset = i * 2;
+                        gl.vertexAttrib2f(offsetLocation, 
+                            (i % Math.ceil(canvas.width / (squareSize + gap))) * (squareSize + gap),
+                            Math.floor(i / Math.ceil(canvas.width / (squareSize + gap))) * (squareSize + gap)
+                        );
+                        gl.drawArrays(gl.TRIANGLES, 0, 6);
+                    }
+                }
+
+                requestAnimationFrame(render);
+            }
+
+            // Check for instancing support
+            const ext = gl.getExtension('ANGLE_instanced_arrays');
+            if (ext) {
+                gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
+                gl.drawArraysInstanced = ext.drawArraysInstancedANGLE.bind(ext);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        // Initialize WebGL when page loads
+        window.addEventListener('load', setupWebGL);
+    </script>
+</body>
+</html>

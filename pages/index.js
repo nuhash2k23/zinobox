@@ -7,10 +7,14 @@ import styles from "@/styles/Home.module.css";
 // import Canvasboxeng from "@/components/Canvasboxeng";
 // import GradientCanvas from "@/components/GradientCanvas";
 import Scene from "@/components/hooks/Scene";
+import Trial from "@/components/hooks/Trial";
+
 import BridgeScene from "@/components/BridgeComponent";
+// import { Trail } from "@react-three/drei";
 
+import  AJ  from "@/components/hooks/AJ";
 
-
+import  Blob  from "@/components/hooks/Blob";
 const GravitasBold = localFont({
   src: "./fonts/Studio K - Gravitas Bold.otf",
   variable: "--font-geist-sans",
@@ -38,7 +42,10 @@ export default function Home() {
      {/* <Canvasboxeng/> */}
      {/* <GradientCanvas/> */}
      {/* <Scene/> */}
-     <BridgeScene/>
+     {/* <Trial/> */}
+     <AJ/>
+     {/* <BridgeScene/> */}
+     {/* <Blob/> */}
      </main>
       </>
     </>

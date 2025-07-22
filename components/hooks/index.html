@@ -613,5 +613,900 @@ animate();
         animate();
     </script>
 </body>
-</html> -->
+</html>
 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Shirt Configurator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .svg-editor {
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 5px;
+}
+
+.editor-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.position-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    justify-items: center;
+}
+
+.position-controls button {
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+}
+
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #three-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #fabric-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .controls {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 300px;
+        }
+
+        .uv-toolbar {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            width: 250px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .control-group h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            height: 30px;
+            margin: 5px;
+            border: none;
+            border-radius: 3px;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        #debug-info {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            z-index: 1000;
+        }
+
+        .texture-preview {
+            width: 100%;
+            height: 100px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f5f5;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .texture-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen">
+        <h2>Loading Model...</h2>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="three-canvas"></canvas>
+        <canvas id="fabric-canvas"></canvas>
+    </div>
+    <div class="svg-editor" style="display: none;">
+        <h4>SVG Editor</h4>
+        <div class="editor-controls">
+            <button id="scale-down">-</button>
+            <input type="range" id="scale-slider" min="0.1" max="2" step="0.1" value="1">
+            <button id="scale-up">+</button>
+            <div class="position-controls">
+                <button id="move-up">↑</button>
+                <button id="move-left">←</button>
+                <button id="move-right">→</button>
+                <button id="move-down">↓</button>
+            </div>
+            <button id="apply-svg">Apply</button>
+            <button id="cancel-svg">Cancel</button>
+        </div>
+    </div>
+
+    <div class="uv-toolbar">
+        <h3>Graphics Placement</h3>
+        <div class="control-group">
+            <select id="part-select">
+                <option value="front">Front</option>
+                <option value="back">Back</option>
+                <option value="collar">Collar</option>
+                <option value="leftshoulder">Left Shoulder</option>
+                <option value="rightshoulder">Right Shoulder</option>
+            </select>
+            <input type="file" id="texture-upload" accept="image/*">
+            <div class="texture-preview">
+                <span>No texture selected</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <h3>Colors</h3>
+            <div class="color-picker-group">
+                <label>Front:</label>
+                <input type="color" id="front-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Back:</label>
+                <input type="color" id="back-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Collar:</label>
+                <input type="color" id="collar-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Left Shoulder:</label>
+                <input type="color" id="leftshoulder-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Right Shoulder:</label>
+                <input type="color" id="rightshoulder-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Background:</label>
+                <input type="color" id="bg-color" value="#ffffff">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Background</h3>
+            <button id="bg-image-btn">Upload Background Image</button>
+            <input type="file" id="bg-image-upload" accept="image/*" style="display: none;">
+        </div>
+
+        <div class="control-group">
+            <h3>Camera Controls</h3>
+            <button id="reset-camera">Reset View</button>
+            <div class="control-options">
+                <label>
+                    <input type="checkbox" id="autoRotate" checked>
+                    Auto Rotate
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Actions</h3>
+            <button id="download-btn">Download Design</button>
+            <button id="reset-btn">Reset All</button>
+        </div>
+    </div>
+
+    <div id="debug-info"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Debug helper
+        function updateDebugInfo(info) {
+            document.getElementById('debug-info').textContent = info;
+        }
+
+        // Three.js scene setup
+        const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ 
+    canvas: document.getElementById('three-canvas'), 
+    antialias: true,
+    preserveDrawingBuffer: true 
+});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+// Controls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 1;
+controls.maxDistance = 10;
+controls.enablePan = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 2.0;
+
+
+        let shirtModel;
+        let selectedPart = 'front';
+        const textureLoader = new THREE.TextureLoader();
+        const materials = {};
+
+        // Setup lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.51);
+        directionalLight.position.set(0, 1, 1);
+        scene.add(directionalLight);
+        const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.51);
+        directionalLight.position.set(0, 1, -1);
+        scene.add(directionalLight2);
+        let currentSVGEditor = null;
+        // Create default materials for each part
+        function createDefaultMaterial() {
+            return new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                metalness: 0.1,
+                roughness: 0.8,
+                side: THREE.DoubleSide
+            });
+        }
+        class SVGEditor {
+            constructor(mesh, svgData) {
+        this.mesh = mesh;
+        this.svgData = svgData;
+        this.scale = 0.2;
+        
+        // Create texture canvas
+        this.textureCanvas = document.createElement('canvas');
+        this.textureCanvas.width = 2048;
+        this.textureCanvas.height = 2048;
+        this.ctx = this.textureCanvas.getContext('2d');
+
+        // Initialize Fabric.js canvas
+        const fabricCanvasEl = document.getElementById('fabric-canvas');
+        fabricCanvasEl.style.pointerEvents = 'auto';
+        this.fabricCanvas = new fabric.Canvas('fabric-canvas', {
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+
+        // Get UV mapping of the mesh
+        this.uvs = this.mesh.geometry.attributes.uv;
+        this.calculateUVBounds();
+        this.setupEditor();
+    }
+
+    calculateUVBounds() {
+        const uvs = this.uvs.array;
+        let minU = Infinity, maxU = -Infinity;
+        let minV = Infinity, maxV = -Infinity;
+
+        for (let i = 0; i < uvs.length; i += 2) {
+            minU = Math.min(minU, uvs[i]);
+            maxU = Math.max(maxU, uvs[i]);
+            minV = Math.min(minV, uvs[i + 1]);
+            maxV = Math.max(maxV, uvs[i + 1]);
+        }
+
+        this.uvBounds = { minU, maxU, minV, maxV };
+    }
+    cleanup() {
+    const fabricCanvas = document.getElementById('fabric-canvas');
+    fabricCanvas.style.pointerEvents = 'none';
+    
+    // Clear Fabric.js canvas
+    this.fabricCanvas.clear();
+    this.fabricCanvas.dispose();
+    
+    // Hide editor controls
+    document.querySelector('.svg-editor').style.display = 'none';
+    
+    // Reset the material if needed
+    if (this.mesh.material.map) {
+        this.mesh.material.map.dispose();
+        this.mesh.material.map = null;
+        this.mesh.material.needsUpdate = true;
+    }
+    
+    currentSVGEditor = null;
+}
+  
+    setupEditor() {
+        this.textureCanvas.width = 2048; // Higher resolution
+        this.textureCanvas.height = 2048;
+        
+        // Show editor controls
+        document.querySelector('.svg-editor').style.display = 'block';
+        
+        // Load SVG into Fabric.js
+        fabric.loadSVGFromURL(this.svgData, (objects, options) => {
+            const svg = fabric.util.groupSVGElements(objects, options);
+            
+            // Initial positioning in UV space
+            svg.scaleX = svg.scaleY = this.scale;
+            this.centerSVGInUVSpace(svg);
+            
+            this.fabricObject = svg;
+            this.fabricCanvas.add(svg);
+            this.fabricCanvas.renderAll();
+            
+            this.setupFabricControls();
+            this.updateThreeJSTexture();
+        });
+    }
+    setupFabricControls() {
+    // Enable object controls
+    this.fabricCanvas.on('object:moving', (e) => {
+        const obj = e.target;
+        const uvPos = this.getUVPosition(obj.left, obj.top);
+        this.applyUVDistortion(uvPos.u, uvPos.v);
+        this.updateThreeJSTexture();
+    });
+
+    this.fabricCanvas.on('object:scaling', (e) => {
+        const obj = e.target;
+        const uvPos = this.getUVPosition(obj.left, obj.top);
+        this.applyUVDistortion(uvPos.u, uvPos.v);
+        this.updateThreeJSTexture();
+    });
+
+    // Add snapping to UV grid
+    this.fabricCanvas.on('object:modified', (e) => {
+        const obj = e.target;
+        const uvPos = this.getUVPosition(obj.left, obj.top);
+        const snappedPos = this.snapToUVGrid(uvPos.u, uvPos.v);
+        
+        obj.set({
+            left: snappedPos.x,
+            top: snappedPos.y
+        });
+        
+        this.fabricCanvas.renderAll();
+        this.updateThreeJSTexture();
+    });
+}
+
+getUVPosition(x, y) {
+    return {
+        u: x / this.textureCanvas.width,
+        v: 1 - (y / this.textureCanvas.height)
+    };
+}
+
+snapToUVGrid(u, v) {
+    // Snap to 0.1 increments in UV space
+    const gridSize = 0.1;
+    const snappedU = Math.round(u / gridSize) * gridSize;
+    const snappedV = Math.round(v / gridSize) * gridSize;
+    
+    return {
+        x: snappedU * this.textureCanvas.width,
+        y: (1 - snappedV) * this.textureCanvas.height
+    };
+}
+    centerSVGInUVSpace(svg) {
+        // Calculate center position in UV space
+        const centerU = (this.uvBounds.maxU + this.uvBounds.minU) / 2;
+        const centerV = (this.uvBounds.maxV + this.uvBounds.minV) / 2;
+
+        // Convert UV coordinates to texture space
+        const x = centerU * this.textureCanvas.width;
+        const y = (1 - centerV) * this.textureCanvas.height;
+
+        svg.set({
+            left: x - (svg.width * svg.scaleX) / 2,
+            top: y - (svg.height * svg.scaleY) / 2
+        });
+    }
+
+    updateThreeJSTexture() {
+        return new Promise((resolve) => {
+            // Render Fabric.js directly onto the texture canvas
+            this.fabricCanvas.renderAll();
+            this.ctx.clearRect(0, 0, this.textureCanvas.width, this.textureCanvas.height);
+            this.ctx.drawImage(this.fabricCanvas.lowerCanvasEl, 0, 0);
+
+            // Create or update Three.js texture
+            const texture = new THREE.CanvasTexture(this.textureCanvas);
+            texture.encoding = THREE.sRGBEncoding;
+            texture.flipY = false;
+            texture.premultiplyAlpha = true;
+            texture.needsUpdate = true;
+
+            if (this.mesh.material.map) {
+                this.mesh.material.map.dispose();
+            }
+
+            this.mesh.material.map = texture;
+            this.mesh.material.transparent = true;
+            this.mesh.material.alphaTest = 0.1;
+            this.mesh.material.needsUpdate = true;
+
+            resolve();
+        });
+    }
+
+    applyChanges() {
+        this.fabricCanvas.renderAll();
+        this.updateThreeJSTexture();
+    }
+
+
+
+    applyUVDistortion(u, v) {
+        // Find closest UV points on the mesh
+        const geometry = this.mesh.geometry;
+        const positions = geometry.attributes.position;
+        const uvs = geometry.attributes.uv;
+        
+        // Calculate distortion based on surface normal at UV point
+        for (let i = 0; i < positions.count; i++) {
+            const uv = new THREE.Vector2(uvs.getX(i), uvs.getY(i));
+            if (uv.distanceTo(new THREE.Vector2(u, v)) < 0.1) {
+                // Get surface normal at this point
+                const normal = new THREE.Vector3();
+                normal.fromBufferAttribute(geometry.attributes.normal, i);
+                
+                // Apply distortion based on normal
+                this.fabricObject.set({
+                    skewX: normal.x * 10,
+                    skewY: normal.y * 10
+                });
+                break;
+            }
+        }
+    }
+
+
+    setupEventListeners() {
+        // Modified movement controls to work in UV space
+        const uvStep = 0.01;
+        
+        document.getElementById('move-up').onclick = () => {
+            if (this.fabricObject) {
+                const newV = this.fabricObject.top - (uvStep * this.textureCanvas.height);
+                this.fabricObject.set('top', newV);
+                this.fabricCanvas.renderAll();
+                this.updateThreeJSTexture();
+            }
+        };
+
+        document.getElementById('scale-down').onclick = () => {
+    if (this.fabricObject) {
+        const currentScale = this.fabricObject.getObjectScaling();
+        this.fabricObject.scale(currentScale.x * 0.9);
+        this.fabricCanvas.renderAll();
+        this.updateThreeJSTexture();
+    }
+};
+
+document.getElementById('scale-up').onclick = () => {
+    if (this.fabricObject) {
+        const currentScale = this.fabricObject.getObjectScaling();
+        this.fabricObject.scale(currentScale.x * 1.1);
+        this.fabricCanvas.renderAll();
+        this.updateThreeJSTexture();
+    }
+};
+
+        document.getElementById('scale-slider').addEventListener('input', (e) => {
+            if (this.fabricObject) {
+                const newScale = parseFloat(e.target.value) * this.scale;
+                this.fabricObject.scale(newScale);
+                this.fabricCanvas.renderAll();
+                this.updateThreeJSTexture();
+            }
+        });
+    }
+}
+
+function getUVCoordinates(mesh, worldPosition) {
+    const geometry = mesh.geometry;
+    const posAttr = geometry.attributes.position;
+    const uvAttr = geometry.attributes.uv;
+    
+    // Find closest point on mesh
+    let minDist = Infinity;
+    let closestUV = new THREE.Vector2();
+    
+    for (let i = 0; i < posAttr.count; i++) {
+        const vertex = new THREE.Vector3(
+            posAttr.getX(i),
+            posAttr.getY(i),
+            posAttr.getZ(i)
+        );
+        vertex.applyMatrix4(mesh.matrixWorld);
+        
+        const dist = vertex.distanceTo(worldPosition);
+        if (dist < minDist) {
+            minDist = dist;
+            closestUV.set(uvAttr.getX(i), uvAttr.getY(i));
+        }
+    }
+    
+    return closestUV;
+}
+
+
+function worldToUV(mesh, worldPosition) {
+    const uv = getUVCoordinates(mesh, worldPosition);
+    return {
+        x: uv.x * 2048, // texture width
+        y: (1 - uv.y) * 2048 // texture height
+    };
+}
+
+   
+
+        // Load the model
+        const loader = new THREE.GLTFLoader();
+        loader.load('shirt.glb', (gltf) => {
+            shirtModel = gltf.scene;
+
+            // Process each mesh in the model
+            shirtModel.traverse((child) => {
+                if (child.isMesh) {
+                    console.log('Found mesh:', child.name);
+                    
+                    // Create and assign new material
+                    const newMaterial = createDefaultMaterial();
+                    materials[child.name] = newMaterial;
+                    child.material = newMaterial;
+                    
+                    // Ensure proper material setup
+                    child.material.needsUpdate = true;
+                }
+            });
+
+            // Center the model
+         
+            shirtModel.position.set(0,-6,0);
+            // Scale the model if needed
+           shirtModel.scale.set(.61,.61,.61);
+
+            scene.add(shirtModel);
+            
+            // Set initial camera position
+            camera.position.set(0, 8,20);
+            controls.update();
+
+            // Remove loading screen
+            document.querySelector('.loading-screen').style.display = 'none';
+            
+            animate();
+        }, 
+        // Progress callback
+        (xhr) => {
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        },
+        // Error callback
+        (error) => {
+            console.error('Error loading model:', error);
+            updateDebugInfo('Error loading model: ' + error.message);
+        });
+
+        // Color change handler
+        function updateMaterialColor(partName, color) {
+            const material = materials[partName];
+            if (material) {
+                material.color.set(color);
+                material.needsUpdate = true;
+                updateDebugInfo(`Updated color for ${partName}`);
+            }
+        }
+
+        function applyTextureToMaterial(partName, texture) {
+    const material = materials[partName];
+    if (material) {
+        material.map = texture;
+        material.needsUpdate = true;
+        updateDebugInfo(`Applied SVG texture to ${partName}`);
+    }
+}
+
+        // Event Listeners
+        // Color picker events
+        document.querySelectorAll('input[type="color"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const part = e.target.id.split('-')[0];
+                if (part === 'bg') {
+                    scene.background = new THREE.Color(e.target.value);
+                } else {
+                    updateMaterialColor(part, e.target.value);
+                }
+            });
+        });
+
+        // Part selection
+        document.getElementById('part-select').addEventListener('change', (e) => {
+            selectedPart = e.target.value;
+            updateDebugInfo(`Selected part: ${selectedPart}`);
+        });
+
+        document.getElementById('texture-upload').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'image/svg+xml') {
+        const reader = new FileReader();
+        
+        reader.onload = (event) => {
+            // Find the selected mesh
+            if (shirtModel) {
+                const selectedMesh = shirtModel.children.find(child => child.name === selectedPart);
+                
+                if (selectedMesh) {
+                    // Clean up previous editor if exists
+                    if (currentSVGEditor) {
+                        currentSVGEditor.cleanup();
+                    }
+                    
+                    // Create new editor
+                    currentSVGEditor = new SVGEditor(selectedMesh, event.target.result);
+                    
+                    // Update preview
+                    const preview = document.querySelector('.texture-preview');
+                    preview.innerHTML = '';
+                    const previewImg = new Image();
+                    previewImg.src = event.target.result;
+                    preview.appendChild(previewImg);
+                } else {
+                    console.error('Selected mesh not found:', selectedPart);
+                }
+            }
+        };
+
+        reader.readAsDataURL(file);
+    } else {
+        alert('Only SVG files are allowed.');
+    }
+});
+
+        // Background image
+        document.getElementById('bg-image-btn').addEventListener('click', () => {
+            document.getElementById('bg-image-upload').click();
+        });
+
+        document.getElementById('bg-image-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const texture = textureLoader.load(event.target.result);
+                    texture.encoding = THREE.sRGBEncoding;
+                    scene.background = texture;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Camera controls
+        document.getElementById('reset-camera').addEventListener('click', () => {
+            camera.position.set(0, 0, 5);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+
+        document.getElementById('autoRotate').addEventListener('change', (e) => {
+            controls.autoRotate = e.target.checked;
+        });
+
+        // Reset functionality
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            // Reset materials
+            Object.keys(materials).forEach(key => {
+                const material = materials[key];
+                material.color.set(0xffffff);
+                material.map = null;
+                material.needsUpdate = true;
+            });
+
+            // Reset background
+            scene.background = new THREE.Color(0xffffff);
+
+            // Reset color inputs
+            document.querySelectorAll('input[type="color"]').forEach(input => {
+                input.value = '#ffffff';
+            });
+
+            // Reset texture preview
+            document.querySelector('.texture-preview').innerHTML = '<span>No texture selected</span>';
+
+            updateDebugInfo('Reset all materials and textures');
+        });
+        // Download functionality
+        document.getElementById('download-btn').addEventListener('click', () => {
+    const wasAutoRotating = controls.autoRotate;
+    controls.autoRotate = false;
+    
+    renderer.render(scene, camera);
+    
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = renderer.domElement.width;
+    finalCanvas.height = renderer.domElement.height;
+    const ctx = finalCanvas.getContext('2d');
+    
+    // Draw Three.js canvas
+    ctx.drawImage(renderer.domElement, 0, 0);
+    
+    // Draw Fabric.js canvas if it exists
+    if (currentSVGEditor && currentSVGEditor.fabricCanvas) {
+        ctx.drawImage(currentSVGEditor.fabricCanvas.lowerCanvasEl, 0, 0);
+    }
+    
+    const link = document.createElement('a');
+    link.download = 'shirt-design.png';
+    link.href = finalCanvas.toDataURL('image/png', 1.0);
+    link.click();
+    
+    controls.autoRotate = wasAutoRotating;
+});
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update controls
+            controls.update();
+            
+            // Update any dynamic textures or materials if needed
+            if (shirtModel) {
+                shirtModel.traverse((child) => {
+                    if (child.isMesh && child.material.needsUpdate) {
+                        child.material.needsUpdate = true;
+                    }
+                });
+            }
+            
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    if (currentSVGEditor && currentSVGEditor.fabricCanvas) {
+        currentSVGEditor.fabricCanvas.setWidth(window.innerWidth);
+        currentSVGEditor.fabricCanvas.setHeight(window.innerHeight);
+        currentSVGEditor.fabricCanvas.renderAll();
+    }
+    
+    renderer.render(scene, camera);
+}
+
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('Runtime error:', e);
+            updateDebugInfo('Error: ' + e.message);
+        });
+
+        // Initialize scene background
+        scene.background = new THREE.Color(0xffffff);
+
+        // Helper function to check WebGL compatibility
+        function checkWebGLCompatibility() {
+            if (!renderer.capabilities.isWebGL2) {
+                const warning = document.createElement('div');
+                warning.style.position = 'fixed';
+                warning.style.top = '10px';
+                warning.style.left = '50%';
+                warning.style.transform = 'translateX(-50%)';
+                warning.style.backgroundColor = '#ff4444';
+                warning.style.color = 'white';
+                warning.style.padding = '10px';
+                warning.style.borderRadius = '5px';
+                warning.style.zIndex = '9999';
+                warning.textContent = 'WebGL 2 is not available. Some features might not work correctly.';
+                document.body.appendChild(warning);
+            }
+        }
+
+        // Check WebGL compatibility on load
+        checkWebGLCompatibility();
+
+
+
+    </script>
+</body>
+</html>

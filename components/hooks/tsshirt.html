@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Shirt Configurator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #three-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #fabric-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .fabric-canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .canvas-container {
+            pointer-events: auto !important;
+        }
+
+        .controls {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 300px;
+        }
+
+        .uv-toolbar {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            width: 250px;
+        }
+
+        .svg-editor {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+        }
+
+        .editor-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .position-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            justify-items: center;
+        }
+
+        .position-controls button {
+            width: 40px;
+            height: 40px;
+            padding: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .control-group h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            height: 30px;
+            margin: 5px;
+            border: none;
+            border-radius: 3px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        #debug-info {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            z-index: 1000;
+        }
+
+        .texture-preview {
+            width: 100%;
+            height: 100px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f5f5;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .texture-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen">
+        <h2>Loading Model...</h2>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="three-canvas"></canvas>
+        <canvas id="fabric-canvas"></canvas>
+    </div>
+
+    <div class="svg-editor" style="display: none;">
+        <h4>SVG Editor</h4>
+        <div class="editor-controls">
+            <button id="scale-down">-</button>
+            <input type="range" id="scale-slider" min="0.1" max="2" step="0.1" value="1">
+            <button id="scale-up">+</button>
+            <div class="position-controls">
+                <button id="move-up">↑</button>
+                <button id="move-left">←</button>
+                <button id="move-right">→</button>
+                <button id="move-down">↓</button>
+            </div>
+            <button id="apply-svg">Apply</button>
+            <button id="cancel-svg">Cancel</button>
+        </div>
+    </div>
+
+    <div class="uv-toolbar">
+        <h3>Graphics Placement</h3>
+        <div class="control-group">
+            <select id="part-select">
+                <option value="front">Front</option>
+                <option value="back">Back</option>
+                <option value="collar">Collar</option>
+                <option value="leftshoulder">Left Shoulder</option>
+                <option value="rightshoulder">Right Shoulder</option>
+            </select>
+            <input type="file" id="texture-upload" accept="image/svg+xml">
+            <div class="texture-preview">
+                <span>No texture selected</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <h3>Colors</h3>
+            <div class="color-picker-group">
+                <label>Front:</label>
+                <input type="color" id="front-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Back:</label>
+                <input type="color" id="back-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Collar:</label>
+                <input type="color" id="collar-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Left Shoulder:</label>
+                <input type="color" id="leftshoulder-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Right Shoulder:</label>
+                <input type="color" id="rightshoulder-color" value="#ffffff">
+            </div>
+            <div class="color-picker-group">
+                <label>Background:</label>
+                <input type="color" id="bg-color" value="#ffffff">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Background</h3>
+            <button id="bg-image-btn">Upload Background Image</button>
+            <input type="file" id="bg-image-upload" accept="image/*" style="display: none;">
+        </div>
+
+        <div class="control-group">
+            <h3>Camera Controls</h3>
+            <button id="reset-camera">Reset View</button>
+            <div class="control-options">
+                <label>
+                    <input type="checkbox" id="autoRotate" checked>
+                    Auto Rotate
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Actions</h3>
+            <button id="download-btn">Download Design</button>
+            <button id="reset-btn">Reset All</button>
+        </div>
+    </div>
+
+    <div id="debug-info"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Debug helper
+        function updateDebugInfo(info) {
+            document.getElementById('debug-info').textContent = info;
+        }
+    
+        // Three.js scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: document.getElementById('three-canvas'), 
+            antialias: true,
+            preserveDrawingBuffer: true 
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+    
+        // Controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 1;
+        controls.maxDistance = 10;
+        controls.enablePan = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 2.0;
+    
+        // Global variables
+        let shirtModel;
+        let selectedPart = 'front';
+        let currentSVGEditor = null;
+        const textureLoader = new THREE.TextureLoader();
+        const materials = {};
+    
+        // Lighting setup
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+        scene.add(ambientLight);
+    
+        const directionalLight = new THREE.DirectionalLight(0xffffff, .68);
+        directionalLight.position.set(-2, 1, -11);
+        scene.add(directionalLight);
+        const directionalLight2 = new THREE.DirectionalLight(0xffffff, .68);
+        directionalLight2.position.set(2, -1, 11);
+        scene.add(directionalLight2);
+
+        
+    
+ class SVGEditor {
+    constructor(mesh, svgData) {
+        this.mesh = mesh;
+        this.svgData = svgData;
+        this.scale = 0.2;
+
+        // Store original material
+        this.originalMaterial = this.mesh.material.clone();
+        
+        // Create texture canvas
+        this.textureCanvas = document.createElement('canvas');
+        this.textureCanvas.width = 2048;
+        this.textureCanvas.height = 2048;
+        this.ctx = this.textureCanvas.getContext('2d');
+
+        // Initialize Fabric.js canvas
+        const fabricCanvasEl = document.getElementById('fabric-canvas');
+        fabricCanvasEl.style.pointerEvents = 'auto';
+        this.fabricCanvas = new fabric.Canvas('fabric-canvas', {
+            width: window.innerWidth,
+            height: window.innerHeight
+        });
+
+        this.initializeDecalMaterial();
+        this.setupEditor();
+    }
+    
+
+    initializeDecalMaterial() {
+        this.decalMaterial = new THREE.MeshPhongMaterial({
+            map: null,
+            transparent: true,
+            opacity: 1,
+            color: this.originalMaterial.color.clone(),
+            side: THREE.DoubleSide,
+            depthTest: true,
+            depthWrite: true,
+            blending: THREE.NormalBlending
+    });
+}
+
+
+    // Get UV coordinates
+    getUVCoordinates() {
+        const geometry = this.mesh.geometry;
+        const uvAttribute = geometry.attributes.uv;
+        const positions = geometry.attributes.position;
+        
+        let centerUV = new THREE.Vector2();
+        let totalVertices = 0;
+        
+        // Calculate average UV coordinate
+        for (let i = 0; i < uvAttribute.count; i++) {
+            centerUV.x += uvAttribute.getX(i);
+            centerUV.y += uvAttribute.getY(i);
+            totalVertices++;
+        }
+        
+        centerUV.divideScalar(totalVertices);
+        return centerUV;
+    }
+    updateDecalTexture() {
+        this.ctx.clearRect(0, 0, this.textureCanvas.width, this.textureCanvas.height);
+        
+        if (!this.fabricObject) return;
+
+        // Fill with original color
+        this.ctx.fillStyle = '#' + this.originalMaterial.color.getHexString();
+        this.ctx.fillRect(0, 0, this.textureCanvas.width, this.textureCanvas.height);
+
+        // Draw SVG
+        this.fabricCanvas.renderAll();
+        
+        // Create combined texture
+        const combinedCanvas = document.createElement('canvas');
+        combinedCanvas.width = this.textureCanvas.width;
+        combinedCanvas.height = this.textureCanvas.height;
+        const combinedCtx = combinedCanvas.getContext('2d');
+
+        // Draw base color
+        combinedCtx.fillStyle = '#' + this.originalMaterial.color.getHexString();
+        combinedCtx.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height);
+
+        // Draw SVG on top
+        combinedCtx.drawImage(this.fabricCanvas.lowerCanvasEl, 0, 0);
+
+        // Update Three.js texture
+        if (!this.mesh.material.map) {
+            const texture = new THREE.CanvasTexture(combinedCanvas);
+            texture.flipY = false;
+            texture.encoding = THREE.sRGBEncoding;
+            this.mesh.material.map = texture;
+        } else {
+            this.mesh.material.map.image = combinedCanvas;
+            this.mesh.material.map.needsUpdate = true;
+        }
+
+        this.mesh.material.needsUpdate = true;
+}
+    // Setup editor
+    setupEditor() {
+        document.querySelector('.svg-editor').style.display = 'block';
+        
+        fabric.loadSVGFromURL(this.svgData, (objects, options) => {
+            const svg = fabric.util.groupSVGElements(objects, options);
+            
+            // Scale down SVG
+            svg.scaleToWidth(this.textureCanvas.width * 0.1);
+            
+            // Center the SVG
+            svg.center();
+            
+            this.fabricObject = svg;
+            this.fabricCanvas.add(svg);
+            this.fabricCanvas.setActiveObject(svg);
+            this.fabricCanvas.renderAll();
+            
+            this.setupFabricControls();
+            this.updateDecalTexture();
+    });
+}
+    convertScreenToUV(x, y) {
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2(
+            (x / window.innerWidth) * 2 - 1,
+            -(y / window.innerHeight) * 2 + 1
+        );
+        
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(this.mesh);
+        
+        if (intersects.length > 0) {
+            return intersects[0].uv;
+        }
+        return null;
+    }
+    // Setup fabric controls
+    setupFabricControls() {
+        this.fabricCanvas.on('object:moving', (e) => {
+        const obj = e.target;
+        const bounds = this.mesh.geometry.boundingBox || 
+            new THREE.Box3().setFromObject(this.mesh);
+        
+        // Constrain movement to mesh bounds
+        const minX = bounds.min.x * this.textureCanvas.width;
+        const maxX = bounds.max.x * this.textureCanvas.width;
+        const minY = bounds.min.y * this.textureCanvas.height;
+        const maxY = bounds.max.y * this.textureCanvas.height;
+        
+        obj.left = Math.max(minX, Math.min(maxX, obj.left));
+        obj.top = Math.max(minY, Math.min(maxY, obj.top));
+        
+        this.updateDecalTexture();
+    });
+        this.fabricCanvas.on('object:modified', () => this.updateDecalTexture());
+
+        this.fabricCanvas.on('object:scaling', () => this.updateDecalTexture());
+        this.fabricCanvas.on('object:rotating', () => this.updateDecalTexture());
+
+        // Scale controls
+        document.getElementById('scale-slider').addEventListener('input', (e) => {
+            if (this.fabricObject) {
+                const scale = parseFloat(e.target.value) * this.scale;
+                this.fabricObject.scale(scale);
+                this.fabricCanvas.renderAll();
+                this.updateDecalTexture();
+            }
+        });
+
+        // Position controls
+        const moveAmount = 10;
+        ['up', 'down', 'left', 'right'].forEach(direction => {
+            document.getElementById(`move-${direction}`).onclick = () => {
+                if (this.fabricObject) {
+                    const prop = direction === 'up' || direction === 'down' ? 'top' : 'left';
+                    const value = this.fabricObject[prop] + (direction === 'down' || direction === 'right' ? moveAmount : -moveAmount);
+                    this.fabricObject.set(prop, value);
+                    this.fabricCanvas.renderAll();
+                    this.updateDecalTexture();
+                }
+            };
+        });
+
+        // Apply and cancel buttons
+        document.getElementById('apply-svg').onclick = () => this.apply();
+        document.getElementById('cancel-svg').onclick = () => this.cancel();
+    }
+
+    // Apply changes
+    apply() {
+        const finalMaterial = this.originalMaterial.clone();
+        finalMaterial.map = this.mesh.material.map;
+        finalMaterial.needsUpdate = true;
+        this.mesh.material = finalMaterial;
+        this.cleanup();
+    }
+
+    cancel() {
+        this.mesh.material = this.originalMaterial;
+        this.cleanup();
+    }
+
+    // Cleanup
+    cleanup() {
+        const fabricCanvasEl = document.getElementById('fabric-canvas');
+        fabricCanvasEl.style.pointerEvents = 'none';
+        this.fabricCanvas.dispose();
+        document.querySelector('.svg-editor').style.display = 'none';
+        
+        if (this.decalMaterial.map) {
+            this.decalMaterial.map.dispose();
+        }
+        this.decalMaterial.dispose();
+        currentSVGEditor = null;
+    }
+}
+function updateDecalMaterialSettings(material) {
+            Object.assign(material, {
+                transparent: true,
+                opacity: 1.0,
+                side: THREE.DoubleSide,
+                alphaTest: 0.5,
+                depthWrite: true,
+                depthTest: true,
+                blending: THREE.NormalBlending,
+                needsUpdate: true
+            });
+        }
+
+        if (currentSVGEditor?.decalMaterial) {
+            updateDecalMaterialSettings(currentSVGEditor.decalMaterial);
+        }
+        
+        // Create default materials for each part
+    function createDefaultMaterial() {
+        return new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            metalness: 0.1,
+            roughness: 0.8,
+            side: THREE.DoubleSide
+        });
+    }
+
+    // Load the model
+    const loader = new THREE.GLTFLoader();
+    loader.load('shirt.glb', (gltf) => {
+        shirtModel = gltf.scene;
+
+        // Process each mesh in the model
+        shirtModel.traverse((child) => {
+            if (child.isMesh) {
+                console.log('Found mesh:', child.name);
+                
+                // Create and assign new material
+                const newMaterial = createDefaultMaterial();
+                materials[child.name] = newMaterial;
+                child.material = newMaterial;
+                child.material.needsUpdate = true;
+            }
+        });
+
+        // Position and scale the model
+        shirtModel.position.set(0, -6, 0);
+        shirtModel.scale.set(0.61, 0.61, 0.61);
+        scene.add(shirtModel);
+        
+        // Set initial camera position
+        camera.position.set(0, 8, 20);
+        controls.update();
+
+        // Remove loading screen
+        document.querySelector('.loading-screen').style.display = 'none';
+        
+        // Start animation
+        animate();
+    }, 
+    // Progress callback
+    (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    },
+    // Error callback
+    (error) => {
+        console.error('Error loading model:', error);
+        updateDebugInfo('Error loading model: ' + error.message);
+    });
+
+    // Color change handler
+    function updateMaterialColor(partName, color) {
+        const material = materials[partName];
+        if (material) {
+            material.color.set(color);
+            material.needsUpdate = true;
+            updateDebugInfo(`Updated color for ${partName}`);
+        }
+    }
+
+    // Event Listeners
+    document.querySelectorAll('input[type="color"]').forEach(input => {
+        input.addEventListener('input', (e) => {
+            const part = e.target.id.split('-')[0];
+            if (part === 'bg') {
+                scene.background = new THREE.Color(e.target.value);
+            } else {
+                updateMaterialColor(part, e.target.value);
+            }
+        });
+    });
+
+    // Part selection
+    document.getElementById('part-select').addEventListener('change', (e) => {
+        selectedPart = e.target.value;
+        updateDebugInfo(`Selected part: ${selectedPart}`);
+    });
+
+    // SVG upload handler
+    document.getElementById('texture-upload').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && file.type === 'image/svg+xml') {
+            const reader = new FileReader();
+            
+            reader.onload = (event) => {
+                if (shirtModel) {
+                    const selectedMesh = shirtModel.children.find(child => 
+                        child.isMesh && child.name === selectedPart
+                    );
+                    
+                    if (selectedMesh) {
+                        if (currentSVGEditor) {
+                            currentSVGEditor.cleanup();
+                        }
+                        
+                        currentSVGEditor = new SVGEditor(selectedMesh, event.target.result);
+                        
+                        // Update preview
+                        const preview = document.querySelector('.texture-preview');
+                        preview.innerHTML = '';
+                        const previewImg = new Image();
+                        previewImg.src = event.target.result;
+                        preview.appendChild(previewImg);
+                    } else {
+                        console.error('Selected mesh not found:', selectedPart);
+                    }
+                }
+            };
+
+            reader.readAsDataURL(file);
+        } else {
+            alert('Only SVG files are allowed.');
+        }
+    });
+
+    // Background image upload
+    document.getElementById('bg-image-btn').addEventListener('click', () => {
+        document.getElementById('bg-image-upload').click();
+    });
+
+    document.getElementById('bg-image-upload').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const texture = textureLoader.load(event.target.result);
+                texture.encoding = THREE.sRGBEncoding;
+                scene.background = texture;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Camera controls
+    document.getElementById('reset-camera').addEventListener('click', () => {
+        camera.position.set(0, 8, 20);
+        controls.target.set(0, 0, 0);
+        controls.update();
+    });
+
+    document.getElementById('autoRotate').addEventListener('change', (e) => {
+        controls.autoRotate = e.target.checked;
+    });
+
+    // Reset functionality
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        // Reset materials
+        Object.keys(materials).forEach(key => {
+            const material = materials[key];
+            material.color.set(0xffffff);
+            material.map = null;
+            material.needsUpdate = true;
+        });
+
+        // Reset background
+        scene.background = new THREE.Color(0xffffff);
+
+        // Reset color inputs
+        document.querySelectorAll('input[type="color"]').forEach(input => {
+            input.value = '#ffffff';
+        });
+
+        // Reset texture preview
+        document.querySelector('.texture-preview').innerHTML = '<span>No texture selected</span>';
+
+        // Cleanup current editor if exists
+        if (currentSVGEditor) {
+            currentSVGEditor.cleanup();
+        }
+
+        updateDebugInfo('Reset all materials and textures');
+    });
+
+    // Download functionality
+    document.getElementById('download-btn').addEventListener('click', () => {
+    const wasAutoRotating = controls.autoRotate;
+    controls.autoRotate = false;
+    
+    // Ensure all materials are properly updated
+    shirtModel.traverse((child) => {
+        if (child.isMesh && child.material.needsUpdate) {
+            child.material.needsUpdate = true;
+        }
+    });
+    
+    // Force a render
+    renderer.render(scene, camera);
+    
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = renderer.domElement.width;
+    finalCanvas.height = renderer.domElement.height;
+    const ctx = finalCanvas.getContext('2d');
+    
+    // Draw Three.js canvas
+    ctx.drawImage(renderer.domElement, 0, 0);
+    
+    // Include active SVG editor if exists
+    if (currentSVGEditor && currentSVGEditor.fabricCanvas) {
+        ctx.drawImage(currentSVGEditor.fabricCanvas.lowerCanvasEl, 0, 0);
+    }
+    
+    const link = document.createElement('a');
+    link.download = 'shirt-design.png';
+    link.href = finalCanvas.toDataURL('image/png', 1.0);
+    link.click();
+    
+    controls.autoRotate = wasAutoRotating;
+});
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    // Window resize handler
+    window.addEventListener('resize', onWindowResize, false);
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        if (currentSVGEditor && currentSVGEditor.fabricCanvas) {
+            currentSVGEditor.fabricCanvas.setWidth(window.innerWidth);
+            currentSVGEditor.fabricCanvas.setHeight(window.innerHeight);
+            currentSVGEditor.fabricCanvas.renderAll();
+        }
+        
+        renderer.render(scene, camera);
+    }
+
+    // Initialize scene background
+    scene.background = new THREE.Color(0xffffff);
+
+    // WebGL compatibility check
+    if (!renderer.capabilities.isWebGL2) {
+        console.warn('WebGL 2 is not available. Some features might not work correctly.');
+    }
+
+</script>
+</body>
+</html>

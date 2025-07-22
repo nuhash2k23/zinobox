@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000;
+            overflow: hidden;
+        }
+        #scene-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+        }
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.8) 150%);
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="scene-container"></div>
+    <div class="vignette"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/DigitalGlitch.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/GlitchPass.js"></script>
+
+<script>
+let scene, camera, renderer, composer, glitchPass;
+const PARTICLE_COUNT = 15000;
+const particleSystems = [];
+let time = 0;
+let dnaRotation = 0;
+
+const colorPalettes = {
+    stream1: new THREE.Color(0x00ffff),  // Cyan
+    stream2: new THREE.Color(0xff00ff),  // Magenta
+    stream3: new THREE.Color(0xffff00),  // Yellow
+    stream4: new THREE.Color(0x00ff99)   // Green-Blue
+};
+
+const particleShader = {
+    vertexShader: `
+        uniform float time;
+        attribute float size;
+        attribute vec3 customColor;
+        varying vec3 vColor;
+        
+        void main() {
+            vColor = customColor;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = size * (300.0 / -mvPosition.z);
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `,
+    fragmentShader: `
+        uniform sampler2D pointTexture;
+        varying vec3 vColor;
+        
+        void main() {
+            vec4 color = vec4(vColor, 1.0) * texture2D(pointTexture, gl_PointCoord);
+            if (color.a < 0.1) discard;
+            gl_FragColor = color;
+        }
+    `
+};
+function createParticleTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+    
+    return new THREE.CanvasTexture(canvas);
+}
+
+function createDNAPath(t, streamIndex) {
+    const radius = 20;
+    const height = 100;
+    const twist = 4; // Number of twists
+    const offset = (streamIndex * Math.PI / 2); // Offset for each stream
+    
+    return new THREE.Vector3(
+        radius * Math.cos(t * twist + offset),
+        height * (t / (Math.PI * 2)) - height/2,
+        radius * Math.sin(t * twist + offset)
+    );
+}
+
+function calculateParticlePosition(progress, startPos, streamIndex) {
+    if (progress <= 0) {
+        return startPos.clone();
+    }
+    
+    if (progress < 1.0) {
+        // Initial path from corner to DNA formation point
+        const dnaEntryPoint = createDNAPath(0, streamIndex);
+        // Add some curve to the approach path
+        const midPoint = startPos.clone().add(dnaEntryPoint).multiplyScalar(0.5);
+        midPoint.y += 50 * Math.sin(progress * Math.PI); // Arc upward
+        
+        if (progress < 0.5) {
+            return new THREE.Vector3().lerpVectors(startPos, midPoint, progress * 2);
+        } else {
+            return new THREE.Vector3().lerpVectors(midPoint, dnaEntryPoint, (progress - 0.5) * 2);
+        }
+    }
+    
+    // Once reached DNA formation point, follow helix path
+    return createDNAPath((progress - 1.0) * Math.PI * 2, streamIndex);
+}
+
+function createParticleSystem(startPosition, color, streamIndex) {
+    const particles = new THREE.BufferGeometry();
+    const particleCount = PARTICLE_COUNT;
+    
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const sizes = new Float32Array(particleCount);
+    const progress = new Float32Array(particleCount);
+    
+    for(let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        positions[i3] = startPosition.x;
+        positions[i3 + 1] = startPosition.y;
+        positions[i3 + 2] = startPosition.z;
+        
+        colors[i3] = color.r;
+        colors[i3 + 1] = color.g;
+        colors[i3 + 2] = color.b;
+        
+        sizes[i] = Math.random() * 2 + 1;
+        progress[i] = -Math.random() * 2.0; // Staggered start times
+    }
+    
+    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particles.setAttribute('customColor', new THREE.BufferAttribute(colors, 3));
+    particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+            pointTexture: { value: createParticleTexture() }
+        },
+        vertexShader: particleShader.vertexShader,
+        fragmentShader: particleShader.fragmentShader,
+        blending: THREE.AdditiveBlending,
+        depthTest: false,
+        transparent: true
+    });
+    
+    const particleSystem = new THREE.Points(particles, material);
+    
+    particleSystems.push({
+        system: particleSystem,
+        progress: progress,
+        streamIndex: streamIndex,
+        startPosition: startPosition.clone()
+    });
+    
+    scene.add(particleSystem);
+}
+function setupParticleSystems() {
+    const width = 150;
+    const height = 150;
+    const depth = 50;
+    
+    createParticleSystem(
+        new THREE.Vector3(-width, height, -depth),
+        colorPalettes.stream1,
+        0
+    );
+    createParticleSystem(
+        new THREE.Vector3(width, height, depth),
+        colorPalettes.stream2,
+        1
+    );
+    createParticleSystem(
+        new THREE.Vector3(-width, -height, depth),
+        colorPalettes.stream3,
+        2
+    );
+    createParticleSystem(
+        new THREE.Vector3(width, -height, -depth),
+        colorPalettes.stream4,
+        3
+    );
+}
+
+function setupPostProcessing() {
+    composer = new THREE.EffectComposer(renderer);
+    
+    const renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    
+    const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        1.5, // Strength
+        0.4, // Radius
+        0.85 // Threshold
+    );
+    composer.addPass(bloomPass);
+    
+    glitchPass = new THREE.GlitchPass();
+    glitchPass.enabled = false;
+    composer.addPass(glitchPass);
+}
+
+function init() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        powerPreference: "high-performance"
+    });
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000);
+    document.getElementById('scene-container').appendChild(renderer.domElement);
+
+    camera.position.set(0, 0, 150);
+    camera.lookAt(0, 0, 0);
+
+    setupParticleSystems();
+    setupPostProcessing();
+
+    // Periodic glitch effects
+    setInterval(() => {
+        glitchPass.enabled = true;
+        setTimeout(() => {
+            glitchPass.enabled = false;
+        }, 200);
+    }, 5000);
+
+    window.addEventListener('resize', onWindowResize, false);
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function updateParticles() {
+    particleSystems.forEach(particleSystem => {
+        const positions = particleSystem.system.geometry.attributes.position.array;
+        const progress = particleSystem.progress;
+        
+        for(let i = 0; i < PARTICLE_COUNT; i++) {
+            progress[i] += 0.005; // Speed of particle movement
+            
+            if(progress[i] > 3.0) {
+                progress[i] = -Math.random() * 2.0; // Reset to before start
+                continue;
+            }
+
+            const point = calculateParticlePosition(
+                progress[i], 
+                particleSystem.startPosition,
+                particleSystem.streamIndex
+            );
+            
+            // Apply DNA rotation only after forming helix
+            if (progress[i] > 1.0) {
+                point.applyAxisAngle(new THREE.Vector3(0, 1, 0), dnaRotation);
+            }
+            
+            positions[i * 3] = point.x;
+            positions[i * 3 + 1] = point.y;
+            positions[i * 3 + 2] = point.z;
+        }
+        
+        particleSystem.system.geometry.attributes.position.needsUpdate = true;
+        particleSystem.system.material.uniforms.time.value = time;
+    });
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    time += 0.01;
+    dnaRotation += 0.005; // Rotate the entire DNA structure
+
+    // Add subtle camera movement
+    camera.position.x = Math.sin(time * 0.5) * 10;
+    camera.position.z = 150 + Math.cos(time * 0.5) * 10;
+    camera.lookAt(0, 0, 0);
+
+    updateParticles();
+    composer.render();
+}
+
+init();
+animate();
+</script>
+</body>
+</html>
