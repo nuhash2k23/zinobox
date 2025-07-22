@@ -485,24 +485,17 @@
 //   );
 // }
 
-
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /*
-Enhanced Blob Animation Sequence:
-1. Default: Organic blob animation (pulsing)
-2. On click: Immediate water ripple + circle formation + fluid ripples (0-10s)
-3. After fluid ripples end (10s): Continuous random edge water ripples
-4. During random ripples: Click → fluid ripples again (ignore further clicks during fluid)
-5. Stop button: Return to default blob animation
-
-Animation States:
-- 'idle': Default organic blob
-- 'animating': Full sequence (water ripple + circle + fluid ripples)
-- 'randomRipples': Continuous random edge ripples
-- 'fluidOnly': Just fluid ripples during random ripple phase
+Animation Flow:
+1. Disconnected: Organic blob, clicks enabled
+2. Click → Sets useragent to "listening" 
+3. Listening: Position water ripple + continuous edge ripples loop
+4. Speaking: Circle formation + continuous edge ripples loop
+5. No time-based transitions - all prop driven
 */ 
 
 const vertexShader = `
@@ -572,17 +565,16 @@ const pinkGlowFragmentShader = `
   }
 `;
 
-// Enhanced black blob shader with multiple ripple types
+// Enhanced black blob shader
 const blackBlobFragmentShader = `
   varying vec2 vUv;
   uniform float uTime;
   uniform vec2 uClickPos;
-  uniform float uRippleTime;
   uniform float uStrokeWidth;
   uniform float uStrokeBlur;
-  uniform bool uHasClick;
-  uniform int uAnimationState; // 0=idle, 1=animating, 2=randomRipples, 3=fluidOnly
-  uniform float uRandomRippleTime;
+  uniform int uAnimationState; // 0=disconnected, 1=listening, 2=speaking
+  uniform float uEdgeRippleTime;
+  uniform float uCircleProgress;
   
   float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -615,7 +607,7 @@ const blackBlobFragmentShader = `
     return value;
   }
   
-  // Organic blob with pulsing (no rotation)
+  // Organic blob with pulsing
   float organicBlob(vec2 pos, float time) {
     float angle = atan(pos.y, pos.x);
     float dist = length(pos);
@@ -629,58 +621,100 @@ const blackBlobFragmentShader = `
     return dist - (bump1 - bump2 + bump3 + bump4 + prominentBump);
   }
   
-  // Circle formation animation
-  float circleFormation(vec2 pos, float time, float clickTime) {
-    if (clickTime <= 0.0) return organicBlob(pos, time);
-    
+  // Circle formation (smooth transition from blob to circle)
+  float circleFormation(vec2 pos, float time, float circleProgress) {
     float dist = length(pos);
     float blobDist = organicBlob(pos, time);
     
-    float formationProgress = smoothstep(0.0, 3.0, clickTime);
-    formationProgress = formationProgress * formationProgress * (3.0 - 2.0 * formationProgress);
+    // Smooth interpolation between blob and circle
+    return mix(blobDist, dist, circleProgress);
+  }
+  
+  // Position-based water ripple (from click)
+  float waterRipple(vec2 pos, vec2 center, float time) {
+    float dist = distance(pos, center);
     
-    float reverseProgress = 0.0;
-    if (clickTime > 8.0) {
-      reverseProgress = smoothstep(8.0, 10.0, clickTime);
-      reverseProgress = reverseProgress * reverseProgress * (3.0 - 2.0 * reverseProgress);
+    if (time <= 0.0) return 0.0;
+    
+    float waveSpeed = 0.3;
+    float waveRadius = time * waveSpeed;
+    
+    float distFromWave = dist - waveRadius;
+    
+    float waveLength = 0.12;
+    float amplitude = 0.03;
+    
+    float pushPull = sin(distFromWave / waveLength * 6.28318) * amplitude;
+    float envelope = exp(-abs(distFromWave) / 0.06);
+    float timeDecay = exp(-time * 0.6);
+    
+    return pushPull * envelope * timeDecay;
+  }
+  
+  // Continuous edge ripple loop (for listening state)
+  float continuousEdgeRipples(vec2 pos, float time) {
+    float totalRipple = 0.0;
+    
+    // Create a continuous loop cycle every 15 seconds
+    float cycleTime = mod(time, 15.0);
+    
+    // Multiple ripples with different timings
+    float rippleTimes[9];
+    rippleTimes[0] = cycleTime;
+    rippleTimes[1] = max(0.0, cycleTime - 2.5);
+    rippleTimes[2] = max(0.0, cycleTime - 5.0);
+    rippleTimes[3] = max(0.0, cycleTime - 7.5);
+    rippleTimes[4] = max(0.0, cycleTime - 10.0);
+    rippleTimes[5] = max(0.0, cycleTime - 12.5);
+    
+    // Second set offset by half cycle
+    float cycle2Time = mod(time + 7.5, 15.0);
+    rippleTimes[6] = cycle2Time;
+    rippleTimes[7] = max(0.0, cycle2Time - 3.0);
+    rippleTimes[8] = max(0.0, cycle2Time - 6.0);
+    
+    float angles[9];
+    angles[0] = 2.3;
+    angles[1] = 4.7;
+    angles[2] = 0.8;
+    angles[3] = 1.9;
+    angles[4] = 3.4;
+    angles[5] = 5.1;
+    angles[6] = 1.1;
+    angles[7] = 4.2;
+    angles[8] = 0.3;
+    
+    float radii[9];
+    radii[0] = 0.35;
+    radii[1] = 0.32;
+    radii[2] = 0.38;
+    radii[3] = 0.34;
+    radii[4] = 0.36;
+    radii[5] = 0.33;
+    radii[6] = 0.37;
+    radii[7] = 0.31;
+    radii[8] = 0.39;
+    
+    for (int i = 0; i < 9; i++) {
+      float rippleTime = rippleTimes[i];
+      if (rippleTime < 6.0) {
+        vec2 ripplePos = vec2(0.5 + cos(angles[i]) * radii[i], 0.5 + sin(angles[i]) * radii[i]);
+        totalRipple += waterRipple(pos, ripplePos, rippleTime);
+      }
     }
     
-    float finalFormationProgress = formationProgress * (1.0 - reverseProgress);
-    return mix(blobDist, dist, finalFormationProgress);
+    return totalRipple;
   }
   
- float waterRipple(vec2 pos, vec2 center, float time) {
-float dist = distance(pos, center);
-  
-  if (time <= 0.0) return 0.0;
-  
-  float waveSpeed = 0.3;
-  float waveRadius = time * waveSpeed;
-  
-  float distFromWave = dist - waveRadius;
-  
-  // Create alternating push (outward) and pull (inward) regions
-  float waveLength = 0.12;
-  float amplitude = 0.03;
-  
-  // Sine wave creates push-pull pattern
-  float pushPull = sin(distFromWave / waveLength * 6.28318) * amplitude;
-  
-  // Envelope to contain the effect
-  float envelope = exp(-abs(distFromWave) / 0.06);
-  
-  // Time decay
-  float timeDecay = exp(-time * 0.6);
-  
-  return pushPull * envelope * timeDecay;
-  }
-  
-  // Fluid edge ripples
+  // Fluid edge ripples (for speaking state) - your exact version with looping
   float fluidRipples(vec2 pos, float time) {
-    if (time < 3.5) return 0.0;
+    // Create a looping cycle every 10 seconds to repeat the effect
+    float cycleTime = mod(time, 10.0);
+    
+    if (cycleTime < 3.5) return 0.0;
     
     float angle = atan(pos.y, pos.x);
-    float adjustedTime = time - 3.5;
+    float adjustedTime = cycleTime - 3.5;
     
     float ripple1 = sin(angle * 8.0 + adjustedTime * 2.2) * 0.005;
     float ripple2 = sin(angle * 12.0 - adjustedTime * 2.4) * 0.005;
@@ -689,98 +723,12 @@ float dist = distance(pos, center);
     
     float totalRipple = ripple1 + ripple2 + ripple3 + ripple4;
     
-    float fadeIn = smoothstep(3.5, 5.0, time);
-    float fadeOut = 1.0 - smoothstep(8.0, 10.0, time);
+    float fadeIn = smoothstep(3.5, 5.0, cycleTime);
+    float fadeOut = 1.0 - smoothstep(8.0, 10.0, cycleTime);
     float fadeInOut = fadeIn * fadeOut;
     
     float timeVariation = sin(adjustedTime * 0.8) * 0.1 + 0.9;
     return totalRipple * fadeInOut * timeVariation;
-  }
-  
-  // NEW: Random edge water ripples (discrete ripple events like click ripple) - CONTINUOUS LOOP
-  float randomEdgeRipples(vec2 pos, float time) {
-    float totalRipple = 0.0;
-    
-    // Create a continuous loop cycle every 15 seconds
-    float cycleTime = mod(time, 15.0);
-    
-    // Ripple 1: Starts at time 0.0
-    float ripple1Time = cycleTime;
-    float angle1 = 2.3; // Fixed random angle
-    vec2 ripple1Pos = vec2(0.5 + cos(angle1) * 0.35, 0.5 + sin(angle1) * 0.35);
-    if (ripple1Time < 6.0) {
-      totalRipple += waterRipple(pos, ripple1Pos, ripple1Time);
-    }
-    
-    // Ripple 2: Starts at time 2.5
-    float ripple2Time = max(0.0, cycleTime - 2.5);
-    float angle2 = 4.7; // Fixed random angle
-    vec2 ripple2Pos = vec2(0.5 + cos(angle2) * 0.32, 0.5 + sin(angle2) * 0.32);
-    if (ripple2Time < 6.0 && cycleTime >= 2.5) {
-      totalRipple += waterRipple(pos, ripple2Pos, ripple2Time);
-    }
-    
-    // Ripple 3: Starts at time 5.0
-    float ripple3Time = max(0.0, cycleTime - 5.0);
-    float angle3 = 0.8; // Fixed random angle
-    vec2 ripple3Pos = vec2(0.5 + cos(angle3) * 0.38, 0.5 + sin(angle3) * 0.38);
-    if (ripple3Time < 6.0 && cycleTime >= 5.0) {
-      totalRipple += waterRipple(pos, ripple3Pos, ripple3Time);
-    }
-    
-    // Ripple 4: Starts at time 7.5
-    float ripple4Time = max(0.0, cycleTime - 7.5);
-    float angle4 = 1.9; // Fixed random angle
-    vec2 ripple4Pos = vec2(0.5 + cos(angle4) * 0.34, 0.5 + sin(angle4) * 0.34);
-    if (ripple4Time < 6.0 && cycleTime >= 7.5) {
-      totalRipple += waterRipple(pos, ripple4Pos, ripple4Time);
-    }
-    
-    // Ripple 5: Starts at time 10.0
-    float ripple5Time = max(0.0, cycleTime - 10.0);
-    float angle5 = 3.4; // Fixed random angle
-    vec2 ripple5Pos = vec2(0.5 + cos(angle5) * 0.36, 0.5 + sin(angle5) * 0.36);
-    if (ripple5Time < 6.0 && cycleTime >= 10.0) {
-      totalRipple += waterRipple(pos, ripple5Pos, ripple5Time);
-    }
-    
-    // Ripple 6: Starts at time 12.5
-    float ripple6Time = max(0.0, cycleTime - 12.5);
-    float angle6 = 5.1; // Fixed random angle
-    vec2 ripple6Pos = vec2(0.5 + cos(angle6) * 0.33, 0.5 + sin(angle6) * 0.33);
-    if (ripple6Time < 6.0 && cycleTime >= 12.5) {
-      totalRipple += waterRipple(pos, ripple6Pos, ripple6Time);
-    }
-    
-    // Additional overlapping ripples for continuous coverage
-    // Second set with different angles for variety
-    float cycle2Time = mod(time + 7.5, 15.0); // Offset by half cycle
-    
-    // Ripple 7: Offset cycle starts at 0.0
-    float ripple7Time = cycle2Time;
-    float angle7 = 1.1;
-    vec2 ripple7Pos = vec2(0.5 + cos(angle7) * 0.37, 0.5 + sin(angle7) * 0.37);
-    if (ripple7Time < 6.0) {
-      totalRipple += waterRipple(pos, ripple7Pos, ripple7Time);
-    }
-    
-    // Ripple 8: Offset cycle starts at 3.0
-    float ripple8Time = max(0.0, cycle2Time - 3.0);
-    float angle8 = 4.2;
-    vec2 ripple8Pos = vec2(0.5 + cos(angle8) * 0.31, 0.5 + sin(angle8) * 0.31);
-    if (ripple8Time < 6.0 && cycle2Time >= 3.0) {
-      totalRipple += waterRipple(pos, ripple8Pos, ripple8Time);
-    }
-    
-    // Ripple 9: Offset cycle starts at 6.0
-    float ripple9Time = max(0.0, cycle2Time - 6.0);
-    float angle9 = 0.3;
-    vec2 ripple9Pos = vec2(0.5 + cos(angle9) * 0.39, 0.5 + sin(angle9) * 0.39);
-    if (ripple9Time < 6.0 && cycle2Time >= 6.0) {
-      totalRipple += waterRipple(pos, ripple9Pos, ripple9Time);
-    }
-    
-    return totalRipple;
   }
   
   void main() {
@@ -788,35 +736,34 @@ float dist = distance(pos, center);
     vec2 pos = vUv - center;
     
     float rippleDistortion = 0.0;
-    float clickTime = 0.0;
+    float baseShape = organicBlob(pos, uTime);
     
     // Handle different animation states
-    if (uAnimationState == 1) { // Full animating sequence
-      clickTime = uRippleTime;
-      float waterRipples = waterRipple(vUv, uClickPos, uRippleTime);
-      float fluidRipplesValue = fluidRipples(pos, uRippleTime);
+    if (uAnimationState == 1) { // Listening: position ripple + continuous edge ripples
+      baseShape = organicBlob(pos, uTime);
       
-      float waterWeight = exp(-max(0.0, uRippleTime - 6.5) * 0.7);
-      float fluidWeight = smoothstep(3.0, 5.0, uRippleTime) * (1.0 - smoothstep(8.0, 10.0, uRippleTime));
+      // Position-based ripple (continuous, never stops)
+      float positionRipple = waterRipple(vUv, uClickPos, uEdgeRippleTime * 0.5);
       
-      rippleDistortion = waterRipples * waterWeight + fluidRipplesValue * fluidWeight;
+      // Continuous edge ripples (discrete water ripples)
+      float edgeRipples = continuousEdgeRipples(pos, uEdgeRippleTime);
+      
+      rippleDistortion = positionRipple + edgeRipples;
     }
-    else if (uAnimationState == 2) { // Random edge ripples
-      rippleDistortion = randomEdgeRipples(pos, uRandomRippleTime);
-    }
-    else if (uAnimationState == 3) { // Fluid only (during random ripples)
-      clickTime = uRippleTime;
-      float fluidRipplesValue = fluidRipples(pos, uRippleTime);
-      float fluidWeight = smoothstep(3.5, 5.0, uRippleTime) * (1.0 - smoothstep(8.0, 10.0, uRippleTime));
-      rippleDistortion = fluidRipplesValue * fluidWeight;
+    else if (uAnimationState == 2) { // Speaking: circle formation + ONLY fluid edge ripples
+      baseShape = circleFormation(pos, uTime, uCircleProgress);
       
-      // Also add random ripples in background
-      rippleDistortion += randomEdgeRipples(pos, uRandomRippleTime) * 0.3;
+      // ONLY fluid edge ripples (smooth sine wave ripples) - no other ripples
+      rippleDistortion = fluidRipples(pos, uEdgeRippleTime);
+    }
+    else { // Disconnected: organic blob only
+      baseShape = organicBlob(pos, uTime);
+      rippleDistortion = 0.0;
     }
     
-    float distortedDist = circleFormation(pos, uTime, clickTime) + rippleDistortion;
+    float distortedDist = baseShape + rippleDistortion;
     
-    // Main blob rendering (same as before)
+    // Main blob rendering
     float blobRadius = 0.35;
     float blobBlurAmount = 0.00013;
     
@@ -834,7 +781,7 @@ float dist = distance(pos, center);
     
     float shadowOffset = 0.008;
     vec2 shadowPos = pos + vec2(shadowOffset, -shadowOffset);
-    float shadowDist = circleFormation(shadowPos, uTime, clickTime) + rippleDistortion;
+    float shadowDist = baseShape + rippleDistortion;
     float shadowBlurAmount = 0.015;
     float shadowOuterRadius = blobRadius + uStrokeWidth;
     
@@ -869,7 +816,7 @@ float dist = distance(pos, center);
   }
 `;
 
-function PinkGlowBlob({ clickData }) {
+function PinkGlowBlob() {
   const meshRef = useRef();
   const materialRef = useRef();
   const [hasScaled, setHasScaled] = useState(false);
@@ -921,71 +868,67 @@ function PinkGlowBlob({ clickData }) {
   );
 }
 
-function BlackBlob({ animationState, onSetAnimationState, onRippleUpdate, strokeWidth = 0.035, strokeBlur = .1}) {
+function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBlur = .1}) {
   const meshRef = useRef();
   const materialRef = useRef();
   const [hasScaled, setHasScaled] = useState(false);
   const [cssRipples, setCssRipples] = useState([]);
+  const [clickPos, setClickPos] = useState([0.5, 0.5]);
+  const [circleProgress, setCircleProgress] = useState(0);
   const startTime = useRef(null);
-  const animationStartTime = useRef(null);
-  const randomRippleStartTime = useRef(null);
+  const edgeRippleStartTime = useRef(null);
+  const circleStartTime = useRef(null);
   const { camera, gl } = useThree();
   
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uClickPos: { value: new THREE.Vector2(0.5, 0.5) },
-    uRippleTime: { value: 0 },
     uStrokeWidth: { value: strokeWidth },
     uStrokeBlur: { value: strokeBlur },
-    uHasClick: { value: false },
-    uAnimationState: { value: 0 }, // 0=idle, 1=animating, 2=randomRipples, 3=fluidOnly
-    uRandomRippleTime: { value: 0 }
+    uAnimationState: { value: 0 }, // 0=disconnected, 1=listening, 2=speaking
+    uEdgeRippleTime: { value: 0 },
+    uCircleProgress: { value: 0 }
   }), [strokeWidth, strokeBlur]);
+  
+  // Handle useragent prop changes
+  useEffect(() => {
+    if (useragent === 'disconnected') {
+      edgeRippleStartTime.current = null;
+      circleStartTime.current = null;
+      setCircleProgress(0);
+    } else if (useragent === 'listening') {
+      if (edgeRippleStartTime.current === null) {
+        edgeRippleStartTime.current = Date.now();
+      }
+      circleStartTime.current = null;
+      setCircleProgress(0);
+    } else if (useragent === 'speaking') {
+      if (edgeRippleStartTime.current === null) {
+        edgeRippleStartTime.current = Date.now();
+      }
+      if (circleStartTime.current === null) {
+        circleStartTime.current = Date.now();
+      }
+    }
+  }, [useragent]);
   
   const handleClick = (event) => {
     event.stopPropagation();
+    
+    // Only allow clicks when disconnected
+    if (useragent !== 'disconnected') {
+      console.log('Click disabled - useragent is', useragent);
+      return;
+    }
     
     const rect = gl.domElement.getBoundingClientRect();
     const screenX = (event.clientX - rect.left) / rect.width;
     const screenY = 1.0 - (event.clientY - rect.top) / rect.height;
     
-    // Handle clicks based on current state
-    if (animationState.state === 'animating') {
-      // During full animation (0-10s), check if in fluid ripples phase
-      const elapsed = (Date.now() - animationState.startTime) / 1000;
-      if (elapsed >= 3.0 && elapsed <= 10.0) {
-        console.log('Click ignored during fluid ripples phase');
-        return;
-      }
-    } else if (animationState.state === 'fluidOnly') {
-      // During fluid-only phase, ignore clicks
-      console.log('Click ignored during fluid-only phase');
-      return;
-    } else if (animationState.state === 'randomRipples') {
-      // During random ripples, trigger fluid-only animation
-      console.log('Starting fluid-only animation');
-      onSetAnimationState({
-        state: 'fluidOnly',
-        startTime: Date.now(),
-        clickPos: [screenX, screenY]
-      });
-      
-      // Create CSS ripple
-      const newRipple = {
-        id: Date.now(),
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top
-      };
-      setCssRipples(prev => [...prev, newRipple]);
-      setTimeout(() => {
-        setCssRipples(prev => prev.filter(ripple => ripple.id !== newRipple.id));
-      }, 600);
-      
-      return;
-    }
+    console.log('Click detected - setting to listening');
     
-    // Default click behavior (idle state or early animation)
-    console.log('Starting full animation');
+    // Store click position
+    setClickPos([screenX, screenY]);
     
     // Create CSS ripple
     const newRipple = {
@@ -998,11 +941,8 @@ function BlackBlob({ animationState, onSetAnimationState, onRippleUpdate, stroke
       setCssRipples(prev => prev.filter(ripple => ripple.id !== newRipple.id));
     }, 600);
     
-    onSetAnimationState({
-      state: 'animating',
-      startTime: Date.now(),
-      clickPos: [screenX, screenY]
-    });
+    // Set to listening state
+    onUseragentChange('listening');
   };
   
   useFrame((state) => {
@@ -1012,55 +952,45 @@ function BlackBlob({ animationState, onSetAnimationState, onRippleUpdate, stroke
       materialRef.current.uniforms.uTime.value = time;
       materialRef.current.uniforms.uStrokeWidth.value = strokeWidth;
       materialRef.current.uniforms.uStrokeBlur.value = strokeBlur;
+      materialRef.current.uniforms.uClickPos.value.set(clickPos[0], clickPos[1]);
+      
+      const now = Date.now();
       
       // Handle animation states
-      if (animationState.state === 'animating') {
-        const elapsed = (Date.now() - animationState.startTime) / 1000;
-        const totalDuration = 10.0;
+      if (useragent === 'listening') {
+        materialRef.current.uniforms.uAnimationState.value = 1;
         
-        if (elapsed < totalDuration) {
-          materialRef.current.uniforms.uAnimationState.value = 1;
-          materialRef.current.uniforms.uRippleTime.value = elapsed;
-          materialRef.current.uniforms.uClickPos.value.set(animationState.clickPos[0], animationState.clickPos[1]);
-          materialRef.current.uniforms.uHasClick.value = true;
-        } else {
-          // Animation finished, start random ripples
-          onSetAnimationState({
-            state: 'randomRipples',
-            startTime: Date.now()
-          });
+        if (edgeRippleStartTime.current) {
+          const rippleElapsed = (now - edgeRippleStartTime.current) / 1000;
+          materialRef.current.uniforms.uEdgeRippleTime.value = rippleElapsed;
         }
-      } else if (animationState.state === 'randomRipples') {
+        
+        materialRef.current.uniforms.uCircleProgress.value = 0;
+      }
+      else if (useragent === 'speaking') {
         materialRef.current.uniforms.uAnimationState.value = 2;
-        materialRef.current.uniforms.uHasClick.value = false;
-        const elapsed = (Date.now() - animationState.startTime) / 1000;
-        materialRef.current.uniforms.uRandomRippleTime.value = elapsed;
-      } else if (animationState.state === 'fluidOnly') {
-        const elapsed = (Date.now() - animationState.startTime) / 1000;
-        const totalDuration = 10.0;
         
-        if (elapsed < totalDuration) {
-          materialRef.current.uniforms.uAnimationState.value = 3;
-          materialRef.current.uniforms.uRippleTime.value = elapsed;
-          materialRef.current.uniforms.uClickPos.value.set(animationState.clickPos[0], animationState.clickPos[1]);
-          materialRef.current.uniforms.uHasClick.value = true;
-          
-          // Keep random ripple time running in background
-          const randomElapsed = (Date.now() - animationState.randomRippleStartTime) / 1000;
-          materialRef.current.uniforms.uRandomRippleTime.value = randomElapsed;
-        } else {
-          // Fluid-only finished, return to random ripples
-          onSetAnimationState({
-            state: 'randomRipples',
-            startTime: Date.now()
-          });
+        if (edgeRippleStartTime.current) {
+          const rippleElapsed = (now - edgeRippleStartTime.current) / 1000;
+          materialRef.current.uniforms.uEdgeRippleTime.value = rippleElapsed;
         }
-      } else {
-        // Idle state
+        
+        // Smooth circle formation
+        if (circleStartTime.current) {
+          const circleElapsed = (now - circleStartTime.current) / 1000;
+          const circleDuration = 2.0; // 2 second smooth transition
+          const progress = Math.min(circleElapsed / circleDuration, 1.0);
+          
+          // Smooth easing
+          const easedProgress = progress * progress * (3.0 - 2.0 * progress);
+          setCircleProgress(easedProgress);
+          materialRef.current.uniforms.uCircleProgress.value = easedProgress;
+        }
+      }
+      else { // disconnected
         materialRef.current.uniforms.uAnimationState.value = 0;
-        materialRef.current.uniforms.uHasClick.value = false;
-        materialRef.current.uniforms.uRippleTime.value = 0;
-        materialRef.current.uniforms.uRandomRippleTime.value = 0;
+        materialRef.current.uniforms.uEdgeRippleTime.value = 0;
+        materialRef.current.uniforms.uCircleProgress.value = 0;
       }
     }
     
@@ -1101,32 +1031,12 @@ function BlackBlob({ animationState, onSetAnimationState, onRippleUpdate, stroke
 }
 
 function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
-  const [animationState, setAnimationState] = useState({
-    state: 'idle', // 'idle', 'animating', 'randomRipples', 'fluidOnly'
-    startTime: 0,
-    clickPos: [0.5, 0.5],
-    randomRippleStartTime: 0
-  });
-  
+  const [useragent, setUseragent] = useState('disconnected'); // disconnected, listening, speaking
   const [cssRipples, setCssRipples] = useState([]);
   
-  const handleStop = () => {
-    console.log('Stop clicked - returning to idle');
-    setAnimationState({
-      state: 'idle',
-      startTime: 0,
-      clickPos: [0.5, 0.5],
-      randomRippleStartTime: 0
-    });
-  };
-  
-  // Update animation state to include random ripple start time
-  const handleSetAnimationState = (newState) => {
-    if (newState.state === 'fluidOnly' && animationState.state === 'randomRipples') {
-      // When transitioning from random ripples to fluid-only, preserve random ripple time
-      newState.randomRippleStartTime = animationState.startTime;
-    }
-    setAnimationState(newState);
+  const handleUseragentChange = (newState) => {
+    console.log('Useragent changed to:', newState);
+    setUseragent(newState);
   };
   
   return (
@@ -1150,25 +1060,40 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           animation: rippleScale 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         
-        .stop-button {
+        .control-panel {
           position: absolute;
           top: 20px;
           right: 20px;
-          background: rgba(255, 0, 102, 0.9);
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 25px;
-          font-size: 16px;
-          font-weight: bold;
-          cursor: pointer;
-          backdrop-filter: blur(10px);
-          transition: all 0.3s ease;
+          background: rgba(0, 0, 0, 0.8);
+          padding: 20px;
+          border-radius: 15px;
           z-index: 1000;
         }
         
-        .stop-button:hover {
-          background: rgba(255, 0, 102, 1);
+        .control-button {
+          display: block;
+          width: 100%;
+          margin-bottom: 10px;
+          padding: 12px 20px;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        .control-button.active {
+          background: rgba(255, 0, 102, 0.9);
+          color: white;
+        }
+        
+        .control-button:not(.active) {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+        
+        .control-button:hover {
           transform: scale(1.05);
         }
         
@@ -1183,16 +1108,54 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           font-size: 14px;
           z-index: 1000;
         }
+        
+        .info-panel {
+          position: absolute;
+          bottom: 20px;
+          left: 20px;
+          background: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 15px;
+          border-radius: 10px;
+          font-size: 12px;
+          max-width: 300px;
+          z-index: 1000;
+        }
       `}</style>
       
-      {/* Stop Button */}
-      <button className="stop-button" onClick={handleStop}>
-        STOP
-      </button>
+      {/* Control Panel */}
+      <div className="control-panel">
+        <button 
+          className={`control-button ${useragent === 'disconnected' ? 'active' : ''}`}
+          onClick={() => handleUseragentChange('disconnected')}
+        >
+          DISCONNECTED
+        </button>
+        <button 
+          className={`control-button ${useragent === 'listening' ? 'active' : ''}`}
+          onClick={() => handleUseragentChange('listening')}
+        >
+          LISTENING
+        </button>
+        <button 
+          className={`control-button ${useragent === 'speaking' ? 'active' : ''}`}
+          onClick={() => handleUseragentChange('speaking')}
+        >
+          SPEAKING
+        </button>
+      </div>
       
-      {/* State Indicator for debugging */}
+      {/* State Indicator */}
       <div className="state-indicator">
-        State: {animationState.state}
+        Useragent: {useragent}
+      </div>
+      
+      {/* Info Panel */}
+      <div className="info-panel">
+        <strong>Current Behavior:</strong><br/>
+        {useragent === 'disconnected' && 'Organic blob animation. Click to set to listening.'}
+        {useragent === 'listening' && 'Position water ripple + continuous edge ripples loop.'}
+        {useragent === 'speaking' && 'Smooth circle formation + continuous fluid edge ripples.'}
       </div>
       
       <Canvas
@@ -1200,15 +1163,14 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           height: '100vh', 
           width: '100%', 
           background: '#f0f0f0',
-          cursor: 'pointer'
+          cursor: useragent === 'disconnected' ? 'pointer' : 'default'
         }}
         camera={{ position: [0, 0, 10], fov: 75 }}
       >
         <PinkGlowBlob />
         <BlackBlob 
-          animationState={animationState}
-          onSetAnimationState={handleSetAnimationState}
-          onRippleUpdate={setCssRipples}
+          useragent={useragent}
+          onUseragentChange={handleUseragentChange}
           strokeWidth={strokeWidth} 
           strokeBlur={strokeBlur} 
         />
