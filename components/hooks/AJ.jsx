@@ -6,9 +6,11 @@ import * as THREE from 'three';
 Corrected Animation Flow:
 1. Disconnected: Organic blob, clicks enabled
 2. Click → sets useragent to "listening"
-3. Listening: Position water ripple only (no edge ripples)
-4. Speaking: Circle formation + fluid ripples loop (starts at 5 seconds)
-5. No time-based transitions - all prop driven
+3. Listening: Position water ripple only (no edge ripples) - REDUCED to 1.5s
+4. Speaking: Circle formation + fluid ripples loop (starts immediately)
+5. Stop → "transitioning" state: Smoothly eases from circle back to organic blob (1.5s)
+6. Restart → Complete reset including initial scale animation from 0.2 to 1.0 (2s)
+7. No time-based transitions - all prop driven
 */ 
 
 const vertexShader = `
@@ -86,9 +88,10 @@ const blackBlobFragmentShader = `
   uniform float uClickRippleTime;
   uniform float uStrokeWidth;
   uniform float uStrokeBlur;
-  uniform int uAnimationState; // 0=disconnected, 1=listening, 2=speaking
+  uniform int uAnimationState; // 0=disconnected, 1=listening, 2=speaking, 3=transitioning
   uniform float uEdgeRippleTime;
   uniform float uCircleProgress;
+  uniform float uTransitionProgress;
   uniform bool uHasClickRipple;
   
   float random(vec2 st) {
@@ -142,7 +145,7 @@ const blackBlobFragmentShader = `
     
     if (time <= 0.0) return 0.0;
     
-    float waveSpeed = 0.3;
+    float waveSpeed = 0.42;
     float waveRadius = time * waveSpeed;
     
     float distFromWave = dist - waveRadius;
@@ -157,12 +160,13 @@ const blackBlobFragmentShader = `
     return pushPull * envelope * timeDecay;
   }
   
-  // Fluid edge ripples - starts immediately after circle formation (2 seconds) and loops continuously
+  // Fluid edge ripples - starts immediately when circle formation completes
   float fluidRipples(vec2 pos, float time) {
-    if (time < 2.0) return 0.0; // Start after circle formation completes
+    // Start fluid ripples after circle formation (1.0 second)
+    if (time < 1.0) return 0.0;
     
     float angle = atan(pos.y, pos.x);
-    float adjustedTime = time - 2.0;
+    float adjustedTime = time - 1.0; // Offset by circle formation time
     
     float ripple1 = sin(angle * 8.0 + adjustedTime * 2.2) * 0.005;
     float ripple2 = sin(angle * 12.0 - adjustedTime * 2.4) * 0.005;
@@ -172,8 +176,7 @@ const blackBlobFragmentShader = `
     float totalRipple = ripple1 + ripple2 + ripple3 + ripple4;
     
     // Fade in quickly after circle formation, then stay at full strength
-    float fadeIn = smoothstep(2.0, 2.5, time);
-    // No fade out - continuous loop
+    float fadeIn = smoothstep(1.0, 1.3, time);
     
     float timeVariation = sin(adjustedTime * 0.8) * 0.1 + 0.9;
     
@@ -208,8 +211,21 @@ const blackBlobFragmentShader = `
       // Interpolate between organic blob and circle based on progress
       baseShape = mix(blobDist, dist, uCircleProgress);
       
-      // Add fluid ripples instead of edge ripples
+      // Add fluid ripples
       rippleDistortion += fluidRipples(pos, uEdgeRippleTime);
+    }
+    else if (uAnimationState == 3) { // Transitioning - ease from circle back to organic blob
+      float dist = length(pos);
+      float blobDist = organicBlob(pos, uTime);
+      
+      // Interpolate from circle back to organic blob based on transition progress
+      // uCircleProgress is 1.0, uTransitionProgress goes from 0 to 1
+      float currentCircleProgress = mix(1.0, 0.0, uTransitionProgress);
+      baseShape = mix(blobDist, dist, currentCircleProgress);
+      
+      // Fade out fluid ripples during transition
+      float rippleFade = 1.0 - uTransitionProgress;
+      rippleDistortion += fluidRipples(pos, uEdgeRippleTime) * rippleFade;
     }
     
     float distortedDist = baseShape + rippleDistortion;
@@ -218,14 +234,14 @@ const blackBlobFragmentShader = `
     float blobRadius = 0.35;
     float blobBlurAmount = 0.00013;
     
-    float borderWidth = 0.025;
+    float borderWidth = 0.044;
     float borderOuterRadius = blobRadius + borderWidth;
-    float borderInnerRadius = blobRadius - borderWidth * 0.3;
+    float borderInnerRadius = blobRadius;
     
-    float borderCore = 1.0 - smoothstep(borderInnerRadius, blobRadius, distortedDist);
+    float borderCore = 1.05- smoothstep(borderInnerRadius, blobRadius, distortedDist);
     float borderOuter = 1.0 - smoothstep(blobRadius, borderOuterRadius, distortedDist);
     
-    float noiseTexture = fbm(vUv * 2.0) * 0.3 + 0.7;
+    float noiseTexture = fbm(vUv * 2.0) * 0.3 + 0.5;
     float borderDensity = (borderOuter - borderCore) * noiseTexture * 0.8;
     
     float blob = 1.0 - smoothstep(blobRadius - blobBlurAmount, blobRadius + blobBlurAmount, distortedDist);
@@ -233,7 +249,7 @@ const blackBlobFragmentShader = `
     float shadowOffset = 0.008;
     vec2 shadowPos = pos + vec2(shadowOffset, -shadowOffset);
     float shadowDist = baseShape + rippleDistortion;
-    float shadowBlurAmount = 0.015;
+    float shadowBlurAmount = 9.15;
     float shadowOuterRadius = blobRadius + uStrokeWidth;
     
     float shadow = smoothstep(blobRadius, blobRadius + shadowBlurAmount, shadowDist) * 
@@ -242,10 +258,10 @@ const blackBlobFragmentShader = `
     shadow *= shadowSoftness;
     
     vec3 blobColor = vec3(0.0, 0.0, 0.0);
-    vec3 borderColor = vec3(1.0, 0.0, 0.6);
+    vec3 borderColor = vec3(1.0, 0.0, 0.478);
     vec3 shadowColor = vec3(1.0, 0.0, 0.478);
     
-    vec3 finalColor = vec3(0.94, 0.94, 0.94);
+    vec3 finalColor = vec3(0.74, 0.74, 0.74);
     float finalAlpha = 0.0;
     
     if (borderDensity > 0.01) {
@@ -267,11 +283,22 @@ const blackBlobFragmentShader = `
   }
 `;
 
-function PinkGlowBlob() {
+function PinkGlowBlob({ shouldRestart, onRestartComplete }) {
   const meshRef = useRef();
   const materialRef = useRef();
   const [hasScaled, setHasScaled] = useState(false);
   const startTime = useRef(null);
+  
+  // Handle restart
+  useEffect(() => {
+    if (shouldRestart) {
+      setHasScaled(false);
+      startTime.current = null;
+      if (meshRef.current) {
+        meshRef.current.scale.setScalar(0.2);
+      }
+    }
+  }, [shouldRestart]);
   
   const uniforms = useMemo(() => ({
     uTime: { value: 0 }
@@ -299,7 +326,13 @@ function PinkGlowBlob() {
         meshRef.current.scale.setScalar(scale);
       } else {
         meshRef.current.scale.setScalar(1.0);
-        setHasScaled(true);
+        if (!hasScaled) {
+          setHasScaled(true);
+          // Notify parent that restart animation is complete
+          if (onRestartComplete) {
+            onRestartComplete();
+          }
+        }
       }
     }
   });
@@ -319,7 +352,7 @@ function PinkGlowBlob() {
   );
 }
 
-function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBlur = .1}) {
+function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBlur = .1, shouldRestart, onRestartComplete}) {
   const meshRef = useRef();
   const materialRef = useRef();
   const [hasScaled, setHasScaled] = useState(false);
@@ -330,12 +363,35 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
     clickTime: 0
   });
   const [circleProgress, setCircleProgress] = useState(0);
+  const [transitionProgress, setTransitionProgress] = useState(0);
   
   const startTime = useRef(null);
   const edgeRippleStartTime = useRef(null);
   const clickStartTime = useRef(null);
   const circleStartTime = useRef(null);
+  const transitionStartTime = useRef(null);
   const { camera, gl } = useThree();
+  
+  // Handle restart
+  useEffect(() => {
+    if (shouldRestart) {
+      setHasScaled(false);
+      setClickData({ hasClick: false, clickPos: [0.5, 0.5], clickTime: 0 });
+      setCircleProgress(0);
+      setTransitionProgress(0);
+      setCssRipples([]);
+      
+      startTime.current = null;
+      edgeRippleStartTime.current = null;
+      clickStartTime.current = null;
+      circleStartTime.current = null;
+      transitionStartTime.current = null;
+      
+      if (meshRef.current) {
+        meshRef.current.scale.setScalar(0.2);
+      }
+    }
+  }, [shouldRestart]);
   
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
@@ -343,9 +399,10 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
     uClickRippleTime: { value: 0 },
     uStrokeWidth: { value: strokeWidth },
     uStrokeBlur: { value: strokeBlur },
-    uAnimationState: { value: 0 }, // 0=disconnected, 1=listening, 2=speaking
+    uAnimationState: { value: 0 }, // 0=disconnected, 1=listening, 2=speaking, 3=transitioning
     uEdgeRippleTime: { value: 0 },
     uCircleProgress: { value: 0 },
+    uTransitionProgress: { value: 0 },
     uHasClickRipple: { value: false }
   }), [strokeWidth, strokeBlur]);
   
@@ -354,20 +411,24 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
     if (useragent === 'disconnected') {
       setClickData({ hasClick: false, clickPos: [0.5, 0.5], clickTime: 0 });
       setCircleProgress(0);
+      setTransitionProgress(0);
       edgeRippleStartTime.current = null;
       clickStartTime.current = null;
       circleStartTime.current = null;
+      transitionStartTime.current = null;
     } else if (useragent === 'listening') {
       // No edge ripples for listening, only position ripple handled in click
       setCircleProgress(0);
+      setTransitionProgress(0);
       circleStartTime.current = null;
+      transitionStartTime.current = null;
       
-      // Auto-transition to speaking after water ripple completes (3 seconds)
+      // REDUCED: Auto-transition to speaking after water ripple completes (1.5 seconds)
       const autoTransitionTimeout = setTimeout(() => {
         if (onUseragentChange) {
           onUseragentChange('speaking');
         }
-      }, 3000);
+      }, 1500); // Reduced from 3000ms to 1500ms
       
       return () => clearTimeout(autoTransitionTimeout);
     } else if (useragent === 'speaking') {
@@ -377,6 +438,22 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       if (circleStartTime.current === null) {
         circleStartTime.current = Date.now();
       }
+      setTransitionProgress(0);
+      transitionStartTime.current = null;
+    } else if (useragent === 'transitioning') {
+      // Start transition back to disconnected
+      if (transitionStartTime.current === null) {
+        transitionStartTime.current = Date.now();
+      }
+      
+      // Auto-complete transition after 1.5 seconds
+      const transitionTimeout = setTimeout(() => {
+        if (onUseragentChange) {
+          onUseragentChange('disconnected');
+        }
+      }, 1500);
+      
+      return () => clearTimeout(transitionTimeout);
     }
   }, [useragent, onUseragentChange]);
   
@@ -436,6 +513,7 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
         materialRef.current.uniforms.uHasClickRipple.value = false;
         materialRef.current.uniforms.uEdgeRippleTime.value = 0;
         materialRef.current.uniforms.uCircleProgress.value = 0;
+        materialRef.current.uniforms.uTransitionProgress.value = 0;
       }
       else if (useragent === 'listening') {
         materialRef.current.uniforms.uAnimationState.value = 1;
@@ -453,15 +531,16 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
         // No edge ripples for listening state
         materialRef.current.uniforms.uEdgeRippleTime.value = 0;
         materialRef.current.uniforms.uCircleProgress.value = 0;
+        materialRef.current.uniforms.uTransitionProgress.value = 0;
       }
       else if (useragent === 'speaking') {
         materialRef.current.uniforms.uAnimationState.value = 2;
         materialRef.current.uniforms.uHasClickRipple.value = false;
         
-        // Handle circle formation progress
+        // Handle circle formation progress - FASTER: reduced duration from 1.4s to 1.0s
         if (circleStartTime.current) {
           const circleElapsed = (now - circleStartTime.current) / 1000;
-          const circleFormationDuration = 2.0;
+          const circleFormationDuration = 1.0; // Reduced from 1.4s to 1.0s
           const progress = Math.min(circleElapsed / circleFormationDuration, 1.0);
           
           // Smooth easing for circle formation
@@ -471,6 +550,33 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
         }
         
         // Handle fluid ripples (using edge ripple time uniform)
+        if (edgeRippleStartTime.current) {
+          const rippleElapsed = (now - edgeRippleStartTime.current) / 1000;
+          materialRef.current.uniforms.uEdgeRippleTime.value = rippleElapsed;
+        }
+        
+        materialRef.current.uniforms.uTransitionProgress.value = 0;
+      }
+      else if (useragent === 'transitioning') {
+        materialRef.current.uniforms.uAnimationState.value = 3;
+        materialRef.current.uniforms.uHasClickRipple.value = false;
+        
+        // Handle transition progress - ease from circle back to organic blob
+        if (transitionStartTime.current) {
+          const transitionElapsed = (now - transitionStartTime.current) / 1000;
+          const transitionDuration = 1.5; // 1.5 seconds for smooth transition
+          const progress = Math.min(transitionElapsed / transitionDuration, 1.0);
+          
+          // Smooth easing for transition (ease-out)
+          const easedProgress = 1 - Math.pow(1 - progress, 3);
+          materialRef.current.uniforms.uTransitionProgress.value = easedProgress;
+          setTransitionProgress(easedProgress);
+        }
+        
+        // Keep circle progress at 1.0 during transition (will be interpolated in shader)
+        materialRef.current.uniforms.uCircleProgress.value = 1.0;
+        
+        // Fade out fluid ripples during transition
         if (edgeRippleStartTime.current) {
           const rippleElapsed = (now - edgeRippleStartTime.current) / 1000;
           materialRef.current.uniforms.uEdgeRippleTime.value = rippleElapsed;
@@ -494,7 +600,13 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
         meshRef.current.scale.setScalar(scale);
       } else {
         meshRef.current.scale.setScalar(1.0);
-        setHasScaled(true);
+        if (!hasScaled) {
+          setHasScaled(true);
+          // Notify parent that restart animation is complete
+          if (onRestartComplete) {
+            onRestartComplete();
+          }
+        }
       }
     }
   });
@@ -515,8 +627,10 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
 }
 
 function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
-  const [useragent, setUseragent] = useState('disconnected'); // disconnected, listening, speaking
+  const [useragent, setUseragent] = useState('disconnected'); // disconnected, listening, speaking, transitioning
   const [cssRipples, setCssRipples] = useState([]);
+  const [shouldRestart, setShouldRestart] = useState(false);
+  const [restartCompletionCount, setRestartCompletionCount] = useState(0);
   
   const handleUseragentChange = (newState) => {
     console.log('Useragent changed to:', newState);
@@ -524,7 +638,12 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
   };
 
   const handleStopClick = () => {
-    handleUseragentChange('disconnected');
+    // If currently speaking, transition smoothly back to disconnected
+    if (useragent === 'speaking') {
+      handleUseragentChange('transitioning');
+    } else {
+      handleUseragentChange('disconnected');
+    }
   };
 
   const handleRefreshClick = () => {
@@ -533,8 +652,25 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
   };
 
   const handleRestartConversation = () => {
-    // For now, just reset to disconnected
-    handleUseragentChange('disconnected');
+    console.log('Restart conversation - full reset with scaling animation');
+    // Reset useragent to disconnected first
+    setUseragent('disconnected');
+    // Reset completion counter
+    setRestartCompletionCount(0);
+    // Trigger restart animation
+    setShouldRestart(true);
+  };
+
+  const handleRestartComplete = () => {
+    const newCount = restartCompletionCount + 1;
+    setRestartCompletionCount(newCount);
+    
+    // When both blobs have completed their restart animations (count === 2)
+    if (newCount >= 2) {
+      setShouldRestart(false);
+      setRestartCompletionCount(0);
+      console.log('Restart animation complete');
+    }
   };
   
   return (
@@ -595,7 +731,7 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           gap: 10px;
           align-items: center;
           margin: 12px 0;
-          scale: 1.15;
+          scale: 1.35;
         }
         
         .action-button {
@@ -643,12 +779,17 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
         }}
         camera={{ position: [0, 0, 10], fov: 75 }}
       >
-        <PinkGlowBlob />
+        <PinkGlowBlob 
+          shouldRestart={shouldRestart} 
+          onRestartComplete={handleRestartComplete} 
+        />
         <BlackBlob 
           useragent={useragent}
           onUseragentChange={handleUseragentChange}
           strokeWidth={strokeWidth} 
-          strokeBlur={strokeBlur} 
+          strokeBlur={strokeBlur}
+          shouldRestart={shouldRestart}
+          onRestartComplete={handleRestartComplete}
         />
       </Canvas>
       
