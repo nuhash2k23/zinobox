@@ -567,7 +567,9 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           flex-direction: column;
           align-items: center;
           z-index: 1000;
-          gap: 16px;
+          font-weight: bold;
+          font-family: poppins;
+          gap: 6px;
         }
         
         .main-text {
@@ -590,9 +592,10 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
         
         .action-buttons {
           display: flex;
-          gap: 20px;
+          gap: 10px;
           align-items: center;
           margin: 12px 0;
+          scale: 1.15;
         }
         
         .action-button {
