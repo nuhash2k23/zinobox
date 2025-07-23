@@ -1,491 +1,3 @@
-// import React, { useRef, useMemo, useState } from 'react';
-// import { Canvas, useFrame } from '@react-three/fiber';
-// import { OrbitControls, Grid, Text } from '@react-three/drei';
-// import * as THREE from 'three';
-
-// function SmallerPart({ position = [0, 0, 0], rotation = [0, 0, 0], color = "#2563eb", showVentingHoles = false }) {
-//   const meshRef = useRef();
-  
-//   // Smaller dimensions - height 50% smaller
-//   const totalWidth = 100; // Same width
-//   const height = 50; // 50% of original 100mm
-//   const depth = 20; // Same depth
-  
-//   // Capsule hole dimensions (same as original)
-//   const capsuleWidth = 35;
-//   const capsuleHeight = 20;
-//   const capsuleRadius = capsuleHeight / 2;
-
-//   // Create the geometry with only capsule holes (no circular holes)
-//   const geometry = useMemo(() => {
-//     // Create the outer rectangle shape with rounded corners on left side
-//     const rectShape = new THREE.Shape();
-//     const cornerRadius = 20; // 20mm corner radius for left corners
-    
-//     // Start at bottom-right corner (sharp)
-//     rectShape.moveTo(totalWidth/2, -height/2);
-    
-//     // Right edge up to top-right corner (sharp)
-//     rectShape.lineTo(totalWidth/2, height/2);
-    
-//     // Top edge to start of top-left corner
-//     rectShape.lineTo(-totalWidth/2 + cornerRadius, height/2);
-    
-//     // Top-left rounded corner
-//     rectShape.absarc(-totalWidth/2 + cornerRadius, height/2 - cornerRadius, cornerRadius, Math.PI/2, Math.PI, false);
-    
-//     // Left edge down to start of bottom-left corner  
-//     rectShape.lineTo(-totalWidth/2, -height/2 + cornerRadius);
-    
-//     // Bottom-left rounded corner
-//     rectShape.absarc(-totalWidth/2 + cornerRadius, -height/2 + cornerRadius, cornerRadius, Math.PI, 3*Math.PI/2, false);
-    
-//     // Bottom edge back to start (sharp right corners)
-//     rectShape.lineTo(totalWidth/2, -height/2);
-
-//     // Function to create a horizontal capsule-shaped hole
-//     const createCapsuleHole = (centerX, centerY) => {
-//       const capsuleHole = new THREE.Path();
-//       const halfHeight = capsuleHeight / 2;
-//       const halfWidth = capsuleWidth / 2;
-      
-//       // Start at the top of the right semicircle
-//       capsuleHole.moveTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
-      
-//       // Right semicircle
-//       capsuleHole.absarc(centerX + halfWidth - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
-      
-//       // Bottom side
-//       capsuleHole.lineTo(centerX - halfWidth + capsuleRadius, centerY - halfHeight);
-      
-//       // Left semicircle
-//       capsuleHole.absarc(centerX - halfWidth + capsuleRadius, centerY, capsuleRadius, -Math.PI/2, Math.PI/2, true);
-      
-//       // Top side back to start
-//       capsuleHole.lineTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
-      
-//       return capsuleHole;
-//     };
-    
-//     // Function to create a half cutoff capsule
-//     const createHalfCapsuleHole = (centerX, centerY) => {
-//       const halfCapsuleHole = new THREE.Path();
-//       const halfHeight = capsuleHeight / 2;
-//       const halfWidth = capsuleWidth / 2;
-//       const cutoffLeft = centerX - halfWidth;
-//       const rightEnd = centerX + halfWidth;
-      
-//       // Start at top left of cutoff
-//       halfCapsuleHole.moveTo(cutoffLeft, centerY + halfHeight);
-      
-//       // Top horizontal line to start of right semicircle
-//       halfCapsuleHole.lineTo(rightEnd - capsuleRadius, centerY + halfHeight);
-      
-//       // Right semicircle
-//       halfCapsuleHole.absarc(rightEnd - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
-      
-//       // Bottom horizontal line back to cutoff left
-//       halfCapsuleHole.lineTo(cutoffLeft, centerY - halfHeight);
-      
-//       // Left vertical line back to start
-//       halfCapsuleHole.lineTo(cutoffLeft, centerY + halfHeight);
-      
-//       return halfCapsuleHole;
-//     };
-    
-//     // Create one half capsule and one full capsule in center
-//     const centerHalfCapsule = createHalfCapsuleHole(-27.5, 0);
-//     const centerFullCapsule = createCapsuleHole(27.5, 0);
-    
-//     // Only add capsule holes if showVentingHoles is true
-//     if (showVentingHoles) {
-//       rectShape.holes.push(centerHalfCapsule);
-//       rectShape.holes.push(centerFullCapsule);
-//     }
-
-//     // Extrude the shape to create 3D geometry
-//     const extrudeSettings = {
-//       depth: depth,
-//       bevelEnabled: true,
-//       bevelThickness: 0.5,
-//       bevelSize: 0.3,
-//       bevelSegments: 3,
-//     };
-
-//     const geom = new THREE.ExtrudeGeometry(rectShape, extrudeSettings);
-    
-//     // Center the geometry
-//     geom.translate(0, 0, -depth/2);
-    
-//     return geom;
-//   }, [totalWidth, height, depth, capsuleWidth, capsuleHeight, capsuleRadius, showVentingHoles]); // SmallerPart now needs showVentingHoles too
-
-//   return (
-//     <mesh ref={meshRef} geometry={geometry} position={position} rotation={rotation}>
-//       <meshStandardMaterial 
-//         color={color} 
-//         side={THREE.DoubleSide}
-//         metalness={0.7}
-//         roughness={0.2}
-//       />
-//     </mesh>
-//   );
-// }
-
-// function PrecisionPart({ showVentingHoles = false }) {
-//   const meshRef = useRef();
-  
-//   // Real-life dimensions in millimeters
-//   const totalWidth = 100; // 45 + 10 + 45
-//   const height = 100;
-//   const depth = 20;
-//   const holeRadius = 3; // 3mm radius holes in center section
-//   const holeSpacing = 25; // 25mm between hole centers
-  
-//   // Capsule hole dimensions (horizontal orientation)
-//   const capsuleWidth = 35; // 30mm wide (horizontal)
-//   const capsuleHeight = 20; // 6mm tall (vertical)
-//   const capsuleRadius = capsuleHeight / 2;
-
-//   // Create the geometry with holes
-//   const geometry = useMemo(() => {
-//     // Create the outer rectangle shape
-//     const rectShape = new THREE.Shape();
-//     rectShape.moveTo(-totalWidth/2, -height/2);
-//     rectShape.lineTo(totalWidth/2, -height/2);
-//     rectShape.lineTo(totalWidth/2, height/2);
-//     rectShape.lineTo(-totalWidth/2, height/2);
-//     rectShape.lineTo(-totalWidth/2, -height/2);
-
-//     // Create first circular hole (left, center section)
-//     const hole1 = new THREE.Path();
-//     hole1.absarc(-holeSpacing/2, 0, holeRadius, 0, Math.PI * 2, false);
-    
-//     // Create second circular hole (right, center section)
-//     const hole2 = new THREE.Path();
-//     hole2.absarc(holeSpacing/2, 0, holeRadius, 0, Math.PI * 2, false);
-    
-//     // Function to create a horizontal capsule-shaped hole
-//     const createCapsuleHole = (centerX, centerY) => {
-//       const capsuleHole = new THREE.Path();
-//       const halfHeight = capsuleHeight / 2;
-//       const halfWidth = capsuleWidth / 2;
-      
-//       // Start at the top of the right semicircle
-//       capsuleHole.moveTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
-      
-//       // Right semicircle
-//       capsuleHole.absarc(centerX + halfWidth - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
-      
-//       // Bottom side
-//       capsuleHole.lineTo(centerX - halfWidth + capsuleRadius, centerY - halfHeight);
-      
-//       // Left semicircle
-//       capsuleHole.absarc(centerX - halfWidth + capsuleRadius, centerY, capsuleRadius, -Math.PI/2, Math.PI/2, true);
-      
-//       // Top side back to start
-//       capsuleHole.lineTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
-      
-//       return capsuleHole;
-//     };
-    
-//     // Function to create a half cutoff capsule (positioned within section, not at edge)
-//     const createHalfCapsuleHole = (centerX, centerY) => {
-//       const halfCapsuleHole = new THREE.Path();
-//       const halfHeight = capsuleHeight / 2;
-//       const halfWidth = capsuleWidth / 2;
-//       const cutoffLeft = centerX - halfWidth; // Left edge of the half capsule
-//       const rightEnd = centerX + halfWidth; // Right end with semicircle
-      
-//       // Start at top left of cutoff
-//       halfCapsuleHole.moveTo(cutoffLeft, centerY + halfHeight);
-      
-//       // Top horizontal line to start of right semicircle
-//       halfCapsuleHole.lineTo(rightEnd - capsuleRadius, centerY + halfHeight);
-      
-//       // Right semicircle
-//       halfCapsuleHole.absarc(rightEnd - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
-      
-//       // Bottom horizontal line back to cutoff left
-//       halfCapsuleHole.lineTo(cutoffLeft, centerY - halfHeight);
-      
-//       // Left vertical line back to start (this creates the flat cutoff)
-//       halfCapsuleHole.lineTo(cutoffLeft, centerY + halfHeight);
-      
-//       return halfCapsuleHole;
-//     };
-    
-//     // Create upper capsules (moved up for better spacing)
-//     const leftUpperCapsuleHole = createHalfCapsuleHole(-27.5, 15);
-//     const rightUpperCapsuleHole = createCapsuleHole(27.5, 15);
-    
-//     // Create lower capsules
-//     const leftLowerCapsuleHole = createHalfCapsuleHole(-27.5, -15);
-//     const rightLowerCapsuleHole = createCapsuleHole(27.5, -15);
-    
-//     // Add all holes to the shape
-//     // Always include circular holes
-//     rectShape.holes.push(hole1);
-//     rectShape.holes.push(hole2);
-    
-//     // Only add capsule holes if showVentingHoles is true
-//     if (showVentingHoles) {
-//       rectShape.holes.push(leftUpperCapsuleHole);
-//       rectShape.holes.push(rightUpperCapsuleHole);
-//       rectShape.holes.push(leftLowerCapsuleHole);
-//       rectShape.holes.push(rightLowerCapsuleHole);
-//     }
-
-//     // Extrude the shape to create 3D geometry
-//     const extrudeSettings = {
-//       depth: depth,
-//       bevelEnabled: true,
-//       bevelThickness: 0.5,
-//       bevelSize: 0.3,
-//       bevelSegments: 3,
-//     };
-
-//     const geom = new THREE.ExtrudeGeometry(rectShape, extrudeSettings);
-    
-//     // Center the geometry
-//     geom.translate(0, 0, -depth/2);
-    
-//     return geom;
-//   }, [totalWidth, height, depth, holeSpacing, holeRadius, capsuleWidth, capsuleHeight, capsuleRadius, showVentingHoles]); // PrecisionPart needs all these variables
-
-//   // Gentle rotation for inspection
-//   useFrame((state) => {
-//     if (meshRef.current) {
-//       meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.3;
-//       meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.15) * 0.1;
-//     }
-//   });
-
-//   return (
-//     <mesh ref={meshRef} geometry={geometry} position={[0, 0, 0]} rotation={[0, 0, Math.PI/2]}>
-//       <meshStandardMaterial 
-//         color="#2563eb" 
-//         side={THREE.DoubleSide}
-//         metalness={0.7}
-//         roughness={0.2}
-//       />
-//     </mesh>
-//   );
-// }
-
-// function DimensionLabels({ showVentingHoles }) {
-//   return (
-//     <group>
-//       {/* Width sections labels */}
-//       <Text
-//         position={[-27.5, -60, 0]}
-//         fontSize={6}
-//         color="#ffffff"
-//         anchorX="center"
-//         anchorY="middle"
-//       >
-//         45mm
-//       </Text>
-      
-//       <Text
-//         position={[0, -60, 0]}
-//         fontSize={6}
-//         color="#ffffff"
-//         anchorX="center"
-//         anchorY="middle"
-//       >
-//         10mm
-//       </Text>
-      
-//       <Text
-//         position={[27.5, -60, 0]}
-//         fontSize={6}
-//         color="#ffffff"
-//         anchorX="center"
-//         anchorY="middle"
-//       >
-//         45mm
-//       </Text>
-      
-//       {/* Total width label */}
-//       <Text
-//         position={[0, -70, 0]}
-//         fontSize={8}
-//         color="#ffffff"
-//         anchorX="center"
-//         anchorY="middle"
-//       >
-//         100mm Total Width
-//       </Text>
-      
-//       {/* Height label */}
-//       <Text
-//         position={[-60, 0, 0]}
-//         fontSize={8}
-//         color="#ffffff"
-//         anchorX="center"
-//         anchorY="middle"
-//         rotation={[0, 0, Math.PI/2]}
-//       >
-//         100mm Height
-//       </Text>
-      
-//       {/* Depth label */}
-//       <Text
-//         position={[60, 30, 0]}
-//         fontSize={6}
-//         color="#ffffff"
-//         anchorX="center"
-//         anchorY="middle"
-//       >
-//         20mm Depth
-//       </Text>
-      
-//       {/* Center holes specification */}
-//       <Text
-//         position={[0, 70, 0]}
-//         fontSize={5}
-//         color="#ffdd44"
-//         anchorX="center"
-//         anchorY="middle"
-//       >
-//         Center: Ø6mm Through Holes (25mm spacing)
-//       </Text>
-      
-//       {/* Capsule holes specification */}
-//       <Text
-//         position={[0, 80, 0]}
-//         fontSize={5}
-//         color="#ff6b44"
-//         anchorX="center"
-//         anchorY="middle"
-//       >
-//         Capsules: {showVentingHoles ? 'Through Holes' : 'Filled Solid'} | All Parts
-//       </Text>
-//     </group>
-//   );
-// }
-
-// function Scene({ showVentingHoles }) {
-//   return (
-//     <>
-//       {/* Lighting setup */}
-//       <ambientLight intensity={0.4} />
-//       <directionalLight position={[100, 100, 50]} intensity={1.2} castShadow />
-//       <directionalLight position={[-50, 50, 30]} intensity={0.6} />
-//       <pointLight position={[0, 0, 100]} intensity={0.4} />
-      
-//       {/* Grid for scale reference */}
-//       <Grid 
-//         args={[200, 200]} 
-//         cellSize={10} 
-//         cellThickness={0.5} 
-//         cellColor="#444444" 
-//         sectionSize={50} 
-//         sectionThickness={1} 
-//         sectionColor="#666666"
-//         position={[0, 0, -15]}
-//       />
-      
-//       {/* The main precision part */}
-//       <PrecisionPart showVentingHoles={showVentingHoles} />
-      
-//       {/* Two additional smaller parts with random positions and rotations */}
-//       <SmallerPart 
-//         position={[150, 80, 0]} 
-//         rotation={[0, 0, Math.PI/3]} 
-//         color="#e11d48" 
-//         showVentingHoles={showVentingHoles}
-//       />
-      
-//       <SmallerPart 
-//         position={[-120, -60, 0]} 
-//         rotation={[0, 0, -Math.PI/4]} 
-//         color="#059669" 
-//         showVentingHoles={showVentingHoles}
-//       />
-      
-//       {/* Dimension labels */}
-//       <DimensionLabels showVentingHoles={showVentingHoles} />
-      
-//       {/* Camera controls */}
-//       <OrbitControls 
-//         enablePan={true} 
-//         enableZoom={true} 
-//         enableRotate={true}
-//         minDistance={50}
-//         maxDistance={300}
-//       />
-//     </>
-//   );
-// }
-
-// export default function App() {
-//   const [showVentingHoles, setShowVentingHoles] = useState(false); // Initially filled (false = filled)
-
-//   return (
-//     <div style={{ width: '100vw', height: '100vh', background: '#0a0a0a' }}>
-//       {/* Venting Holes Toggle Button */}
-//       <div style={{
-//         position: 'absolute',
-//         top: '20px',
-//         right: '20px',
-//         zIndex: 100
-//       }}>
-//         <button
-//           onClick={() => setShowVentingHoles(!showVentingHoles)}
-//           style={{
-//             padding: '12px 20px',
-//             backgroundColor: showVentingHoles ? '#059669' : '#dc2626',
-//             color: 'white',
-//             border: 'none',
-//             borderRadius: '8px',
-//             fontSize: '14px',
-//             fontWeight: 'bold',
-//             cursor: 'pointer',
-//             fontFamily: 'monospace',
-//             transition: 'all 0.3s ease'
-//           }}
-//         >
-//           Capsule Holes: {showVentingHoles ? 'ON' : 'OFF'}
-//         </button>
-//       </div>
-      
-//       <div style={{
-//         position: 'absolute',
-//         top: '20px',
-//         left: '20px',
-//         color: '#ffffff',
-//         fontFamily: 'monospace',
-//         fontSize: '14px',
-//         background: 'rgba(0,0,0,0.7)',
-//         padding: '10px',
-//         borderRadius: '5px',
-//         zIndex: 100
-//       }}>
-//         <div><strong>Precision Machined Parts (3 Total)</strong></div>
-//         <div><strong>Main:</strong> 100mm × 100mm × 20mm</div>
-//         <div>Width: 45mm + 10mm + 45mm</div>
-//         <div>Center: Two Ø6mm through holes (always visible)</div>
-//         <div>Capsules: {showVentingHoles ? 'Through' : 'Filled'}</div>
-//         <div>Left: 2 Half cutoff capsules ({showVentingHoles ? 'holes' : 'filled'})</div>
-//         <div>Right: 2 Full capsules ({showVentingHoles ? 'holes' : 'filled'})</div>
-//         <div><strong>Smaller:</strong> 100mm × 50mm × 20mm</div>
-//         <div>1 Half + 1 Full capsule ({showVentingHoles ? 'holes' : 'filled'})</div>
-//         <div>Rounded corners on left side (20mm radius)</div>
-//       </div>
-      
-//       <Canvas 
-//         camera={{ position: [120, 80, 120], fov: 45 }}
-//         shadows
-//       >
-//         <Scene showVentingHoles={showVentingHoles} />
-//       </Canvas>
-//     </div>
-//   );
-// }
-
-
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -495,7 +7,7 @@ Corrected Animation Flow:
 1. Disconnected: Organic blob, clicks enabled
 2. Click → sets useragent to "listening"
 3. Listening: Position water ripple only (no edge ripples)
-4. Speaking: Circle formation + fluid ripples loop (starts at 5 seconds)
+4. Speaking: Circle formation + fluid ripples loop (starts at 3.5 seconds - 1.5s after circle formation)
 5. No time-based transitions - all prop driven
 */ 
 
@@ -645,12 +157,12 @@ const blackBlobFragmentShader = `
     return pushPull * envelope * timeDecay;
   }
   
-  // Fluid edge ripples - starts immediately after circle formation (2 seconds) and loops continuously
+  // Fluid edge ripples - starts 1.5s after circle formation completes (3.5 seconds total) and loops continuously
   float fluidRipples(vec2 pos, float time) {
-    if (time < 2.0) return 0.0; // Start after circle formation completes
+    if (time < 3.5) return 0.0; // Start 1.5s after circle formation completes
     
     float angle = atan(pos.y, pos.x);
-    float adjustedTime = time - 2.0;
+    float adjustedTime = time - 3.5;
     
     float ripple1 = sin(angle * 8.0 + adjustedTime * 2.2) * 0.005;
     float ripple2 = sin(angle * 12.0 - adjustedTime * 2.4) * 0.005;
@@ -659,71 +171,14 @@ const blackBlobFragmentShader = `
     
     float totalRipple = ripple1 + ripple2 + ripple3 + ripple4;
     
-    // Fade in quickly after circle formation, then stay at full strength
-    float fadeIn = smoothstep(2.0, 2.5, time);
+    // Fade in quickly after 1.5s delay following circle formation, then stay at full strength
+    float fadeIn = smoothstep(3.5, 4.0, time);
     // No fade out - continuous loop
     
     float timeVariation = sin(adjustedTime * 0.8) * 0.1 + 0.9;
     
     return totalRipple * fadeIn * timeVariation;
   }
-  
-  /*
-  // Continuous edge ripple loop (COMMENTED OUT - no longer used)
-  float continuousEdgeRipples(vec2 pos, float time) {
-    float totalRipple = 0.0;
-    
-    // Create a continuous loop cycle every 15 seconds
-    float cycleTime = mod(time, 15.0);
-    
-    // Multiple ripples with different timings
-    float rippleTimes[9];
-    rippleTimes[0] = cycleTime;
-    rippleTimes[1] = max(0.0, cycleTime - 2.5);
-    rippleTimes[2] = max(0.0, cycleTime - 5.0);
-    rippleTimes[3] = max(0.0, cycleTime - 7.5);
-    rippleTimes[4] = max(0.0, cycleTime - 10.0);
-    rippleTimes[5] = max(0.0, cycleTime - 12.5);
-    
-    // Second set offset by half cycle
-    float cycle2Time = mod(time + 7.5, 15.0);
-    rippleTimes[6] = cycle2Time;
-    rippleTimes[7] = max(0.0, cycle2Time - 3.0);
-    rippleTimes[8] = max(0.0, cycle2Time - 6.0);
-    
-    float angles[9];
-    angles[0] = 2.3;
-    angles[1] = 4.7;
-    angles[2] = 0.8;
-    angles[3] = 1.9;
-    angles[4] = 3.4;
-    angles[5] = 5.1;
-    angles[6] = 1.1;
-    angles[7] = 4.2;
-    angles[8] = 0.3;
-    
-    float radii[9];
-    radii[0] = 0.35;
-    radii[1] = 0.32;
-    radii[2] = 0.38;
-    radii[3] = 0.34;
-    radii[4] = 0.36;
-    radii[5] = 0.33;
-    radii[6] = 0.37;
-    radii[7] = 0.31;
-    radii[8] = 0.39;
-    
-    for (int i = 0; i < 9; i++) {
-      float rippleTime = rippleTimes[i];
-      if (rippleTime < 6.0) {
-        vec2 ripplePos = vec2(0.5 + cos(angles[i]) * radii[i], 0.5 + sin(angles[i]) * radii[i]);
-        totalRipple += waterRipple(pos, ripplePos, rippleTime);
-      }
-    }
-    
-    return totalRipple;
-  }
-  */
   
   void main() {
     vec2 center = vec2(0.5, 0.5);
@@ -906,6 +361,15 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       // No edge ripples for listening, only position ripple handled in click
       setCircleProgress(0);
       circleStartTime.current = null;
+      
+      // Auto-transition to speaking after water ripple completes (3 seconds)
+      const autoTransitionTimeout = setTimeout(() => {
+        if (onUseragentChange) {
+          onUseragentChange('speaking');
+        }
+      }, 3000);
+      
+      return () => clearTimeout(autoTransitionTimeout);
     } else if (useragent === 'speaking') {
       if (edgeRippleStartTime.current === null) {
         edgeRippleStartTime.current = Date.now();
@@ -914,7 +378,7 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
         circleStartTime.current = Date.now();
       }
     }
-  }, [useragent]);
+  }, [useragent, onUseragentChange]);
   
   const handleClick = (event) => {
     event.stopPropagation();
@@ -1058,9 +522,23 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
     console.log('Useragent changed to:', newState);
     setUseragent(newState);
   };
+
+  const handleStopClick = () => {
+    handleUseragentChange('disconnected');
+  };
+
+  const handleRefreshClick = () => {
+    // Does nothing for now
+    console.log('Refresh clicked - no action');
+  };
+
+  const handleRestartConversation = () => {
+    // For now, just reset to disconnected
+    handleUseragentChange('disconnected');
+  };
   
   return (
-    <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
+    <div style={{ position: 'relative', height: '100vh', width: '100%', display: 'flex', flexDirection: 'column' }}>
       <style>{`
         @keyframes rippleScale {
           0% {
@@ -1080,104 +558,79 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           animation: rippleScale 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
         
-        .control-panel {
+        .ui-container {
           position: absolute;
-          top: 20px;
-          right: 20px;
-          background: rgba(0, 0, 0, 0.8);
-          padding: 20px;
-          border-radius: 15px;
+          bottom: 40px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           z-index: 1000;
+          gap: 16px;
         }
         
-        .control-button {
-          display: block;
-          width: 100%;
-          margin-bottom: 10px;
-          padding: 12px 20px;
+        .main-text {
+          font-size: 18px;
+          color: #333;
+          text-align: center;
+          margin-bottom: 8px;
+        }
+        
+        .sub-text {
+          font-size: 14px;
+          color: #666;
+          text-align: center;
+        }
+        
+        .text-to-talk {
+          text-decoration: underline;
+          color: #000;
+        }
+        
+        .action-buttons {
+          display: flex;
+          gap: 20px;
+          align-items: center;
+          margin: 12px 0;
+        }
+        
+        .action-button {
+          width: 48px;
+          height: 48px;
+          background: none;
           border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: bold;
           cursor: pointer;
-          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.2s ease;
         }
         
-        .control-button.active {
-          background: rgba(255, 0, 102, 0.9);
-          color: white;
+        .action-button:hover {
+          transform: scale(1.1);
         }
         
-        .control-button:not(.active) {
-          background: rgba(255, 255, 255, 0.2);
-          color: white;
+        .action-button img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
         
-        .control-button:hover {
-          transform: scale(1.05);
-        }
-        
-        .state-indicator {
-          position: absolute;
-          top: 20px;
-          left: 20px;
-          background: rgba(0, 0, 0, 0.7);
-          color: white;
-          padding: 8px 16px;
-          border-radius: 20px;
+        .restart-link {
+          color: #ff007a;
+          text-decoration: underline;
           font-size: 14px;
-          z-index: 1000;
+          cursor: pointer;
+          transition: opacity 0.2s ease;
         }
         
-        .instructions {
-          position: absolute;
-          bottom: 20px;
-          left: 20px;
-          background: rgba(0, 0, 0, 0.7);
-          color: white;
-          padding: 12px 16px;
-          border-radius: 10px;
-          font-size: 12px;
-          max-width: 300px;
-          z-index: 1000;
+        .restart-link:hover {
+          opacity: 0.8;
         }
       `}</style>
       
-      {/* Control Panel */}
-      <div className="control-panel">
-        <button 
-          className={`control-button ${useragent === 'disconnected' ? 'active' : ''}`}
-          onClick={() => handleUseragentChange('disconnected')}
-        >
-          DISCONNECTED
-        </button>
-        <button 
-          className={`control-button ${useragent === 'listening' ? 'active' : ''}`}
-          onClick={() => handleUseragentChange('listening')}
-        >
-          LISTENING
-        </button>
-        <button 
-          className={`control-button ${useragent === 'speaking' ? 'active' : ''}`}
-          onClick={() => handleUseragentChange('speaking')}
-        >
-          SPEAKING
-        </button>
-      </div>
-      
-      {/* State Indicator */}
-      <div className="state-indicator">
-        Useragent: {useragent}
-      </div>
-      
-      {/* Instructions */}
-      <div className="instructions">
-        <div><strong>Updated Flow:</strong></div>
-        <div>• Disconnected: Click blob → sets to listening</div>
-        <div>• Listening: Position ripple only (no edge ripples)</div>
-        <div>• Speaking: Circle formation + fluid ripples (starts at 5s)</div>
-      </div>
-      
+      {/* Main Canvas */}
       <Canvas
         style={{ 
           height: '100vh', 
@@ -1195,6 +648,31 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           strokeBlur={strokeBlur} 
         />
       </Canvas>
+      
+      {/* UI Container Below Blob */}
+      <div className="ui-container">
+        <div className="main-text">
+          Tap and talk to begin
+        </div>
+        
+        <div className="sub-text">
+          Unable to talk and/or listen? <span className="text-to-talk">Text to talk</span>.
+        </div>
+        
+        <div className="action-buttons">
+          <button className="action-button" onClick={handleStopClick} title="Stop">
+                    <img src='/stop.png'/>
+          </button>
+          
+          <button className="action-button" onClick={handleRefreshClick} title="Refresh">
+         <img src='/refresh.png'/>
+          </button>
+        </div>
+        
+        <div className="restart-link" onClick={handleRestartConversation}>
+          Restart Conversation
+        </div>
+      </div>
       
       {/* CSS ripples */}
       {cssRipples.map(ripple => (
