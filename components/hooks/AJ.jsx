@@ -7,7 +7,7 @@ Corrected Animation Flow:
 1. Disconnected: Organic blob, clicks enabled
 2. Click → sets useragent to "listening"
 3. Listening: Position water ripple only (no edge ripples)
-4. Speaking: Circle formation + fluid ripples loop (starts at 3.5 seconds - 1.5s after circle formation)
+4. Speaking: Circle formation + fluid ripples loop (starts at 5 seconds)
 5. No time-based transitions - all prop driven
 */ 
 
@@ -157,12 +157,12 @@ const blackBlobFragmentShader = `
     return pushPull * envelope * timeDecay;
   }
   
-  // Fluid edge ripples - starts 1.5s after circle formation completes (3.5 seconds total) and loops continuously
+  // Fluid edge ripples - starts immediately after circle formation (2 seconds) and loops continuously
   float fluidRipples(vec2 pos, float time) {
-    if (time < 3.5) return 0.0; // Start 1.5s after circle formation completes
+    if (time < 2.0) return 0.0; // Start after circle formation completes
     
     float angle = atan(pos.y, pos.x);
-    float adjustedTime = time - 3.5;
+    float adjustedTime = time - 2.0;
     
     float ripple1 = sin(angle * 8.0 + adjustedTime * 2.2) * 0.005;
     float ripple2 = sin(angle * 12.0 - adjustedTime * 2.4) * 0.005;
@@ -171,8 +171,8 @@ const blackBlobFragmentShader = `
     
     float totalRipple = ripple1 + ripple2 + ripple3 + ripple4;
     
-    // Fade in quickly after 1.5s delay following circle formation, then stay at full strength
-    float fadeIn = smoothstep(3.5, 4.0, time);
+    // Fade in quickly after circle formation, then stay at full strength
+    float fadeIn = smoothstep(2.0, 2.5, time);
     // No fade out - continuous loop
     
     float timeVariation = sin(adjustedTime * 0.8) * 0.1 + 0.9;
@@ -661,7 +661,7 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
         
         <div className="action-buttons">
           <button className="action-button" onClick={handleStopClick} title="Stop">
-                    <img src='/stop.png'/>
+        <img src='/stop.png'/>
           </button>
           
           <button className="action-button" onClick={handleRefreshClick} title="Refresh">
