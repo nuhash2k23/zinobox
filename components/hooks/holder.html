@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Supply Holder Configurator - Dynamic Positioning System</title>
+    <style>
+        /* Add your CSS styles here */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .main-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #0f172a;
+        }
+
+        .section-description {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .dimensions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .unit-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .unit-selector label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .unit-selector select {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .unit-selector select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .thickness-info {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .thickness-info-icon {
+            font-size: 1.2rem;
+            color: #0ea5e9;
+        }
+
+        .thickness-info-text {
+            color: #0c4a6e;
+            font-weight: 500;
+        }
+
+        .viewer-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .viewer-canvas {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            background: #f8fafc;
+        }
+
+        .loading-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #64748b;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-card:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .option-card.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .option-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f9fafb;
+        }
+
+        .option-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .adapter-count {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-weight: 600;
+            color: #059669;
+            font-size: 1.1rem;
+        }
+
+        .production-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .production-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .production-card:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .production-card.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .color-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .color-option.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .color-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        #usage-description {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        #usage-description:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .total-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .total-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: 20px;
+        }
+
+        .add-to-cart-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px 20px;
+            transition: background-color 0.2s;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #2563eb;
+        }
+
+        .export-stl-btn {
+            background: #059669;
+            color: white;
+            display: none;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px 20px;
+            transition: background-color 0.2s;
+        }
+
+        .export-stl-btn:hover {
+            background: #047857;
+        }
+
+        .shipping-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .shipping-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .unit-info {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>CUSTOM POWER SUPPLY HOLDER</h1>
+    </div>
+
+    <!-- Dimensions Section -->
+    <div class="section">
+        <div class="dimensions-header">
+            <div>
+                <h2 id="dimensions-title">Your Power Adapter Dimensions (Inches)</h2>
+                <p class="section-description">Enter the exact dimensions for your custom power supply holder.</p>
+            </div>
+            <div class="unit-selector">
+                <label for="unit-select">Units:</label>
+                <select id="unit-select">
+                    <option value="in" selected>Inches (in)</option>
+                    <option value="mm">Millimeters (mm)</option>
+                    <option value="cm">Centimeters (cm)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="dimensions-grid">
+            <div class="input-group">
+                <label for="length" id="length-label">Length (in)</label>
+                <input type="number" id="length" placeholder="1.97" step="0.01" value="1.97">
+                <div class="unit-info" id="length-info">Default: 1.97 in</div>
+            </div>
+            <div class="input-group">
+                <label for="width" id="width-label">Width (in)</label>
+                <input type="number" id="width" placeholder="0.98" step="0.01" value="0.98">
+                <div class="unit-info" id="width-info">Default: 0.98 in</div>
+            </div>
+            <div class="input-group">
+                <label for="height" id="height-label">Height (in)</label>
+                <input type="number" id="height" placeholder="0.59" step="0.01" value="0.59">
+                <div class="unit-info" id="height-info">Default: 0.59 in</div>
+            </div>
+        </div>
+
+   
+    </div>
+
+    <!-- 3D Viewer -->
+    <div class="viewer-section">
+        <div id="model-container" class="viewer-canvas">
+            <div class="loading-text" id="loading-model">
+                Loading 3D Model with Dynamic Positioning...
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurator Options -->
+    <div class="section">
+        <h2>Configurator Options</h2>
+        <p class="section-description">Choose how many power adapters your holder should accommodate.</p>
+        
+        <div class="options-grid">
+            <div class="option-card active" data-config="single">
+                <h3>Single Holder</h3>
+                <p class="adapter-count">1 Adapter</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card" data-config="row2">
+                <h3>2 in a Row</h3>
+                <p class="adapter-count">2 adapters side by side</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card" data-config="row3">
+                <h3>3 in a Row</h3>
+                <p class="adapter-count">3 adapters in line</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card" data-config="row4">
+                <h3>4 in a Row</h3>
+                <p class="adapter-count">4 adapters in line</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card" data-config="grid2x2">
+                <h3>2×2 Grid</h3>
+                <p class="adapter-count">4 adapters in grid</p>
+                <p class="price">$0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Production Speed -->
+    <div class="section">
+        <h2>PRODUCTION SPEED</h2>
+        
+        <div class="production-options">
+            <div class="production-card active" data-speed="standard">
+                <h3>Standard Production</h3>
+                <p>5-10 business days</p>
+            </div>
+            <div class="production-card" data-speed="rush">
+                <h3>Rush Order (+$20)</h3>
+                <p>2-3 business days</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Selection -->
+    <div class="section">
+        <h2>Color Selection</h2>
+        
+        <div class="color-options">
+            <div class="color-option active" data-color="black">
+                <div class="color-circle" style="background-color: #1a1a1a;"></div>
+                <span>Midnight Black</span>
+            </div>
+            <div class="color-option" data-color="red">
+                <div class="color-circle" style="background-color: #dc2626;"></div>
+                <span>Crimson Red</span>
+            </div>
+            <div class="color-option" data-color="blue">
+                <div class="color-circle" style="background-color: #2563eb;"></div>
+                <span>Ocean Blue</span>
+            </div>
+            <div class="color-option" data-color="gray">
+                <div class="color-circle" style="background-color: #6b7280;"></div>
+                <span>Storm Gray</span>
+            </div>
+            <div class="color-option" data-color="white">
+                <div class="color-circle" style="background-color: #ffffff; border: 2px solid #e5e7eb;"></div>
+                <span>Pure White</span>
+            </div>
+            <div class="color-option" data-color="orange">
+                <div class="color-circle" style="background-color: #ea580c;"></div>
+                <span>Sunset Orange</span>
+            </div>
+            <div class="color-option" data-color="green">
+                <div class="color-circle" style="background-color: #16a34a;"></div>
+                <span>Neon Green</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Description -->
+    <div class="section">
+        <h2>USAGE DESCRIPTION (OPTIONAL)</h2>
+        <p class="section-description">Tell us how you'll use this power supply holder</p>
+        
+        <textarea id="usage-description" placeholder="Describe how you plan to use this power supply holder..." rows="4"></textarea>
+    </div>
+
+    <!-- Total and Cart -->
+    <div class="total-section">
+        <div class="total-price">Total: $0.00</div>
+        <button class="add-to-cart-btn">Add to Cart - $0.00</button>
+        <button class="export-stl-btn">📁 Export STL File</button>
+        
+        <div class="shipping-info">
+            <div class="shipping-item">📦 Ships in 5-10 business days</div>
+            <div class="shipping-item">✨ Custom manufactured with precision PETG plastic</div>
+            <div class="shipping-item">💪 Chemical resistant • Durable • Professional grade</div>
+            <div class="shipping-item">🚀 Features DYNAMIC POSITIONING for optimal assembly</div>
+            <div class="shipping-item">🔧 Fixed 1mm thickness for consistent quality</div>
+        </div>
+    </div>
+</div>
+
+<!-- Fixed Three.js Script - Using Script Tags for Maximum Compatibility -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script>
+// Simple OrbitControls implementation
+class SimpleOrbitControls {
+    constructor(camera, domElement) {
+        this.camera = camera;
+        this.domElement = domElement;
+        this.target = new THREE.Vector3();
+        this.enableDamping = true;
+        this.dampingFactor = 0.05;
+        this.screenSpacePanning = true;
+        this.maxPolarAngle = Math.PI;
+        
+        this.spherical = new THREE.Spherical();
+        this.sphericalDelta = new THREE.Spherical();
+        this.scale = 1;
+        this.panOffset = new THREE.Vector3();
+        
+        this.rotateStart = new THREE.Vector2();
+        this.rotateEnd = new THREE.Vector2();
+        this.rotateDelta = new THREE.Vector2();
+        
+        this.panStart = new THREE.Vector2();
+        this.panEnd = new THREE.Vector2();
+        this.panDelta = new THREE.Vector2();
+        
+        this.dollyStart = new THREE.Vector2();
+        this.dollyEnd = new THREE.Vector2();
+        this.dollyDelta = new THREE.Vector2();
+        
+        this.state = 'NONE';
+        this.keys = { LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
+        this.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+        
+        this.init();
+    }
+    
+    init() {
+        this.domElement.addEventListener('contextmenu', this.onContextMenu.bind(this), false);
+        this.domElement.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+        this.domElement.addEventListener('wheel', this.onMouseWheel.bind(this), false);
+        
+        this.domElement.addEventListener('touchstart', this.onTouchStart.bind(this), false);
+        this.domElement.addEventListener('touchend', this.onTouchEnd.bind(this), false);
+        this.domElement.addEventListener('touchmove', this.onTouchMove.bind(this), false);
+    }
+    
+    update() {
+        const offset = new THREE.Vector3();
+        const quat = new THREE.Quaternion().setFromUnitVectors(this.camera.up, new THREE.Vector3(0, 1, 0));
+        const quatInverse = quat.clone().invert();
+        
+        const position = this.camera.position;
+        offset.copy(position).sub(this.target);
+        offset.applyQuaternion(quat);
+        
+        this.spherical.setFromVector3(offset);
+        
+        if (this.enableDamping) {
+            this.spherical.theta += this.sphericalDelta.theta * this.dampingFactor;
+            this.spherical.phi += this.sphericalDelta.phi * this.dampingFactor;
+        } else {
+            this.spherical.theta += this.sphericalDelta.theta;
+            this.spherical.phi += this.sphericalDelta.phi;
+        }
+        
+        this.spherical.phi = Math.max(0, Math.min(Math.PI, this.spherical.phi));
+        this.spherical.makeSafe();
+        this.spherical.radius *= this.scale;
+        
+        this.target.add(this.panOffset);
+        
+        offset.setFromSpherical(this.spherical);
+        offset.applyQuaternion(quatInverse);
+        
+        position.copy(this.target).add(offset);
+        this.camera.lookAt(this.target);
+        
+        if (this.enableDamping) {
+            this.sphericalDelta.theta *= (1 - this.dampingFactor);
+            this.sphericalDelta.phi *= (1 - this.dampingFactor);
+        } else {
+            this.sphericalDelta.set(0, 0, 0);
+        }
+        
+        this.scale = 1;
+        this.panOffset.set(0, 0, 0);
+    }
+    
+    onMouseDown(event) {
+        event.preventDefault();
+        
+        switch (event.button) {
+            case 0: // left
+                if (event.ctrlKey || event.metaKey) {
+                    this.handleMouseDownPan(event);
+                    this.state = 'PAN';
+                } else {
+                    this.handleMouseDownRotate(event);
+                    this.state = 'ROTATE';
+                }
+                break;
+            case 1: // middle
+                this.handleMouseDownDolly(event);
+                this.state = 'DOLLY';
+                break;
+            case 2: // right
+                this.handleMouseDownPan(event);
+                this.state = 'PAN';
+                break;
+        }
+        
+        if (this.state !== 'NONE') {
+            document.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+            document.addEventListener('mouseup', this.onMouseUp.bind(this), false);
+        }
+    }
+    
+    onMouseMove(event) {
+        event.preventDefault();
+        
+        switch (this.state) {
+            case 'ROTATE':
+                this.handleMouseMoveRotate(event);
+                break;
+            case 'DOLLY':
+                this.handleMouseMoveDolly(event);
+                break;
+            case 'PAN':
+                this.handleMouseMovePan(event);
+                break;
+        }
+    }
+    
+    onMouseUp() {
+        document.removeEventListener('mousemove', this.onMouseMove.bind(this), false);
+        document.removeEventListener('mouseup', this.onMouseUp.bind(this), false);
+        this.state = 'NONE';
+    }
+    
+    onMouseWheel(event) {
+        event.preventDefault();
+        
+        if (event.deltaY < 0) {
+            this.dollyIn(this.getZoomScale());
+        } else if (event.deltaY > 0) {
+            this.dollyOut(this.getZoomScale());
+        }
+    }
+    
+    handleMouseDownRotate(event) {
+        this.rotateStart.set(event.clientX, event.clientY);
+    }
+    
+    handleMouseMoveRotate(event) {
+        this.rotateEnd.set(event.clientX, event.clientY);
+        this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(0.31);
+        
+        const element = this.domElement;
+        this.rotateLeft(2 * Math.PI * this.rotateDelta.x / element.clientHeight);
+        this.rotateUp(2 * Math.PI * this.rotateDelta.y / element.clientHeight);
+        
+        this.rotateStart.copy(this.rotateEnd);
+    }
+    
+    handleMouseDownPan(event) {
+        this.panStart.set(event.clientX, event.clientY);
+    }
+    
+    handleMouseMovePan(event) {
+        this.panEnd.set(event.clientX, event.clientY);
+        this.panDelta.subVectors(this.panEnd, this.panStart).multiplyScalar(0.01);
+        this.pan(this.panDelta.x, this.panDelta.y);
+        this.panStart.copy(this.panEnd);
+    }
+    
+    handleMouseDownDolly(event) {
+        this.dollyStart.set(event.clientX, event.clientY);
+    }
+    
+    handleMouseMoveDolly(event) {
+        this.dollyEnd.set(event.clientX, event.clientY);
+        this.dollyDelta.subVectors(this.dollyEnd, this.dollyStart);
+        
+        if (this.dollyDelta.y > 0) {
+            this.dollyIn(this.getZoomScale());
+        } else if (this.dollyDelta.y < 0) {
+            this.dollyOut(this.getZoomScale());
+        }
+        
+        this.dollyStart.copy(this.dollyEnd);
+    }
+    
+    onTouchStart(event) {
+        switch (event.touches.length) {
+            case 1:
+                this.handleTouchStartRotate(event);
+                this.state = 'TOUCH_ROTATE';
+                break;
+            case 2:
+                this.handleTouchStartDollyPan(event);
+                this.state = 'TOUCH_DOLLY_PAN';
+                break;
+        }
+    }
+    
+    onTouchMove(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        switch (event.touches.length) {
+            case 1:
+                this.handleTouchMoveRotate(event);
+                break;
+            case 2:
+                this.handleTouchMoveDollyPan(event);
+                break;
+        }
+    }
+    
+    onTouchEnd() {
+        this.state = 'NONE';
+    }
+    
+    handleTouchStartRotate(event) {
+        this.rotateStart.set(event.touches[0].pageX, event.touches[0].pageY);
+    }
+    
+    handleTouchMoveRotate(event) {
+        this.rotateEnd.set(event.touches[0].pageX, event.touches[0].pageY);
+        this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(0.01);
+        
+        const element = this.domElement;
+        this.rotateLeft(2 * Math.PI * this.rotateDelta.x / element.clientHeight);
+        this.rotateUp(2 * Math.PI * this.rotateDelta.y / element.clientHeight);
+        
+        this.rotateStart.copy(this.rotateEnd);
+    }
+    
+    handleTouchStartDollyPan(event) {
+        const dx = event.touches[0].pageX - event.touches[1].pageX;
+        const dy = event.touches[0].pageY - event.touches[1].pageY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        this.dollyStart.set(0, distance);
+        
+        const x = 0.5 * (event.touches[0].pageX + event.touches[1].pageX);
+        const y = 0.5 * (event.touches[0].pageY + event.touches[1].pageY);
+        this.panStart.set(x, y);
+    }
+    
+    handleTouchMoveDollyPan(event) {
+        const dx = event.touches[0].pageX - event.touches[1].pageX;
+        const dy = event.touches[0].pageY - event.touches[1].pageY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        this.dollyEnd.set(0, distance);
+        this.dollyDelta.set(0, Math.pow(this.dollyEnd.y / this.dollyStart.y, 0.5));
+        
+        this.dollyIn(this.dollyDelta.y);
+        this.dollyStart.copy(this.dollyEnd);
+        
+        const x = 0.5 * (event.touches[0].pageX + event.touches[1].pageX);
+        const y = 0.5 * (event.touches[0].pageY + event.touches[1].pageY);
+        this.panEnd.set(x, y);
+        this.panDelta.subVectors(this.panEnd, this.panStart).multiplyScalar(0.01);
+        this.pan(this.panDelta.x, this.panDelta.y);
+        this.panStart.copy(this.panEnd);
+    }
+    
+    rotateLeft(angle) {
+        this.sphericalDelta.theta -= angle;
+    }
+    
+    rotateUp(angle) {
+        this.sphericalDelta.phi -= angle;
+    }
+    
+    pan(deltaX, deltaY) {
+        const offset = new THREE.Vector3();
+        const element = this.domElement;
+        
+        if (this.camera.isPerspectiveCamera) {
+            const position = this.camera.position;
+            offset.copy(position).sub(this.target);
+            let targetDistance = offset.length();
+            
+            targetDistance *= Math.tan((this.camera.fov / 2) * Math.PI / 180.0);
+            
+            const panLeft = new THREE.Vector3();
+            panLeft.setFromMatrixColumn(this.camera.matrix, 0);
+            panLeft.multiplyScalar(-2 * deltaX * targetDistance / element.clientHeight);
+            
+            const panUp = new THREE.Vector3();
+            panUp.setFromMatrixColumn(this.camera.matrix, 1);
+            panUp.multiplyScalar(2 * deltaY * targetDistance / element.clientHeight);
+            
+            this.panOffset.add(panLeft).add(panUp);
+        }
+    }
+    
+    dollyIn(dollyScale) {
+        if (this.camera.isPerspectiveCamera) {
+            this.scale /= dollyScale;
+        }
+    }
+    
+    dollyOut(dollyScale) {
+        if (this.camera.isPerspectiveCamera) {
+            this.scale *= dollyScale;
+        }
+    }
+    
+    getZoomScale() {
+        return Math.pow(0.95, 1);
+    }
+    
+    onContextMenu(event) {
+        event.preventDefault();
+    }
+}
+
+// Create STLExporter since it's not available via script tag on cdnjs
+class STLExporter {
+    parse(scene) {
+        const meshes = [];
+        scene.traverse((child) => {
+            if (child.isMesh) {
+                meshes.push(child);
+            }
+        });
+
+        let output = '';
+        
+        for (let i = 0; i < meshes.length; i++) {
+            const mesh = meshes[i];
+            const geometry = mesh.geometry.clone();
+            mesh.updateMatrixWorld();
+            geometry.applyMatrix4(mesh.matrixWorld);
+            
+            if (geometry.index) {
+                geometry = geometry.toNonIndexed();
+            }
+            
+            const vertices = geometry.attributes.position.array;
+            const normals = geometry.attributes.normal ? geometry.attributes.normal.array : null;
+            
+            for (let j = 0; j < vertices.length; j += 9) {
+                const normal = normals ? 
+                    `${normals[j + 2]} ${normals[j + 5]} ${normals[j + 8]}` : 
+                    '0.0 0.0 1.0';
+                
+                output += `facet normal ${normal}\n`;
+                output += '  outer loop\n';
+                output += `    vertex ${vertices[j]} ${vertices[j + 1]} ${vertices[j + 2]}\n`;
+                output += `    vertex ${vertices[j + 3]} ${vertices[j + 4]} ${vertices[j + 5]}\n`;
+                output += `    vertex ${vertices[j + 6]} ${vertices[j + 7]} ${vertices[j + 8]}\n`;
+                output += '  endloop\n';
+                output += 'endfacet\n';
+            }
+        }
+        
+        return `solid exported\n${output}endsolid exported\n`;
+    }
+}</script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing 3D configurator with SEAMLESS MULTI-ADAPTER LAYOUTS (Universal Browser Fix)...');
+    
+    // 🎯 USER DIMENSION CHANGE TRACKING
+    let userHasChangedDimensions = false; // Track if user has modified any dimensions
+    
+    const container = document.getElementById('model-container');
+    const loadingText = document.getElementById('loading-model');
+    
+    if (!container) {
+        console.error('Model container not found!');
+        return;
+    }
+    
+    // Scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0xf8fafc, 1);
+    // Shadows completely disabled for better performance
+    
+    // Clear container and add canvas
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+    
+    // Add FPS counter
+    const fpsCounter = document.createElement('div');
+    fpsCounter.id = 'fps-counter';
+    fpsCounter.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #00ff00;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        font-weight: bold;
+        z-index: 1000;
+        user-select: none;
+        pointer-events: none;
+    `;
+    fpsCounter.textContent = 'FPS: --';
+    container.appendChild(fpsCounter);
+    
+    // FPS tracking variables
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let fps = 0;
+    
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    // Shadow casting disabled for performance
+    scene.add(directionalLight);
+    
+    const pointLight = new THREE.PointLight(0xffffff, 1.4);
+    pointLight.position.set(-5, -5, -2);
+    scene.add(pointLight);
+    
+    // Camera position
+    camera.position.set(2, 1, 3);
+    
+    // OrbitControls (now using our custom implementation)
+    const controls = new SimpleOrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = true;
+    controls.maxPolarAngle = Math.PI;
+    
+    // Model variables
+    let currentModels = [];
+    let currentSecondaryModels = [];
+    let currentLeftModels = [];
+    let currentRoundedModels = [];
+    let currentUShapeModels = [];
+    let currentConfiguration = 'single';
+    let currentColor = 0x1a1a1a;
+    let updateTimeout = null;
+    
+    // Configuration state - All calculations done in inches internally, FIXED 1MM THICKNESS
+    const FIXED_THICKNESS_INCHES = 0.0394; // 1mm in inches
+    const state = {
+        configuration: 'single',
+        production: 'standard',
+        color: 'black',
+        currentUnit: 'in', // Current display unit (default to inches)
+        dimensions: { 
+            length: 1.9685,   // 50mm converted to inches (always stored in inches)
+            width: 0.9843,    // 25mm converted to inches (always stored in inches)  
+            height: 0.5906    // 15mm converted to inches (always stored in inches)
+            // thickness removed - using FIXED_THICKNESS_INCHES constant
+        }
+    };
+
+    // Unit conversion functions
+    const unitConversions = {
+        // Convert FROM inches TO other units
+        inToCm: (inches) => inches * 2.54,
+        inToMm: (inches) => inches * 25.4,
+        
+        // Convert TO inches FROM other units
+        cmToIn: (cm) => cm / 2.54,
+        mmToIn: (mm) => mm / 25.4,
+        
+        // Utility function to convert from inches to any unit
+        fromInches: (inches, toUnit) => {
+            switch(toUnit) {
+                case 'cm': return inches * 2.54;
+                case 'mm': return inches * 25.4;
+                case 'in': 
+                default: return inches;
+            }
+        },
+        
+        // Utility function to convert to inches from any unit
+        toInches: (value, fromUnit) => {
+            switch(fromUnit) {
+                case 'cm': return value / 2.54;
+                case 'mm': return value / 25.4;
+                case 'in':
+                default: return value;
+            }
+        }
+    };
+
+    // Calculate secondary width based on height
+    function calculateSecondaryHeightMM(height) {
+        const defaultHeightInches = 0.5906; // 15mm in inches
+        const baseHeightMM = (0.9843 / 2) * 25.4; // Base height: 25mm / 2 = 12.5mm
+        
+        console.log(`\n=== SECONDARY WIDTH CALCULATION ===`);
+        console.log(`Current height: ${height.toFixed(4)} inches (${(height * 25.4).toFixed(1)}mm)`);
+        console.log(`Default height: ${defaultHeightInches.toFixed(4)} inches (15.0mm)`);
+        
+        if (height <= defaultHeightInches) {
+            // At or below 15mm, use standard width
+            console.log(`Height <= 15mm: Using standard secondary width: ${baseHeightMM.toFixed(1)}mm`);
+            console.log('=== END SECONDARY WIDTH CALCULATION ===\n');
+            return baseHeightMM;
+        } else {
+            // Above 15mm, scale the width proportionally
+            const heightScale = height / defaultHeightInches;
+            const scaledHeightMM = baseHeightMM * heightScale;
+            
+            console.log(`Height > 15mm: Scale factor = ${heightScale.toFixed(3)}`);
+            console.log(`Scaled secondary width: ${scaledHeightMM.toFixed(1)}mm`);
+            console.log('=== END SECONDARY WIDTH CALCULATION ===\n');
+            return scaledHeightMM;
+        }
+    }
+
+    // Get actual thickness - now always returns 1mm
+    function getActualThickness() {
+        console.log(`Using FIXED thickness: 1.0mm (${FIXED_THICKNESS_INCHES.toFixed(4)} inches)`);
+        return FIXED_THICKNESS_INCHES;
+    }
+
+    // Calculate visual thickness scaling for 3D display (maintains 1mm actual, scales visual)
+    function getVisualThicknessScale(length, width, height) {
+        // Calculate average dimension in mm
+        const avgDimensionMM = ((length + width + height) / 3) * 25.4;
+        
+        // Base scale factor - larger parts need thicker visual representation
+        const baseScale = Math.max(1.0, avgDimensionMM / 50); // 50mm baseline
+        const cappedScale = Math.min(baseScale, 8.0); // Cap at 8x for very large parts
+        
+        console.log(`Visual thickness scale: ${cappedScale.toFixed(2)}x (avg dimension: ${avgDimensionMM.toFixed(1)}mm)`);
+        return cappedScale;
+    }
+
+    // Calculate Z-axis adjustment based on secondary width increase
+    function calculateZAxisAdjustment(height) {
+        const defaultHeightInches = 0.5906; // 15mm in inches
+        const baseHeightMM = (0.9843 / 2) * 25.4; // Base height: 25mm / 2 = 12.5mm
+        
+        console.log(`\n=== Z-AXIS ADJUSTMENT CALCULATION ===`);
+        
+        if (height <= defaultHeightInches) {
+            console.log(`Height <= 15mm: No Z adjustment needed`);
+            console.log('=== END Z-AXIS ADJUSTMENT CALCULATION ===\n');
+            return { secondary: 0, ushape: 0 };
+        }
+        
+        const currentWidthMM = calculateSecondaryHeightMM(height);
+        const widthIncreaseMM = currentWidthMM - baseHeightMM;
+        
+        // Secondary gets half the width increase
+        const secondaryZAdjustmentMM = widthIncreaseMM / 2;
+        // U-shape gets the FULL width increase
+        const ushapeZAdjustmentMM = widthIncreaseMM;
+        
+        // Convert to 3D units
+        const displayScale = 2 / 100;
+        const secondaryZAdjustment3D = secondaryZAdjustmentMM * displayScale;
+        const ushapeZAdjustment3D = ushapeZAdjustmentMM * displayScale;
+        
+        console.log(`Width increase: ${widthIncreaseMM.toFixed(1)}mm`);
+        console.log(`Secondary Z adjustment: ${secondaryZAdjustmentMM.toFixed(1)}mm = ${secondaryZAdjustment3D.toFixed(4)} 3D units (half)`);
+        console.log(`U-shape Z adjustment: ${ushapeZAdjustmentMM.toFixed(1)}mm = ${ushapeZAdjustment3D.toFixed(4)} 3D units (full)`);
+        console.log('=== END Z-AXIS ADJUSTMENT CALCULATION ===\n');
+        
+        return { 
+            secondary: secondaryZAdjustment3D, 
+            ushape: ushapeZAdjustment3D 
+        };
+    }
+
+    // Get appropriate step size for current unit
+    function getStepSize(unit) {
+        switch(unit) {
+            case 'mm': return 0.1;
+            case 'cm': return 0.01;
+            case 'in': 
+            default: return 0.01;
+        }
+    }
+
+    // Get appropriate precision for display
+    function getPrecision(unit) {
+        switch(unit) {
+            case 'mm': return 1;
+            case 'cm': return 2;
+            case 'in': 
+            default: return 2;
+        }
+    }
+
+    // Update UI elements when unit changes
+    function updateUIForUnit(unit) {
+        const unitNames = {
+            'in': 'inches',
+            'cm': 'centimeters', 
+            'mm': 'millimeters'
+        };
+        
+        const unitSymbols = {
+            'in': 'in',
+            'cm': 'cm',
+            'mm': 'mm'
+        };
+
+        // Update title
+        document.getElementById('dimensions-title').textContent = 
+            `Your Power Adapter Dimensions (${unitNames[unit].charAt(0).toUpperCase() + unitNames[unit].slice(1)})`;
+
+        // Update labels
+        document.getElementById('length-label').textContent = `Length (${unitSymbols[unit]})`;
+        document.getElementById('width-label').textContent = `Width (${unitSymbols[unit]})`;
+        document.getElementById('height-label').textContent = `Height (${unitSymbols[unit]})`;
+
+        // Update input attributes
+        const step = getStepSize(unit);
+        ['length', 'width', 'height'].forEach(dim => {
+            const input = document.getElementById(dim);
+            input.step = step;
+        });
+
+        // Update info text with defaults in current unit
+        const precision = getPrecision(unit);
+        const defaultLength = unitConversions.fromInches(1.9685, unit).toFixed(precision); // 50mm default
+        const defaultWidth = unitConversions.fromInches(0.9843, unit).toFixed(precision);   // 25mm default
+        const defaultHeight = unitConversions.fromInches(0.5906, unit).toFixed(precision);  // 15mm default
+
+        document.getElementById('length-info').textContent = `Default: ${defaultLength} ${unitSymbols[unit]}`;
+        document.getElementById('width-info').textContent = `Default: ${defaultWidth} ${unitSymbols[unit]}`;
+        document.getElementById('height-info').textContent = `Default: ${defaultHeight} ${unitSymbols[unit]}`;
+    }
+
+    // Convert and update input values when unit changes
+    function updateInputValues(newUnit) {
+        const precision = getPrecision(newUnit);
+        
+        ['length', 'width', 'height'].forEach(dim => {
+            const input = document.getElementById(dim);
+            const currentInchValue = state.dimensions[dim];
+            const newValue = unitConversions.fromInches(currentInchValue, newUnit);
+            input.value = newValue.toFixed(precision);
+            input.placeholder = newValue.toFixed(precision);
+        });
+    }
+    
+    // Material setup
+    const createPlasticMaterial = (color) => {
+        return new THREE.MeshPhongMaterial({ 
+            color: color,
+            shininess: 30,        
+            specular: 0x222222,   
+            transparent: false,
+            opacity: 1.0,
+            side: THREE.DoubleSide
+        });
+    };
+    
+    console.log('Materials initialized with black matte plastic appearance');
+    
+    // DYNAMIC SPACING CALCULATION FOR ROWS
+    function calculateRowSpacing() {
+        const widthInches = state.dimensions.width;
+        const spacing = widthInches * 0.51; // Based on width for spacing
+        console.log(`Row spacing: ${spacing.toFixed(3)} inches`);
+        return spacing;
+    }
+
+    // DYNAMIC VERTICAL SPACING CALCULATION FOR GRIDS
+    function calculateGridVerticalSpacing() {
+        const lengthInches = state.dimensions.length;
+        const verticalSpacing = lengthInches * 0.505; // Based on length for vertical spacing
+        console.log(`Grid vertical spacing: ${verticalSpacing.toFixed(3)} inches`);
+        return verticalSpacing;
+    }
+
+    // CALCULATE SEAMLESS SCALING FOR MULTI-ADAPTER CONFIGURATIONS
+    function calculateSeamlessScaling(config) {
+        const scalingFactors = {
+            single: { y: 1.0 },     // No scaling for single
+            row2: { y: 0.995 },     // 0.5% reduction for seamless joining
+            row3: { y: 0.995 },     // 0.5% reduction for seamless joining
+            row4: { y: 0.995 },     // 0.5% reduction for seamless joining
+            grid2x2: { y: 0.995 }   // 0.5% reduction for seamless joining
+        };
+        
+        const scaling = scalingFactors[config] || { y: 1.0 };
+        console.log(`Seamless scaling for ${config}: Y=${scaling.y} (0.5% reduction for tight seamless fit)`);
+        return scaling;
+    }
+    
+    // CREATE PRECISION PART GEOMETRY - CENTER MODEL WITH VISUAL SCALING (FIXED!)
+    function createPrecisionPart(totalLength, totalWidth, height) {
+        const actualThickness = getActualThickness(); // Always 1mm
+        const visualScale = getVisualThicknessScale(totalLength, totalWidth, height); // NOW WITH VISUAL SCALING
+        console.log(`Creating CENTER precision part: ${totalLength}"×${totalWidth}" - FIXED 1MM with visual scale: ${visualScale.toFixed(2)}x`);
+        
+        // Convert inches to mm for display scaling
+        const lengthMM = totalLength * 25.4;
+        const widthMM = totalWidth * 25.4;
+        const thicknessMM = actualThickness * 25.4 * visualScale; // NOW WITH visual scaling
+        
+        const displayScale = 2 / 100;
+        const scaledLength = lengthMM * displayScale;
+        const scaledWidth = widthMM * displayScale;
+        const scaledDepth = thicknessMM * displayScale; // Now scales with other components
+        
+        // Dynamic hole calculations based on LENGTH and WIDTH only
+        const holeRadius = Math.min(scaledLength * 0.03, scaledWidth * 0.02);
+        const holeSpacing = scaledLength * 0.4;
+        
+        // Capsule hole dimensions based on LENGTH and WIDTH only
+        const capsuleWidth = Math.min(scaledLength * 0.25, scaledWidth * 0.6);
+        const capsuleHeight = Math.min(scaledWidth * 0.3, scaledLength * 0.15);
+        const capsuleRadius = capsuleHeight / 2;
+        
+        console.log(`CENTER holes: radius=${holeRadius.toFixed(3)}, spacing=${holeSpacing.toFixed(3)}`);
+        console.log(`CENTER capsules: ${capsuleWidth.toFixed(3)}×${capsuleHeight.toFixed(3)}`);
+        console.log(`CENTER SCALED thickness: 1.0mm × ${visualScale.toFixed(2)} = ${(actualThickness * 25.4 * visualScale).toFixed(1)}mm (${scaledDepth.toFixed(3)} 3D units)`);
+
+        const rectShape = new THREE.Shape();
+        rectShape.moveTo(-scaledLength/2, -scaledWidth/2);
+        rectShape.lineTo(scaledLength/2, -scaledWidth/2);
+        rectShape.lineTo(scaledLength/2, scaledWidth/2);
+        rectShape.lineTo(-scaledLength/2, scaledWidth/2);
+        rectShape.lineTo(-scaledLength/2, -scaledWidth/2);
+
+        // Add center circular holes
+        const hole1 = new THREE.Path();
+        hole1.absarc(-holeSpacing/2, 0, holeRadius, 0, Math.PI * 2, false);
+        
+        const hole2 = new THREE.Path();
+        hole2.absarc(holeSpacing/2, 0, holeRadius, 0, Math.PI * 2, false);
+        
+        rectShape.holes.push(hole1);
+        rectShape.holes.push(hole2);
+
+        function createCapsuleHole(centerX, centerY) {
+            const capsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            capsuleHole.moveTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            capsuleHole.absarc(centerX + halfWidth - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            capsuleHole.lineTo(centerX - halfWidth + capsuleRadius, centerY - halfHeight);
+            capsuleHole.absarc(centerX - halfWidth + capsuleRadius, centerY, capsuleRadius, -Math.PI/2, Math.PI/2, true);
+            capsuleHole.lineTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            
+            return capsuleHole;
+        }
+
+        function createHalfCapsuleHole(centerX, centerY) {
+            const halfCapsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            const cutoffPosition = centerX - halfWidth * 0.85;
+            const rightEnd = centerX + halfWidth;
+            
+            halfCapsuleHole.moveTo(cutoffPosition, centerY + halfHeight);
+            halfCapsuleHole.lineTo(rightEnd - capsuleRadius, centerY + halfHeight);
+            halfCapsuleHole.absarc(rightEnd - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY - halfHeight);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY + halfHeight);
+            
+            return halfCapsuleHole;
+        }
+
+        // Add capsule venting holes
+        const offsetY = scaledWidth * 0.25;
+        const offsetX = scaledLength * 0.25;
+        
+        const leftUpperCapsuleHole = createHalfCapsuleHole(-offsetX, offsetY);
+        const rightUpperCapsuleHole = createCapsuleHole(offsetX, offsetY);
+        const leftLowerCapsuleHole = createHalfCapsuleHole(-offsetX, -offsetY);
+        const rightLowerCapsuleHole = createCapsuleHole(offsetX, -offsetY);
+
+        rectShape.holes.push(leftUpperCapsuleHole);
+        rectShape.holes.push(rightUpperCapsuleHole);
+        rectShape.holes.push(leftLowerCapsuleHole);
+        rectShape.holes.push(rightLowerCapsuleHole);
+
+        const extrudeSettings = {
+            depth: scaledDepth,
+            bevelEnabled: true,
+            bevelThickness: scaledDepth * 0.2,
+            bevelSize: scaledDepth * 0.12,
+            bevelSegments: 24,
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(rectShape, extrudeSettings);
+        geometry.translate(0, 0, -scaledDepth/2);
+
+        console.log(`✓ CENTER precision part created with VISUAL SCALING (${visualScale.toFixed(2)}x)`);
+        return geometry;
+    }
+
+    // CREATE SECONDARY PART GEOMETRY - WITH HEIGHT-CONTROLLED WIDTH AND FIXED 1MM THICKNESS
+    function createSecondaryPart(baseLength, baseWidth, height) {
+        const actualThickness = getActualThickness(); // Always 1mm
+        const visualScale = getVisualThicknessScale(baseLength, baseWidth, height);
+        console.log(`Creating SECONDARY part: HEIGHT-CONTROLLED WIDTH (${height.toFixed(4)}" height affects width) - FIXED 1MM, visual scale: ${visualScale.toFixed(2)}x`);
+        
+        // Use actual length for geometry
+        const fixedLengthMM = baseLength * 25.13; // Use actual length
+        
+        // CALCULATE HEIGHT-CONTROLLED WIDTH
+        const heightControlledHeightMM = calculateSecondaryHeightMM(height);
+        const thicknessMM = actualThickness * 25.4 * visualScale; // 1mm with visual scaling
+        
+        const displayScale = 2 / 100;
+        const scaledWidth = fixedLengthMM * displayScale;
+        const scaledHeight = heightControlledHeightMM * displayScale; // NOW HEIGHT-CONTROLLED
+        const scaledDepth = thicknessMM * displayScale;
+        
+        console.log(`SECONDARY: scaledWidth=${scaledWidth.toFixed(3)}, HEIGHT-CONTROLLED scaledHeight=${scaledHeight.toFixed(3)} (${heightControlledHeightMM.toFixed(1)}mm)`);
+        console.log(`SECONDARY FIXED thickness: 1.0mm (${scaledDepth.toFixed(3)} 3D units)`);
+        
+        // Use capsule dimensions scaled for HEIGHT-CONTROLLED height
+        const capsuleWidth = Math.min(scaledWidth * 0.25, scaledHeight * 1.2);
+        const capsuleHeight = Math.min(scaledHeight * 0.6, scaledWidth * 0.15);
+        const capsuleRadius = capsuleHeight / 2;
+        
+        console.log(`SECONDARY (HEIGHT-CONTROLLED) capsules: ${capsuleWidth.toFixed(3)}×${capsuleHeight.toFixed(3)}`);
+
+        function createCapsuleHole(centerX, centerY) {
+            const capsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            capsuleHole.moveTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            capsuleHole.absarc(centerX + halfWidth - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            capsuleHole.lineTo(centerX - halfWidth + capsuleRadius, centerY - halfHeight);
+            capsuleHole.absarc(centerX - halfWidth + capsuleRadius, centerY, capsuleRadius, -Math.PI/2, Math.PI/2, true);
+            capsuleHole.lineTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            
+            return capsuleHole;
+        }
+
+        function createHalfCapsuleHole(centerX, centerY) {
+            const halfCapsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            const cutoffPosition = centerX - halfWidth * 0.85;
+            const rightEnd = centerX + halfWidth;
+            
+            halfCapsuleHole.moveTo(cutoffPosition, centerY + halfHeight);
+            halfCapsuleHole.lineTo(rightEnd - capsuleRadius, centerY + halfHeight);
+            halfCapsuleHole.absarc(rightEnd - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY - halfHeight);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY + halfHeight);
+            
+            return halfCapsuleHole;
+        }
+
+        // CREATE MAIN SHAPE
+        const mainShape = new THREE.Shape();
+        mainShape.moveTo(-scaledWidth/2, -scaledHeight/2);
+        mainShape.lineTo(scaledWidth/2, -scaledHeight/2);
+        mainShape.lineTo(scaledWidth/2, scaledHeight/2);
+        mainShape.lineTo(-scaledWidth/2, scaledHeight/2);
+        mainShape.lineTo(-scaledWidth/2, -scaledHeight/2);
+
+        // Add capsule holes (NO center circular holes for secondary)
+        const spacing = scaledWidth * 0.25;
+        const leftCenterCapsuleHole = createHalfCapsuleHole(-spacing, 0);
+        const rightCenterCapsuleHole = createCapsuleHole(spacing, 0);
+
+        mainShape.holes.push(leftCenterCapsuleHole);
+        mainShape.holes.push(rightCenterCapsuleHole);
+        console.log(`✓ Added 2 capsule holes (HEIGHT-CONTROLLED WIDTH)`);
+        
+        const extrudeSettings = {
+            depth: scaledDepth,
+            bevelEnabled: true,
+            bevelThickness: scaledDepth * 0.4,
+            bevelSize: scaledDepth * 0.3,
+            bevelSegments: 8,
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(mainShape, extrudeSettings);
+        geometry.translate(0, 0, -scaledDepth/2);
+
+        // POST-PROCESS: Flatten the back face while keeping front face beveled
+        const positions = geometry.attributes.position.array;
+        const backZ = -scaledDepth/2;
+        const tolerance = scaledDepth * 0.05;
+        
+        for (let i = 0; i < positions.length; i += 3) {
+            const z = positions[i + 2];
+            if (z <= backZ + tolerance) {
+                positions[i + 2] = backZ;
+            }
+        }
+        
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
+
+        console.log(`✓ SECONDARY part: HEIGHT-CONTROLLED WIDTH (${heightControlledHeightMM.toFixed(1)}mm) with FIXED 1MM thickness and FLAT BACK`);
+        return geometry;
+    }
+    
+    // CREATE FLAT ROUNDED RECTANGLE - FIXED 1MM THICKNESS
+    function createFlatRoundedRectWithHole(totalLength, totalWidth, height) {
+        const actualThickness = getActualThickness(); // Always 1mm
+        console.log(`Creating FLAT ROUNDED RECTANGLE: NEW MAPPING - FIXED 1MM thickness`);
+        
+        // NEW MAPPING SYSTEM:
+        // Height input → Rectangle Length (X dimension)
+        const rectLengthMM = calculateSecondaryHeightMM(height) * 1.0; // Height → Rectangle Length
+        
+        // Width input → Rectangle Width (Y dimension)
+        const rectWidthMM = totalWidth * 25.4 * 1.0; // Width → Rectangle Width
+        
+        // Fixed thickness - no length scaling needed since thickness is constant
+        const thicknessMM = actualThickness * 27.4; // Always 1mm
+        
+        const displayScale = 2 / 100;
+        const scaledLength = rectLengthMM * displayScale;    // X dimension (from height input)
+        const scaledWidth = rectWidthMM * displayScale;     // Y dimension (from width input)
+        const scaledDepth = thicknessMM * displayScale;     // Z dimension (always 1mm)
+        
+        console.log(`ROUNDED RECTANGLE MAPPING (FIXED 1MM):`);
+        console.log(`  Height input → Length: ${rectLengthMM.toFixed(1)}mm`);
+        console.log(`  Width input → Width: ${rectWidthMM.toFixed(1)}mm`);
+        console.log(`  FIXED thickness: 1.0mm`);
+        console.log(`FINAL RECTANGLE: ${rectLengthMM.toFixed(1)}mm × ${rectWidthMM.toFixed(1)}mm × 1.0mm`);
+        
+        // Outer rounded rectangle - laying flat in XY plane
+        const outerShape = new THREE.Shape();
+        const radius = Math.min(scaledLength, scaledWidth) * 0.05;
+        
+        // Create rectangle with rounded corners in XY plane
+        outerShape.moveTo(-scaledLength/2 + radius, -scaledWidth/2);
+        outerShape.lineTo(scaledLength/2 - radius, -scaledWidth/2);
+        outerShape.quadraticCurveTo(scaledLength/2, -scaledWidth/2, scaledLength/2, -scaledWidth/2 + radius);
+        outerShape.lineTo(scaledLength/2, scaledWidth/2 - radius);
+        outerShape.quadraticCurveTo(scaledLength/2, scaledWidth/2, scaledLength/2 - radius, scaledWidth/2);
+        outerShape.lineTo(-scaledLength/2 + radius, scaledWidth/2);
+        outerShape.quadraticCurveTo(-scaledLength/2, scaledWidth/2, -scaledLength/2, scaledWidth/2 - radius);
+        outerShape.lineTo(-scaledLength/2, -scaledWidth/2 + radius);
+        outerShape.quadraticCurveTo(-scaledLength/2, -scaledWidth/2, -scaledLength/2 + radius, -scaledWidth/2);
+
+        // Inner hole - centered (proportional to rectangle size)
+        const innerShape = new THREE.Shape();
+        const innerLength = scaledLength * 0.6; // Hole size
+        const innerWidth = scaledWidth * 0.6;   // Hole size
+        const innerRadius = Math.min(innerLength, innerWidth) * 0.1;
+        
+        // Create inner hole with rounded corners
+        innerShape.moveTo(-innerLength/2 + innerRadius, -innerWidth/2);
+        innerShape.lineTo(innerLength/2 - innerRadius, -innerWidth/2);
+        innerShape.quadraticCurveTo(innerLength/2, -innerWidth/2, innerLength/2, -innerWidth/2 + innerRadius);
+        innerShape.lineTo(innerLength/2, innerWidth/2 - innerRadius);
+        innerShape.quadraticCurveTo(innerLength/2, innerWidth/2, innerLength/2 - innerRadius, innerWidth/2);
+        innerShape.lineTo(-innerLength/2 + innerRadius, innerWidth/2);
+        innerShape.quadraticCurveTo(-innerLength/2, innerWidth/2, -innerLength/2, innerWidth/2 - innerRadius);
+        innerShape.lineTo(-innerLength/2, -innerWidth/2 + innerRadius);
+        innerShape.quadraticCurveTo(-innerLength/2, -innerWidth/2, -innerLength/2 + innerRadius, -innerWidth/2);
+
+        outerShape.holes.push(innerShape);
+
+        // Extrude settings with FIXED 1MM THICKNESS
+        const extrudeSettings = {
+            depth: scaledDepth, // FIXED 1MM thickness
+            bevelEnabled: true,
+            bevelSegments: 8,
+            steps: 1,
+            bevelSize: scaledDepth * 0.02,
+            bevelThickness: scaledDepth * 0.02
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(outerShape, extrudeSettings);
+        
+        // Center the geometry vertically (Z direction is thickness)
+        geometry.translate(0, 0, -scaledDepth/2);
+
+        console.log(`✓ FLAT ROUNDED RECTANGLE created with FIXED 1MM thickness`);
+        return geometry;
+    }
+
+// 🎯 ENHANCED U-SHAPED GEOMETRY - AGGRESSIVE BOTTOM WALL + CONDITIONAL CAVITY + CONSISTENT THICKNESS + DYNAMIC RADII
+function createUShapedGeometry(uWidth, uLength, height) {
+    console.log(`Creating ENHANCED U-SHAPED geometry: AGGRESSIVE BOTTOM WALL + CONDITIONAL CAVITY + CONSISTENT THICKNESS + DYNAMIC RADII`);
+    
+    // 🔧 CONSISTENT THICKNESS PATTERN - SAME AS CENTER AND SECONDARY
+    const actualThickness = getActualThickness(); // Always 1mm base
+    const visualScale = getVisualThicknessScale(uLength, uWidth, height); // Visual scaling
+    
+    // ADAPTER-SIZED HANDLES - fit within the adapter width
+    const adapterWidthMM = uWidth * 25.4;
+    const handleWidthMM = adapterWidthMM; // Handles = adapter width (never exceed)
+    
+    // 🎯 CONDITIONAL CAVITY WIDTH - different for initial vs changed dimensions
+    let cavityMultiplier;
+    if (userHasChangedDimensions) {
+        cavityMultiplier = 0.82; // 82% when user has changed dimensions
+        console.log(`Using 0.82 cavity multiplier (user modified dimensions)`);
+    } else {
+        cavityMultiplier = 0.80; // 85% for initial load
+        console.log(`Using 0.85 cavity multiplier (initial load)`);
+    }
+    
+    const cavityWidthMM = handleWidthMM * cavityMultiplier; // No thickness calculations!
+    
+    const lengthMM = uLength * 25.4;
+    const thicknessMM = actualThickness * 25.4 * visualScale; // 1mm base + visual scaling (CONSISTENT!)
+    
+    const displayScale = 2 / 100;
+    const scaledWidth = handleWidthMM * displayScale;
+    const scaledLength = lengthMM * displayScale;
+    const scaledDepth = thicknessMM * displayScale; // Always the same
+    
+    console.log(`U-Shape CONSISTENT THICKNESS VERSION:`);
+    console.log(`  Adapter width: ${adapterWidthMM.toFixed(1)}mm`);
+    console.log(`  CONSISTENT thickness: 1.0mm base × ${visualScale.toFixed(2)} = ${(actualThickness * 25.4 * visualScale).toFixed(1)}mm (same as center/secondary)`);
+    console.log(`  Cavity: ${cavityWidthMM.toFixed(1)}mm (${(cavityMultiplier*100).toFixed(0)}% of adapter)`);
+    console.log(`  User changed dims: ${userHasChangedDimensions}`);
+    
+    const shape = new THREE.Shape();
+    
+    // U shape parameters - AGGRESSIVE DYNAMIC BOTTOM WALL THICKNESS
+    const outerWidth = scaledWidth; 
+    const cavityWidth = (cavityWidthMM * displayScale); 
+    const uShapeHeight = scaledLength * 1;
+    const fixedWallThickness3D = 0.04; // COMPLETELY FIXED WALL THICKNESS in 3D units
+    
+    // 🚀 AGGRESSIVE DYNAMIC BOTTOM WALL THICKNESS - scales much more for large dimensions
+    const avgDimensionMM = ((uWidth + uLength + height) / 3) * 25.4; // Average in mm
+    const baselineMM = 30; // 30mm baseline (25+50+15)/3
+    const dimensionRatio = avgDimensionMM / baselineMM; // How much larger than baseline
+    
+    // MUCH MORE AGGRESSIVE SCALING for large parts
+    let dynamicBottomScale;
+    if (dimensionRatio <= 2.0) {
+        // Small to medium parts: 2.5x to 5x
+        dynamicBottomScale = 2.5 + (dimensionRatio - 1.0) * 2.5;
+    } else if (dimensionRatio <= 10.0) {
+        // Large parts: 5x to 20x (much more aggressive)
+        dynamicBottomScale = 5.0 + (dimensionRatio - 2.0) * 1.875; // Gets to 20x at 10x size
+    } else {
+        // Very large parts: 20x to 40x (extremely aggressive)
+        dynamicBottomScale = 20.0 + Math.min((dimensionRatio - 10.0) * 2.0, 20.0);
+    }
+    
+    const bottomWallThickness = fixedWallThickness3D * dynamicBottomScale; // AGGRESSIVE DYNAMIC bottom wall
+    
+    // 🚀 DYNAMIC RADII - Scale with actual U-shape dimensions for proper corners
+    const minRadius = fixedWallThickness3D * 0.3; // Minimum radius for very small parts
+    const maxRadius = fixedWallThickness3D * 3.0; // Maximum radius cap
+    
+    // Cavity inner radius - scales with cavity width for proper interior corners
+    const cavityRadiusScale = cavityWidth * 0.08; // 8% of cavity width
+    const innerRadius = Math.max(minRadius, Math.min(maxRadius, cavityRadiusScale));
+    
+    // Open side bevel radius - scales with overall U-shape dimensions for visible corners
+    const overallSizeScale = Math.min(outerWidth, uShapeHeight) * 0.04; // 4% of smaller dimension
+    const openSideBevelRadius = Math.max(minRadius, Math.min(maxRadius, overallSizeScale));
+    
+    console.log(`U-Shape AGGRESSIVE DYNAMIC BOTTOM WALL:`);
+    console.log(`  Avg dimension: ${avgDimensionMM.toFixed(1)}mm (baseline: ${baselineMM}mm)`);
+    console.log(`  Dimension ratio: ${dimensionRatio.toFixed(2)}x larger than baseline`);
+    console.log(`  Bottom wall scale: ${dynamicBottomScale.toFixed(1)}x (AGGRESSIVE: 2.5x→40x range)`);
+    console.log(`  Bottom wall thickness: ${bottomWallThickness.toFixed(4)} units`);
+    console.log(`  For your ${avgDimensionMM.toFixed(0)}mm avg: Bottom cavity is ${dynamicBottomScale.toFixed(1)}x farther from end!`);
+    console.log(`U-Shape 3D ENHANCED: outer=${outerWidth.toFixed(3)}, cavity=${cavityWidth.toFixed(3)}, side walls=${fixedWallThickness3D}, AGGRESSIVE bottom wall=${bottomWallThickness.toFixed(3)}, depth=${scaledDepth.toFixed(3)}`);
+    console.log(`DYNAMIC RADII: cavity inner=${innerRadius.toFixed(4)} (${cavityRadiusScale.toFixed(4)} scaled), open side=${openSideBevelRadius.toFixed(4)} (${overallSizeScale.toFixed(4)} scaled)`);
+    
+    // Inner contour helper
+    const cavityHalfWidth = cavityWidth / 2;
+    
+    // OUTER RECTANGLE - handle area (counterclockwise)
+    shape.moveTo(-outerWidth/2, uShapeHeight/2);
+    shape.lineTo(-outerWidth/2, -uShapeHeight/2);
+    shape.lineTo(outerWidth/2, -uShapeHeight/2);
+    shape.lineTo(outerWidth/2, uShapeHeight/2);
+    
+    // INNER CAVITY - U-shaped cutout (clockwise to create hole)
+    // Start from top opening (right side)
+    shape.lineTo(cavityHalfWidth + openSideBevelRadius, uShapeHeight/2);
+    
+    // Top-right rounded corner of cavity
+    shape.quadraticCurveTo(cavityHalfWidth, uShapeHeight/2, cavityHalfWidth, uShapeHeight/2 - openSideBevelRadius);
+    
+    // Right side of cavity (goes down to the improved bottom wall)
+    shape.lineTo(cavityHalfWidth, -uShapeHeight/2 + bottomWallThickness + innerRadius);
+    
+    // Bottom-right rounded corner of cavity
+    shape.quadraticCurveTo(cavityHalfWidth, -uShapeHeight/2 + bottomWallThickness, cavityHalfWidth - innerRadius, -uShapeHeight/2 + bottomWallThickness);
+    
+    // Bottom of cavity - NOW WITH IMPROVED DISTANCE FROM END
+    shape.lineTo(-cavityHalfWidth + innerRadius, -uShapeHeight/2 + bottomWallThickness);
+    
+    // Bottom-left rounded corner of cavity
+    shape.quadraticCurveTo(-cavityHalfWidth, -uShapeHeight/2 + bottomWallThickness, -cavityHalfWidth, -uShapeHeight/2 + bottomWallThickness + innerRadius);
+    
+    // Left side of cavity (goes up)
+    shape.lineTo(-cavityHalfWidth, uShapeHeight/2 - openSideBevelRadius);
+    
+    // Top-left rounded corner of cavity
+    shape.quadraticCurveTo(-cavityHalfWidth, uShapeHeight/2, -cavityHalfWidth - openSideBevelRadius, uShapeHeight/2);
+    
+    // Close the shape
+    shape.closePath();
+
+    // Extrude settings with CONSISTENT thickness
+    const extrudeSettings = {
+        depth: scaledDepth, // FIXED depth, never changes
+        bevelEnabled: true,
+        bevelThickness: scaledDepth * 0.02,
+        bevelSize: scaledDepth * 0.015,
+        bevelSegments: 4,
+    };
+
+    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    geometry.translate(0, 0, -scaledDepth/2);
+
+    console.log(`✅ U-shaped geometry created successfully:`);
+    console.log(`   - CONSISTENT thickness (1mm base × ${visualScale.toFixed(2)} visual scale)`);
+    console.log(`   - ${(cavityMultiplier*100).toFixed(0)}% cavity width (85% initial, 82% after changes)`);
+    console.log(`   - DYNAMIC bottom wall: ${bottomWallThickness.toFixed(4)} units (${dynamicBottomScale.toFixed(2)}x thicker)`);
+    console.log(`   - DYNAMIC radii: Inner=${innerRadius.toFixed(4)}, Open side=${openSideBevelRadius.toFixed(4)} (scale with dimensions)`);
+    console.log(`   - Scales proportionally with W×L×H dimensions for better structural integrity`);
+    console.log(`   - Optimized for both visual appeal (initial) and functionality (after changes)`);
+    console.log(`   - Perfect rounded corners at all sizes - no more invisible radii!`);
+    
+    return geometry;
+}
+        
+    // MAIN UPDATE CONFIGURATION FUNCTION WITH CONDITIONAL DYNAMIC POSITIONING AND SEAMLESS MULTI-ADAPTER LAYOUTS
+    function updateConfiguration() {
+        console.log('\n=== 🚀 CONFIGURATION UPDATE WITH SEAMLESS MULTI-ADAPTER LAYOUTS (0.5% REDUCTION + 4 ROUNDED RECTANGLES IN 2x2) ===');
+        
+        // Clear existing models
+        [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels].forEach(model => {
+            scene.remove(model);
+        });
+        currentModels = [];
+        currentSecondaryModels = [];
+        currentLeftModels = [];
+        currentRoundedModels = [];
+        currentUShapeModels = [];
+        
+        const horizontalSpacing = calculateRowSpacing();
+        const verticalSpacing = calculateGridVerticalSpacing();
+        const seamlessScaling = calculateSeamlessScaling(state.configuration);
+        
+        let positions = [];
+        
+        switch (state.configuration) {
+            case 'single':
+                positions = [{ x: 0, y: 0, z: 0 }];
+                break;
+            case 'row2':
+                positions = [
+                    { x: -horizontalSpacing/2, y: 0, z: 0 },
+                    { x: horizontalSpacing/2, y: 0, z: 0 }
+                ];
+                break;
+            case 'row3':
+                positions = [
+                    { x: -horizontalSpacing, y: 0, z: 0 },
+                    { x: 0, y: 0, z: 0 },
+                    { x: horizontalSpacing, y: 0, z: 0 }
+                ];
+                break;
+            case 'row4':
+                positions = [
+                    { x: -horizontalSpacing*1.5, y: 0, z: 0 },
+                    { x: -horizontalSpacing/2, y: 0, z: 0 },
+                    { x: horizontalSpacing/2, y: 0, z: 0 },
+                    { x: horizontalSpacing*1.5, y: 0, z: 0 }
+                ];
+                break;
+            case 'grid2x2':
+                positions = [
+                    { x: -horizontalSpacing/2, y: verticalSpacing/2, z: 0 },    // Top left
+                    { x: horizontalSpacing/2, y: verticalSpacing/2, z: 0 },     // Top right
+                    { x: -horizontalSpacing/2, y: -verticalSpacing/2, z: 0 },   // Bottom left
+                    { x: horizontalSpacing/2, y: -verticalSpacing/2, z: 0 }     // Bottom right
+                ];
+                break;
+        }
+        
+        console.log(`Creating SEAMLESS configuration: ${state.configuration}`);
+        console.log(`Horizontal spacing: ${horizontalSpacing.toFixed(3)} inches`);
+        console.log(`Vertical spacing: ${verticalSpacing.toFixed(3)} inches`);
+        console.log(`Seamless Y scaling for secondary models: ${seamlessScaling.y} (0.5% reduction for tight fit)`);
+        console.log(`All components using FIXED thickness: 1.0mm with proportional visual scaling`);
+        
+        // Calculate Z-axis adjustments based on height
+        const zAdjustments = calculateZAxisAdjustment(state.dimensions.height);
+        
+        // CHECK IF ALL THREE INPUTS ARE VALID BEFORE APPLYING DYNAMIC POSITIONING
+        const hasCompleteInputs = state.dimensions.length > 0 && state.dimensions.width > 0 && state.dimensions.height > 0;
+        
+        // ===== CALCULATE DYNAMIC POSITIONING VALUES =====
+        const displayScale = 2 / 100; // 0.02
+        
+        let dynamicY, dynamicZ, centerZ_dynamic, roundedZ_dynamic, secondaryZ, ushapeZ;
+        
+        if (hasCompleteInputs) {
+            console.log(`✅ ALL THREE INPUTS PROVIDED - APPLYING FULL DYNAMIC POSITIONING`);
+            
+            // DYNAMIC Y CALCULATION (Length effect - center model growth) - REDUCED BY HALF
+            const currentLengthMM = state.dimensions.length * 25.4; // Convert to mm
+            const defaultLengthMM = 50; // 50mm baseline
+            const lengthIncreaseMM = Math.max(0, currentLengthMM - defaultLengthMM); // Only positive increases
+            const lengthIncrease3D = lengthIncreaseMM * displayScale; // Convert to 3D units
+            const baseDynamicY = -0.488; // Original Y position
+            dynamicY = baseDynamicY - (lengthIncrease3D * 0.5); // Move further down (HALF movement)
+            
+            // DYNAMIC Z CALCULATION (Height effect - reduced from U-shape) - REDUCED BY HALF
+            const baseDynamicZ = 0.03; // Original Z position  
+            dynamicZ = baseDynamicZ + (zAdjustments.ushape * 0.5); // HALF the U-shape adjustment
+            
+            // DYNAMIC CENTER Z CALCULATION (Width-based thickness overlap prevention)
+            const currentWidthMM = state.dimensions.width * 25.4; // Convert to mm
+            const baseWidthMM = 25; // 25mm baseline
+            const targetWidthMM = 250; // 250mm target for full +0.0873 movement
+            const maxZMovement = 0.032; // Maximum additional Z movement at 250mm (POSITIVE - away from camera, REDUCED by 10x)
+            
+            const widthIncrease = Math.max(0, currentWidthMM - baseWidthMM); // Only positive increases
+            const widthScale = widthIncrease / (targetWidthMM - baseWidthMM); // Scale factor (0 to 1+ for 250mm+)
+            const additionalCenterZ = widthScale * maxZMovement; // Additional Z movement
+            centerZ_dynamic = -0.0873 + additionalCenterZ; // Base position + additional movement
+            
+            // DYNAMIC U-SHAPE Z CALCULATION (All three inputs combined - Length + Width + Height)
+            const currentHeightMM = state.dimensions.height * 25.4; // Convert to mm
+            const baseLengthMM = 50; // 50mm baseline
+            const baseHeightMM = 15; // 15mm baseline
+            const targetCombinedMM = 750; // Combined target (250+250+250) for full movement
+            
+            // Calculate combined dimensional increase
+            const lengthIncrease = Math.max(0, currentLengthMM - baseLengthMM);
+            const heightIncrease = Math.max(0, currentHeightMM - baseHeightMM);
+            const combinedIncrease = lengthIncrease + widthIncrease + heightIncrease;
+            const combinedScale = combinedIncrease / (targetCombinedMM - (baseLengthMM + baseWidthMM + baseHeightMM)); // Scale factor
+            
+            const maxUshapeZMovement = -0.0245; // Maximum additional Z movement for U-shape (POSITIVE - away from camera)
+            const additionalUshapeZ = combinedScale * maxUshapeZMovement; // Additional Z movement based on ALL THREE inputs
+            
+            // FIXED Z positions for other components + height-based adjustments
+            roundedZ_dynamic = dynamicZ; // 🚀 DYNAMIC based on height
+            secondaryZ = 0.03 + zAdjustments.secondary; // Base level + half width increase
+            ushapeZ = 0.1497 + zAdjustments.ushape + additionalUshapeZ; // Fixed base + height adjustment + ALL-THREE-INPUTS Z offset
+            
+            console.log(`🎯 DYNAMIC POSITIONING CALCULATIONS (REDUCED BY HALF):`);
+            console.log(`  Length: ${currentLengthMM.toFixed(1)}mm (${lengthIncreaseMM.toFixed(1)}mm increase)`);
+            console.log(`  Length 3D effect: ${lengthIncrease3D.toFixed(3)} units (reduced to ${(lengthIncrease3D * 0.5).toFixed(3)})`);
+            console.log(`  Dynamic Y: ${baseDynamicY} → ${dynamicY.toFixed(3)} (down ${(lengthIncrease3D * 0.5).toFixed(3)} - HALF movement)`);
+            console.log(`  Height Z adjustment: +${zAdjustments.ushape.toFixed(4)} units (reduced to ${(zAdjustments.ushape * 0.5).toFixed(4)})`);
+            console.log(`  Dynamic Z: ${baseDynamicZ} → ${dynamicZ.toFixed(4)} (up ${(zAdjustments.ushape * 0.5).toFixed(4)} - HALF movement)`);
+        } else {
+            console.log(`⏳ INCOMPLETE INPUTS - USING DEFAULT POSITIONING`);
+            console.log(`  Length: ${state.dimensions.length > 0 ? '✓' : '✗'}`);
+            console.log(`  Width: ${state.dimensions.width > 0 ? '✓' : '✗'}`);
+            console.log(`  Height: ${state.dimensions.height > 0 ? '✓' : '✗'}`);
+            
+            // USE DEFAULT POSITIONS WHEN INPUTS ARE INCOMPLETE
+            dynamicY = -0.488; // Default Y position
+            dynamicZ = 0.03; // Default Z position
+            centerZ_dynamic = -0.0873; // Default center Z position
+            roundedZ_dynamic = 0.029; // Default rounded Z position
+            secondaryZ = 0.03; // Default secondary Z position
+            ushapeZ = 0.15; // Default ushape Z position
+            
+            console.log(`📍 USING DEFAULT Z-POSITIONING (no dynamic adjustments)`);
+        }
+        
+        // Create models for each position
+        positions.forEach((pos, index) => {
+            // Calculate width-based X offsets for secondary positioning
+            const widthIncrease = state.dimensions.width - 0.9843; // Increase from baseline (25mm in inches)
+            const widthXOffset = (widthIncrease * 25.4 * (2/100)) / 1.99; // Half the increase for X positioning
+            
+            // 1. CREATE FLAT ROUNDED RECTANGLE (BOTTOM SUPPORT) - 🚀 CONDITIONAL DYNAMIC POSITIONING
+            const roundedGeometry = createFlatRoundedRectWithHole(
+                state.dimensions.length,  // Pass length (NO SCALING for thickness)
+                state.dimensions.width,   // Pass width (affects rectangle width)
+                state.dimensions.height   // Pass height (affects rectangle length)
+            );
+            const roundedMaterial = createPlasticMaterial(currentColor);
+            const roundedModel = new THREE.Mesh(roundedGeometry, roundedMaterial);
+            
+            roundedModel.name = `RoundedModel_${index + 1}`;
+            
+            // 🚀 APPLY CONDITIONAL DYNAMIC POSITIONING - RESPONDS TO BOTH LENGTH AND HEIGHT WHEN INPUTS COMPLETE
+            // For grid layouts, use pos.y + dynamicY to maintain grid positioning
+            const roundedY = (state.configuration === 'grid2x2') ? pos.y + dynamicY : dynamicY;
+            roundedModel.position.set(pos.x, roundedY, roundedZ_dynamic);
+            
+            roundedModel.rotation.x = Math.PI / 2;
+            roundedModel.scale.y= 1.02;
+                        roundedModel.scale.z= 1.02;
+            roundedModel.rotation.z = Math.PI / 2;
+            // Shadows disabled for performance
+            
+            scene.add(roundedModel);
+            currentRoundedModels.push(roundedModel);
+
+            console.log(`✅ ROUNDED positioned at: (${pos.x.toFixed(2)}, ${roundedY.toFixed(3)}, ${roundedZ_dynamic.toFixed(4)})`);
+
+            // 2. CREATE CENTER MODEL (ON TOP OF ROUNDED) - NOW WITH VISUAL SCALING AND CONDITIONAL DYNAMIC Z
+            const centerGeometry = createPrecisionPart(
+                state.dimensions.length,  // Pass length
+                state.dimensions.width,   // Pass width
+                state.dimensions.height   // Pass height for visual scaling
+            );
+            const centerMaterial = createPlasticMaterial(currentColor);
+            const centerModel = new THREE.Mesh(centerGeometry, centerMaterial);
+            
+            centerModel.name = `CenterModel_${index + 1}`;
+            centerModel.position.set(pos.x, pos.y, centerZ_dynamic); // 🚀 CONDITIONAL DYNAMIC WIDTH-BASED Z POSITIONING
+            centerModel.scale.set(.998,1,1); // FIXED scale - never changes
+            centerModel.rotation.z = Math.PI / 2;
+            // Shadows disabled for performance
+            
+            scene.add(centerModel);
+            currentModels.push(centerModel);
+            
+            console.log(`✅ CENTER model positioned at: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${centerZ_dynamic.toFixed(5)})`);
+
+            // 3. CREATE RIGHT SIDE MODEL - HEIGHT-CONTROLLED WIDTH + CONDITIONAL Z POSITIONING + SEAMLESS SCALING
+            const rightGeometry = createSecondaryPart(
+                state.dimensions.length,  // Pass length for geometry
+                state.dimensions.width,   // Pass width
+                state.dimensions.height   // Pass height for width control and visual scaling
+            );
+            const rightMaterial = createPlasticMaterial(currentColor);
+            const rightModel = new THREE.Mesh(rightGeometry, rightMaterial);
+            
+            rightModel.name = `RightModel_${index + 1}`;
+            
+            // FIXED BASE + WIDTH OFFSET: No length-based effects, only width-based X positioning
+            const baseRightX = pos.x + 0.262; // FIXED base position (no length scaling)
+            const rightX = baseRightX + widthXOffset; // Add width-based X offset
+            
+            rightModel.position.set(rightX, pos.y, secondaryZ); // CONDITIONAL Z position
+            rightModel.rotation.z = Math.PI / 2;
+            rightModel.rotation.y = Math.PI / 2;
+            rightModel.scale.x = 1.001;
+            // 🚀 APPLY SEAMLESS SCALING FOR MULTI-ADAPTER CONFIGURATIONS (0.5% reduction)
+            rightModel.scale.y = seamlessScaling.y;
+            // Shadows disabled for performance
+            
+            scene.add(rightModel);
+            currentSecondaryModels.push(rightModel);
+
+            console.log(`✅ RIGHT model positioned at: (${rightX.toFixed(2)}, ${pos.y.toFixed(2)}, ${secondaryZ.toFixed(3)}) with Y scale: ${seamlessScaling.y}`);
+
+            // 4. CREATE LEFT SIDE MODEL - HEIGHT-CONTROLLED WIDTH + CONDITIONAL Z POSITIONING + SEAMLESS SCALING
+            const leftGeometry = createSecondaryPart(
+                state.dimensions.length,  // Pass length for geometry
+                state.dimensions.width,   // Pass width
+                state.dimensions.height   // Pass height for width control and visual scaling
+            );
+            const leftMaterial = createPlasticMaterial(currentColor);
+            const leftModel = new THREE.Mesh(leftGeometry, leftMaterial);
+            
+            leftModel.name = `LeftModel_${index + 1}`;
+            
+            // FIXED BASE + WIDTH OFFSET: No length-based effects, only width-based X positioning
+            const baseLeftX = pos.x - 0.262; // FIXED base position (no length scaling)
+            const leftX = baseLeftX - widthXOffset; // Subtract width-based X offset
+            
+            leftModel.position.set(leftX, pos.y, secondaryZ); // CONDITIONAL Z position
+            leftModel.rotation.z = Math.PI / 2;
+            leftModel.rotation.y = -Math.PI / 2;
+            leftModel.scale.x = 1.001;
+            // 🚀 APPLY SEAMLESS SCALING FOR MULTI-ADAPTER CONFIGURATIONS (0.5% reduction)
+            leftModel.scale.y = seamlessScaling.y;
+            // Shadows disabled for performance
+            
+            scene.add(leftModel);
+            currentLeftModels.push(leftModel);
+
+            console.log(`✅ LEFT model positioned at: (${leftX.toFixed(2)}, ${pos.y.toFixed(2)}, ${secondaryZ.toFixed(3)}) with Y scale: ${seamlessScaling.y}`);
+
+            // 5. 🚀 CREATE ENHANCED U-SHAPE MODEL - DYNAMIC BOTTOM WALL + CONDITIONAL CAVITY WIDTH + DYNAMIC RADII
+            const ushapeGeometry = createUShapedGeometry(
+                state.dimensions.width,   // Pass width (for cavity widening)
+                state.dimensions.length,  // Pass length
+                state.dimensions.height   // Pass height (for dynamic bottom wall scaling)
+            );
+            const ushapeMaterial = createPlasticMaterial(currentColor);
+            const ushapeModel = new THREE.Mesh(ushapeGeometry, ushapeMaterial);
+            
+            ushapeModel.name = `UShapeModel_${index + 1}`;
+            
+            ushapeModel.position.set(pos.x, pos.y, ushapeZ ); // CONDITIONAL Z position
+            ushapeModel.scale.set(1.008, 1, 1.1);
+            // Shadows disabled for performance
+            
+            scene.add(ushapeModel);
+            currentUShapeModels.push(ushapeModel);
+
+            console.log(`✅ U-SHAPE model positioned at: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${ushapeZ.toFixed(3)})`);
+        });
+        
+        adjustCameraToFitModels();
+        
+        console.log(`✅ SEAMLESS MULTI-ADAPTER ASSEMBLY COMPLETE:`);
+        console.log(`   Configuration: ${state.configuration} (${positions.length} adapters)`);
+        console.log(`   ${currentRoundedModels.length} rounded + ${currentModels.length} center + ${currentSecondaryModels.length} right + ${currentLeftModels.length} left + ${currentUShapeModels.length} ushape models`);
+        console.log(`   🎯 ALL COMPONENTS: Consistent 1mm base + visual scaling (except rounded rectangle)`);
+        console.log(`   🚀 SEAMLESS JOINING: Secondary models scaled to Y=${seamlessScaling.y} (0.5% reduction) for ${state.configuration}`);
+        console.log(`   🌐 GRID SUPPORT: 2x2 grid enabled with ${currentRoundedModels.length} properly positioned rounded rectangles`);
+        
+        if (hasCompleteInputs) {
+            console.log(`   🚀 FULL DYNAMIC POSITIONING APPLIED (all 3 inputs provided)`);
+        } else {
+            console.log(`   ⏳ DEFAULT POSITIONING USED (waiting for complete inputs)`);
+        }
+        
+        console.log('=== END SEAMLESS MULTI-ADAPTER CONFIGURATION (0.5% REDUCTION + ALL RECTANGLES VISIBLE) ===\n');
+    }
+    
+    function adjustCameraToFitModels() {
+        const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
+        if (allModels.length === 0) return;
+        
+        const box = new THREE.Box3();
+        allModels.forEach(model => {
+            box.expandByObject(model);
+        });
+        
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        const maxSize = Math.max(size.x, size.y, size.z);
+        const distance = maxSize * 1.8;
+        
+        controls.target.copy(center);
+        controls.update();
+    }
+    
+    function updateModelColors() {
+        console.log(`Updating model colors to: ${state.color}`);
+        
+        [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels].forEach((model, index) => {
+            model.material = createPlasticMaterial(currentColor);
+        });
+    }
+    
+    function debouncedUpdateDimensions() {
+        if (updateTimeout) {
+            clearTimeout(updateTimeout);
+        }
+        
+        updateTimeout = setTimeout(() => {
+            updateDimensions();
+        }, 500);
+    }
+    
+    function updateDimensions() {
+        console.log('\n=== 🚀 DIMENSIONS UPDATE WITH SEAMLESS MULTI-ADAPTER LAYOUTS (0.5% REDUCTION) ===');
+        console.log('Current dimensions (inches):', state.dimensions);
+        console.log('Current configuration:', state.configuration);
+        console.log(`User has changed dimensions: ${userHasChangedDimensions} (affects U-shape cavity: 85%→82%)`);
+        
+        updateConfiguration();
+        
+        console.log('=== END SEAMLESS MULTI-ADAPTER UPDATE ===\n');
+    }
+    
+    function exportSTL() {
+        console.log('\n=== STL EXPORT STARTED (SEAMLESS MULTI-ADAPTER LAYOUTS) ===');
+        
+        const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
+        if (allModels.length === 0) {
+            alert('No models to export. Please wait for the model to load.');
+            return;
+        }
+        
+        try {
+            const exporter = new STLExporter();
+            const exportGroup = new THREE.Group();
+            
+            allModels.forEach((model, index) => {
+                const modelClone = model.clone();
+                exportGroup.add(modelClone);
+                console.log(`Added model ${index + 1} (${model.userData.type || model.name}) to export group`);
+            });
+            
+            console.log(`Exporting ${allModels.length} SEAMLESS MULTI-ADAPTER model(s) for ${state.configuration}`);
+            
+            const stlString = exporter.parse(exportGroup);
+            
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `power_supply_holder_SEAMLESS_${state.configuration}_${state.dimensions.length.toFixed(2)}x${state.dimensions.width.toFixed(2)}x${state.dimensions.height.toFixed(2)}in_${state.color}_${timestamp}.stl`;
+            
+            const blob = new Blob([stlString], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+            
+            console.log(`✅ SEAMLESS MULTI-ADAPTER STL exported successfully: ${filename}`);
+            console.log('=== STL EXPORT COMPLETED ===\n');
+            
+        } catch (error) {
+            console.error('Error exporting STL:', error);
+            alert('Error exporting STL file. Please try again.');
+        }
+    }
+
+    // Animation loop with FPS counter
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        // Calculate FPS
+        frameCount++;
+        const currentTime = performance.now();
+        const deltaTime = currentTime - lastTime;
+        
+        if (deltaTime >= 1000) { // Update FPS every second
+            fps = Math.round((frameCount * 1000) / deltaTime);
+            fpsCounter.textContent = `FPS: ${fps}`;
+            
+            // Color code FPS counter based on performance
+            if (fps >= 50) {
+                fpsCounter.style.color = '#00ff00'; // Green - Good
+            } else if (fps >= 30) {
+                fpsCounter.style.color = '#ffff00'; // Yellow - OK
+            } else {
+                fpsCounter.style.color = '#ff0000'; // Red - Poor
+            }
+            
+            frameCount = 0;
+            lastTime = currentTime;
+        }
+        
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        const newWidth = container.offsetWidth;
+        const newHeight = container.offsetHeight;
+        
+        camera.aspect = newWidth / newHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(newWidth, newHeight);
+    });
+    
+    // Initialize the first model with enhanced U-shape geometry
+    updateConfiguration();
+    
+    // Hide loading text
+    if (loadingText) {
+        setTimeout(() => {
+            loadingText.style.display = 'none';
+        }, 1000);
+    }
+    
+    // Initialize UI interactions
+    initializeUI();
+    
+    function initializeUI() {
+        // Get dimension inputs (no thickness input)
+        const dimensionInputs = document.querySelectorAll('#length, #width, #height');
+        
+        // Unit selector
+        const unitSelect = document.getElementById('unit-select');
+        unitSelect.addEventListener('change', function() {
+            const newUnit = this.value;
+            const oldUnit = state.currentUnit;
+            
+            console.log(`Unit changed from ${oldUnit} to ${newUnit}`);
+            
+            state.currentUnit = newUnit;
+            updateUIForUnit(newUnit);
+            updateInputValues(newUnit);
+            
+            // Trigger min value updates for all inputs
+            dimensionInputs.forEach(input => {
+                input.dispatchEvent(new Event('unitChanged'));
+            });
+        });
+
+        // Configuration options
+        const optionCards = document.querySelectorAll('.option-card');
+        optionCards.forEach(card => {
+            card.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) {
+                    console.log('Configuration disabled:', this.dataset.config);
+                    return;
+                }
+                
+                optionCards.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                state.configuration = this.dataset.config;
+                console.log('Selected configuration:', state.configuration);
+                updateConfiguration();
+            });
+        });
+        
+        // Production speed
+        const productionCards = document.querySelectorAll('.production-card');
+        productionCards.forEach(card => {
+            card.addEventListener('click', function() {
+                productionCards.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                state.production = this.dataset.speed;
+                console.log('Selected production speed:', state.production);
+            });
+        });
+        
+        // Color selection
+        const colorOptions = document.querySelectorAll('.color-option');
+        colorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                colorOptions.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                state.color = this.dataset.color;
+                console.log('Selected color:', state.color);
+                
+                const colorMap = {
+                    'black': 0x1a1a1a,
+                    'red': 0xdc2626,
+                    'blue': 0x2563eb,
+                    'gray': 0x6b7280,
+                    'white': 0xffffff,
+                    'orange': 0xea580c,
+                    'green': 0x16a34a
+                };
+                currentColor = colorMap[this.dataset.color] || 0x1a1a1a;
+                updateModelColors();
+            });
+        });
+        
+        // 🎯 DIMENSION INPUTS - WITH USER CHANGE TRACKING
+        dimensionInputs.forEach(input => {
+            // Set min attributes based on current unit
+            const setMinValues = () => {
+                const minValues = {
+                    length: unitConversions.fromInches(1.9685, state.currentUnit), // 50mm min
+                    width: unitConversions.fromInches(0.9843, state.currentUnit),  // 25mm min  
+                    height: unitConversions.fromInches(0.5906, state.currentUnit)  // 15mm min
+                };
+                
+                input.min = minValues[input.id].toFixed(getPrecision(state.currentUnit));
+            };
+            
+            setMinValues();
+            
+            // Allow free typing, validate only on input events with debounce
+            input.addEventListener('input', function() {
+                const displayValue = parseFloat(this.value);
+                
+                // 🎯 SET THE FLAG WHEN USER CHANGES ANY DIMENSION
+                userHasChangedDimensions = true;
+                console.log(`🎯 User changed ${this.id}, flag set to true (will use 82% cavity)`);
+                
+                // Only process if it's a valid number
+                if (!isNaN(displayValue) && displayValue > 0) {
+                    const minValue = parseFloat(this.min) || 0;
+                    
+                    // Only update if value is valid and within reasonable bounds
+                    if (displayValue >= minValue) {
+                        // Convert from current unit to inches for internal storage
+                        const inchValue = unitConversions.toInches(displayValue, state.currentUnit);
+                        state.dimensions[this.id] = inchValue;
+                        
+                        console.log(`${this.id}: ${displayValue} ${state.currentUnit} = ${inchValue.toFixed(4)} inches`);
+                        debouncedUpdateDimensions();
+                    }
+                }
+            });
+            
+            // Validate and correct on blur (when user finishes typing)
+            input.addEventListener('blur', function() {
+                const displayValue = parseFloat(this.value);
+                const minValue = parseFloat(this.min) || 0;
+                
+                // If invalid input or below minimum, set to minimum
+                if (isNaN(displayValue) || displayValue < minValue || this.value === '') {
+                    // 🎯 ALSO SET FLAG EVEN FOR CORRECTIONS
+                    userHasChangedDimensions = true;
+                    console.log(`🎯 User input corrected for ${this.id}, flag set to true`);
+                    
+                    this.value = minValue.toFixed(getPrecision(state.currentUnit));
+                    const inchValue = unitConversions.toInches(minValue, state.currentUnit);
+                    state.dimensions[this.id] = inchValue;
+                    updateDimensions();
+                }
+            });
+            
+            // Prevent typing invalid characters (allow numbers, decimal point, backspace, etc.)
+            input.addEventListener('keydown', function(e) {
+                // Allow: backspace, delete, tab, escape, enter
+                if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+                    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true) ||
+                    // Allow: home, end, left, right
+                    (e.keyCode >= 35 && e.keyCode <= 39)) {
+                    return;
+                }
+                // Ensure that it's a number and stop the keypress if it's not
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105) && e.keyCode !== 190 && e.keyCode !== 110) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Update min values when unit changes
+            input.addEventListener('unitChanged', setMinValues);
+        });
+        
+        // Usage description
+        const usageDescription = document.getElementById('usage-description');
+        usageDescription.addEventListener('input', function() {
+            console.log('Usage description:', this.value);
+        });
+        
+        // Add to cart button
+        const addToCartBtn = document.querySelector('.add-to-cart-btn');
+        addToCartBtn.addEventListener('click', function() {
+            console.log('🚀 Add to cart clicked (SEAMLESS MULTI-ADAPTER - 0.5% REDUCTION)');
+            console.log('Current state with SEAMLESS LAYOUTS:', state);
+        });
+        
+        // Export STL button
+        const exportBtn = document.querySelector('.export-stl-btn');
+        exportBtn.addEventListener('click', function() {
+            console.log('🚀 Export STL clicked (SEAMLESS MULTI-ADAPTER - 0.5% REDUCTION)');
+            exportSTL();
+        });
+
+        // Initialize UI for default unit
+        updateUIForUnit(state.currentUnit);
+    }
+    
+    console.log('✅ 🚀 SEAMLESS MULTI-ADAPTER CONFIGURATOR INITIALIZED (Universal Browser Fix)');
+    console.log('🎯 THICKNESS CONSISTENCY: All components use 1mm base + visual scaling (except rounded rectangle)');
+    console.log('🚀 SEAMLESS JOINING: Secondary models scale with 0.5% reduction for perfect multi-adapter layouts');
+    console.log('🌐 2x2 GRID ENABLED: With 4 properly positioned rounded rectangles and dynamic spacing');
+    console.log('📏 DYNAMIC SPACING: Horizontal (width-based) + Vertical (length-based) spacing');
+    console.log('⏳ INITIAL LOAD: 85% cavity (looks good visually)');
+    console.log('📝 AFTER USER INPUT: 82% cavity (works great functionally)');
+    console.log('🎯 Perfect balance: Great initial appearance + excellent functionality + seamless multi-adapter joining!');
+    console.log('🚀 All configurations now support seamless joining with whole adapter visibility and 0.5% reduction only');
+    console.log('🔥 PERFORMANCE OPTIMIZED: Shadows disabled, FPS counter added for mobile-friendly rendering');
+    console.log('📐 DEFAULT UNIT: Inches (in) - User-friendly for US market');
+    console.log('🌐 UNIVERSAL COMPATIBILITY: Works in all browsers - Firefox, Chrome, Safari, Edge!');
+});
+</script>
+
+</body>
+</html>

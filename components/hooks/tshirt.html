@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuratore Maglietta 3D</title>
+</head>
+<body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .canvas-section {
+            width: 50vw;
+            height: 100vh;
+            background: whitesmoke;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .configurator-section {
+            width: 50vw;
+            height: 100vh;
+            background: white;
+            border-left: 1px solid #e5e5e5;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #viewer {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-size: 1rem;
+            z-index: 10;
+        }
+
+        .header {
+            padding: 2rem 2rem 1rem 2rem;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.75rem 0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .tab:hover {
+            color: #007bff;
+        }
+
+        .tab:hover .tab-icon {
+            opacity: 1;
+        }
+
+        .tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .tab.active .tab-icon {
+            opacity: 1;
+        }
+
+        .cart-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            stroke: #000;
+            transition: all 0.2s ease;
+        }
+
+        .cart-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .content-panel {
+            display: none;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        .control-group {
+            margin-bottom: 2rem;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .color-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            border: 2px solid #e5e5e5;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .color-option:hover {
+            scale: 1.05;
+        }
+
+        .color-option.active {
+            border-color: #007bff;
+        }
+
+        .size-options {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .size-option {
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e5e5;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-width: 55px;
+            text-align: center;
+            font-size: 0.875rem;
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .size-option:hover {
+            border-color: #007bff;
+        }
+
+        .size-option.active {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+
+        .pattern-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .sponsor-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .badge-options {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1rem;
+        }
+
+        .pattern-item, .sponsor-item {
+            aspect-ratio: 1;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #666;
+            overflow: hidden;
+            filter: grayscale(100%);
+        }
+
+        .pattern-item:hover, .sponsor-item:hover {
+            border-color: #007bff;
+            transform: scale(1.05);
+            filter: grayscale(0%);
+        }
+
+        .pattern-item.active, .sponsor-item.active {
+            border-color: #007bff;
+            border-width: 3px;
+            filter: grayscale(0%);
+        }
+
+        .badge-option {
+            padding: 1rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-option:hover {
+            border-color: #007bff;
+        }
+
+        .badge-option.active {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .color-tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e5e5e5;
+            flex-wrap: wrap;
+        }
+
+        .color-tab {
+            padding: 0.5rem 0;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .color-tab:hover {
+            color: #007bff;
+        }
+
+        .color-tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+        }
+
+        .color-picker::-webkit-color-swatch {
+            border: none;
+            border-radius: 6px;
+        }
+
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #e5e5e5;
+            background: #FFFFFF;
+        }
+
+        .color-hex {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: #666;
+            min-width: 70px;
+        }
+
+        .color-presets {
+            margin-top: 1rem;
+        }
+
+        .preset-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pattern-option {
+            padding: 1rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .pattern-option:hover {
+            border-color: #007bff;
+        }
+
+        .pattern-option.active {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .input-field:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .disabled-message {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .view-controls {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .text-style-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .text-style-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .text-style-group label {
+            font-size: 0.7rem;
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .canvas-section,
+            .configurator-section {
+                width: 100vw;
+                height: 50vh;
+            }
+
+            .tabs-container {
+                gap: 0.75rem;
+            }
+
+            .tab {
+                font-size: 0.7rem;
+                padding: 0.5rem 0;
+            }
+            
+            .color-tabs {
+                gap: 0.5rem;
+            }
+            
+            .color-tab {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+
+    <div class="container">
+        <div class="canvas-section">
+            <div class="loading" id="loading">Caricamento Modello 3D...</div>
+            <canvas id="viewer"></canvas>
+            <div class="view-controls">
+                Clicca e trascina per ruotare • Scorri per ingrandire
+            </div>
+        </div>
+        
+        <div class="configurator-section">
+            <div class="header">
+                <div class="tabs-container">
+                    <div class="tab active" data-tab="pattern">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5z'/%3E%3Cpath d='m2 17 10 5 10-5'/%3E%3Cpath d='m2 12 10 5 10-5'/%3E%3C/svg%3E" alt="Motivo" class="tab-icon">
+                        Motivo
+                    </div>
+                    <div class="tab" data-tab="color">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c1.19 0 2.34-.21 3.41-.6 1.07-.39 2.07-.98 2.93-1.73.86-.75 1.58-1.66 2.12-2.7.54-1.04.81-2.18.81-3.39 0-2.21-.9-4.21-2.36-5.66S14.21 6.56 12 6.56c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'/%3E%3C/svg%3E" alt="Colore" class="tab-icon">
+                        Colore
+                    </div>
+                    <div class="tab" data-tab="sponsor">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='2' y='3' width='20' height='14' rx='2' ry='2'/%3E%3Cline x1='8' y1='21' x2='16' y2='21'/%3E%3Cline x1='12' y1='17' x2='12' y2='21'/%3E%3C/svg%3E" alt="Sponsor" class="tab-icon">
+                        Sponsor
+                    </div>
+                    <div class="tab" data-tab="badge">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/%3E%3C/svg%3E" alt="Distintivo" class="tab-icon">
+                        Distintivo
+                    </div>
+                    <div class="tab" data-tab="size">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolyline points='15,3 21,3 21,9'/%3E%3Cpolyline points='9,21 3,21 3,15'/%3E%3Cline x1='21' y1='3' x2='14' y2='10'/%3E%3Cline x1='3' y1='21' x2='10' y2='14'/%3E%3C/svg%3E" alt="Taglia" class="tab-icon">
+                        Taglia
+                    </div>
+                    <div class="tab" data-tab="name">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14,2 14,8 20,8'/%3E%3Cline x1='16' y1='13' x2='8' y2='13'/%3E%3Cline x1='16' y1='17' x2='8' y2='17'/%3E%3Cpolyline points='10,9 9,9 8,9'/%3E%3C/svg%3E" alt="Nome" class="tab-icon">
+                        Nome
+                    </div>
+                </div>
+                
+                <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="m1 1 4 4 2 10 11 0 3-7H6"></path>
+                </svg>
+            </div>
+            
+            <div class="tab-content">
+                <div class="content-panel active" id="pattern-panel">
+                    <div class="control-group">
+                        <label>Seleziona Motivo</label>
+                        <div class="pattern-grid" id="pattern-grid">
+                            <!-- 50 pattern divs will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-panel" id="color-panel">
+                    <div class="color-tabs">
+                        <div class="color-tab active" data-color-part="varthree">Texture Maglia 1</div>
+                        <div class="color-tab" data-color-part="vartwo">Texture Maglia 2</div>
+                        <div class="color-tab" data-color-part="varone">Texture Maglia 3</div>
+                        <div class="color-tab" data-color-part="varfour">Texture Maniche</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label id="color-label">Texture Maglia 1</label>
+                        
+                        <!-- Color Picker -->
+                        <div class="color-picker-container">
+                            <input type="color" id="color-picker" class="color-picker" value="#D9D9D9">
+                            <div class="color-preview" id="color-preview" style="background: #D9D9D9; border: 2px solid #ccc;"></div>
+                            <span class="color-hex" id="color-hex">#D9D9D9</span>
+                        </div>
+                        
+                        <!-- Quick Color Presets -->
+                        <div class="color-presets">
+                            <label class="preset-label">Colori Rapidi</label>
+                            <div class="color-options">
+                                <div class="color-option" data-color="#FFFFFF" style="background: #FFFFFF; border-color: #007bff;"></div>
+                                <div class="color-option" data-color="#000000" style="background: #000000;"></div>
+                                <div class="color-option" data-color="#ff0000" style="background: #ff0000;"></div>
+                                <div class="color-option" data-color="#00ff00" style="background: #00ff00;"></div>
+                                <div class="color-option" data-color="#0000ff" style="background: #0000ff;"></div>
+                                <div class="color-option" data-color="#ffff00" style="background: #ffff00;"></div>
+                                <div class="color-option" data-color="#ff00ff" style="background: #ff00ff;"></div>
+                                <div class="color-option" data-color="#00ffff" style="background: #00ffff;"></div>
+                                <div class="color-option" data-color="#808080" style="background: #808080;"></div>
+                                <div class="color-option" data-color="#800000" style="background: #800000;"></div>
+                                <div class="color-option" data-color="#008000" style="background: #008000;"></div>
+                                <div class="color-option active" data-color="#D9D9D9" style="background: #D9D9D9;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-panel" id="sponsor-panel">
+                    <div class="control-group">
+                        <label>Logo Sponsor</label>
+                        <div class="sponsor-grid" id="sponsor-grid">
+                            <!-- 12 sponsor logos will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-panel" id="badge-panel">
+                    <div class="control-group">
+                        <label>Posizionamento Distintivo</label>
+                        <div class="badge-options">
+                            <div class="badge-option" data-badge="right-sleeve">Manica Destra</div>
+                            <div class="badge-option" data-badge="center">Distintivo Centrale</div>
+                            <div class="badge-option" data-badge="left-sleeve">Manica Sinistra</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-panel" id="size-panel">
+                    <div class="control-group">
+                        <label>Taglia</label>
+                        <div class="size-options">
+                            <div class="size-option" data-size="xs">XS</div>
+                            <div class="size-option" data-size="s">S</div>
+                            <div class="size-option" data-size="m">M</div>
+                            <div class="size-option" data-size="l">L</div>
+                            <div class="size-option" data-size="xl">XL</div>
+                            <div class="size-option" data-size="xxl">XXL</div>
+                            <div class="size-option" data-size="xxxl">XXXL</div>
+                            <div class="size-option" data-size="xxxxl">XXXXL</div>
+                            <div class="size-option" data-size="xxxxxl">XXXXXL</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-panel" id="name-panel">
+                    <div class="control-group">
+                        <label>Nome Giocatore</label>
+                        <input type="text" id="player-name" class="input-field" placeholder="Inserisci nome giocatore" disabled />
+                        <div class="disabled-message" id="name-message">Seleziona prima una taglia</div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Stile Testo</label>
+                        <div class="text-style-controls">
+                            <div class="text-style-group">
+                                <label>Colore Testo</label>
+                                <div class="color-picker-container">
+                                    <input type="color" id="text-color-picker" class="color-picker" value="#FFFFFF">
+                                    <div class="color-preview" id="text-color-preview" style="background: #FFFFFF; border: 2px solid #ccc;"></div>
+                                    <span class="color-hex" id="text-color-hex">#FFFFFF</span>
+                                </div>
+                            </div>
+                            <div class="text-style-group">
+                                <label>Colore Contorno</label>
+                                <div class="color-picker-container">
+                                    <input type="color" id="stroke-color-picker" class="color-picker" value="#000000">
+                                    <div class="color-preview" id="stroke-color-preview" style="background: #000000;"></div>
+                                    <span class="color-hex" id="stroke-color-hex">#000000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
+        let scene, camera, renderer, tshirtModel, controls;
+        let currentColors = {
+            varone: '#FFFFFF',
+            vartwo: '#114DCF', 
+            varthree: '#D9D9D9',
+            varfour: '#031C0D'
+        };
+        let currentTexture = null;
+        let currentPattern = 1;
+        let currentSponsor = null;
+        let currentBadges = {
+            center: false,
+            rightSleeve: false,
+            leftSleeve: false
+        };
+        let selectedSize = null;
+        let playerName = '';
+        let textColor = '#FFFFFF';
+        let strokeColor = '#000000';
+        
+        // Model parts references
+        let modelParts = {
+            front: null,
+            back: null,
+            righthand: null,
+            leftsleeve: null
+        };
+
+        // 71 Pattern URLs Array - Pattern 7 is now first (default)
+        const patternUrls = [
+            null, // index 0 - not used
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern7.svg?v=1753949863", // pattern 1 (was pattern 7)
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern2.svg?v=1754125376", // pattern 2
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern1_a2203329-f0e0-4c15-a705-7fcd76f98d31.svg?v=1754125389", // pattern 3 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern4.svg?v=1754125751", // pattern 4 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern5.svg?v=1754125751", // pattern 5 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern6.svg?v=1754125914", // pattern 6 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern3.svg?v=1754125365", // pattern 7 (was pattern 1)
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern8.svg?v=1753949864", // pattern 8 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern9.svg?v=1753949865", // pattern 9 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern10.svg?v=1753949866", // pattern 10 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern11.svg?v=1753949867", // pattern 11 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern12.svg?v=1753949868", // pattern 12 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern13.svg?v=1753949869", // pattern 13 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern14.svg?v=1753949870", // pattern 14 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern15.svg?v=1753949871", // pattern 15 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern16.svg?v=1753949872", // pattern 16 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern17.svg?v=1753949873", // pattern 17 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern18.svg?v=1753949874", // pattern 18 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern19.svg?v=1753949875", // pattern 19 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern20.svg?v=1753949876", // pattern 20 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern21.svg?v=1753949877", // pattern 21 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern22.svg?v=1753949878", // pattern 22 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern23.svg?v=1753949879", // pattern 23 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern24.svg?v=1753949880", // pattern 24 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern25.svg?v=1753949881", // pattern 25 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern26.svg?v=1753949882", // pattern 26 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern27.svg?v=1753949883", // pattern 27 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern28.svg?v=1753949884", // pattern 28 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern29.svg?v=1753949885", // pattern 29 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern30.svg?v=1753949886", // pattern 30 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern31.svg?v=1753949887", // pattern 31 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern32.svg?v=1753949888", // pattern 32 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern33.svg?v=1753949889", // pattern 33 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern34.svg?v=1753949890", // pattern 34 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern35.svg?v=1753949891", // pattern 35 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern36.svg?v=1753949892", // pattern 36 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern37.svg?v=1753949893", // pattern 37 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern38.svg?v=1753949894", // pattern 38 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern39.svg?v=1753949895", // pattern 39 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern40.svg?v=1753949896", // pattern 40 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern41.svg?v=1753949897", // pattern 41 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern42.svg?v=1753949898", // pattern 42 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern43.svg?v=1753949899", // pattern 43 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern44.svg?v=1753949900", // pattern 44 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern45.svg?v=1754549901", // pattern 45 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern46.svg?v=1753949902", // pattern 46 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern47.svg?v=1753949903", // pattern 47 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern48.svg?v=1753949904", // pattern 48 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern49.svg?v=1753949905", // pattern 49 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern50.svg?v=1753949906", // pattern 50 - placeholder
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern51.svg?v=1754203248", // pattern 51
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern52.svg?v=1754203248", // pattern 52
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern53.svg?v=1754203248", // pattern 53
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern54.svg?v=1754203248", // pattern 54
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern55.svg?v=1754203248", // pattern 55
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern56.svg?v=1754203248", // pattern 56
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern57.svg?v=1754203248", // pattern 57
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern58.svg?v=1754203248", // pattern 58
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern59.svg?v=1754203248", // pattern 59
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern60.svg?v=1754203248", // pattern 60
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern61.svg?v=1754203248", // pattern 61
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern62.svg?v=1754203248", // pattern 62
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern63.svg?v=1754203248", // pattern 63
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern64.svg?v=1754203248", // pattern 64
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern65.svg?v=1754203248", // pattern 65
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern66.svg?v=1754203248", // pattern 66
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern67.svg?v=1754203248", // pattern 67
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern68.svg?v=1754203248", // pattern 68
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern69.svg?v=1754203248", // pattern 69
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern70.svg?v=1754203248", // pattern 70
+            "https://cdn.shopify.com/s/files/1/0768/3709/3601/files/previewpattern71.svg?v=1754203248"  // pattern 71
+        ];
+
+        function init() {
+            const canvas = document.getElementById('viewer');
+            const loading = document.getElementById('loading');
+            
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.toneMapping = THREE.LinearToneMapping;
+            renderer.toneMappingExposure = 1.0;
+            renderer.setClearColor(0xf5f5f5); // Set background to whitesmoke
+
+            // Camera position - farther away
+            camera.position.set(0, 0, 20);
+
+            // Set up OrbitControls
+            controls = new OrbitControls(camera, canvas);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = true;
+            controls.enablePan = false;
+            controls.minDistance = 10;
+            controls.maxDistance = 25;
+            
+            // Allow limited vertical rotation (prevent extreme up/down movement)
+            controls.minPolarAngle = Math.PI / 3; // 60 degrees (can look down slightly)
+            controls.maxPolarAngle = Math.PI / 1.5; // 120 degrees (can look up slightly)
+
+            // Load HDR environment
+            const rgbeLoader = new RGBELoader();
+            rgbeLoader.load('https://cdn.shopify.com/s/files/1/0768/3709/3601/files/ui.hdr?v=1752267797', (texture) => {
+                texture.mapping = THREE.EquirectangularReflectionMapping;
+                scene.environment = texture;
+                scene.background = new THREE.Color(0xf5f5f5); // Keep whitesmoke background
+                scene.backgroundBlurriness = 0.5;
+                scene.backgroundIntensity = 0.13;
+            }, undefined, (error) => {
+                console.warn('HDR loading failed, using fallback lighting:', error);
+                scene.background = new THREE.Color(0xf5f5f5); // whitesmoke fallback
+            });
+
+            // Load model
+            const loader = new GLTFLoader();
+            const modelPath = 'https://cdn.shopify.com/3d/models/ca04dc61d03f40db/soccerjersey.glb';
+            
+            loader.load(
+                modelPath,
+                (gltf) => {
+                    tshirtModel = gltf.scene;
+                    tshirtModel.scale.set(0.5, 0.5, 0.5);
+                    tshirtModel.position.set(0, -8, 0);
+                    
+                    // Find and store model parts
+                    findModelParts();
+                    
+                    // Load first pattern initially
+                    loadActualSVG(1);
+                    
+                    scene.add(tshirtModel);
+                    loading.style.display = 'none';
+                    animate();
+                },
+                (progress) => {
+                    const percent = (progress.loaded / progress.total) * 100;
+                    loading.textContent = `Caricamento... ${Math.round(percent)}%`;
+                },
+                (error) => {
+                    console.error('Model loading error:', error);
+                    loading.textContent = 'Impossibile caricare il modello';
+                    createFallbackModel();
+                }
+            );
+
+            // Controls
+            setupTabs();
+            setupControls();
+            setupEventListeners();
+        }
+
+        function findModelParts() {
+            // Find and store references to specific model parts
+            if (tshirtModel) {
+                tshirtModel.traverse((child) => {
+                    if (child.isMesh) {
+                        const name = child.name.toLowerCase();
+                        console.log('Found mesh:', child.name); // Debug log
+                        
+                        if (name.includes('front') || name === 'front') {
+                            modelParts.front = child;
+                            console.log('Found front part:', child.name);
+                        } else if (name.includes('back') || name === 'back') {
+                            modelParts.back = child;
+                            console.log('Found back part:', child.name);
+                        } else if (name.includes('righthand') || name === 'righthand') {
+                            modelParts.righthand = child;
+                            console.log('Found right hand part:', child.name);
+                        } else if (name.includes('lefthand') || name === 'lefthand') {
+                            modelParts.leftsleeve = child;
+                            console.log('Found left hand part:', child.name);
+                        }
+                        
+                        // If no specific parts found, use the main mesh for all parts
+                        if (!modelParts.front && !modelParts.back && !modelParts.righthand && !modelParts.leftsleeve) {
+                            modelParts.front = child;
+                            modelParts.back = child;
+                            modelParts.righthand = child;
+                            modelParts.leftsleeve = child;
+                            console.log('Using main mesh for all parts:', child.name);
+                        }
+                    }
+                });
+            }
+        }
+
+        function loadSponsorLogo(sponsorNumber) {
+            const svgUrl = `./sponsors/${sponsorNumber}.svg`;
+            
+            fetch(svgUrl)
+                .then(response => response.text())
+                .then(svgText => {
+                    const svgBlob = new Blob([svgText], {type: 'image/svg+xml'});
+                    const svgBlobUrl = URL.createObjectURL(svgBlob);
+                    
+                    const textureLoader = new THREE.TextureLoader();
+                    textureLoader.load(
+                        svgBlobUrl,
+                        (texture) => {
+                            overlayTextures.sponsor = texture;
+                            updateCompositeTexture();
+                            URL.revokeObjectURL(svgBlobUrl);
+                            console.log(`Loaded sponsor logo ${sponsorNumber}`);
+                        },
+                        undefined,
+                        (error) => {
+                            console.error('Sponsor logo loading error:', error);
+                            createFallbackSponsorLogo(sponsorNumber);
+                        }
+                    );
+                })
+                .catch(error => {
+                    console.error('Failed to load sponsor SVG:', error);
+                    createFallbackSponsorLogo(sponsorNumber);
+                });
+        }
+
+        function createFallbackSponsorLogo(sponsorNumber) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = 120;
+            canvas.height = 120;
+            
+            // Create a simple sponsor logo
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.strokeStyle = '#000000';
+            context.lineWidth = 2;
+            context.strokeRect(2, 2, canvas.width-4, canvas.height-4);
+            
+            context.fillStyle = '#000000';
+            context.font = 'bold 16px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(`SPONSOR`, canvas.width / 2, canvas.height / 2 - 10);
+            context.fillText(`${sponsorNumber}`, canvas.width / 2, canvas.height / 2 + 10);
+            
+            const fallbackTexture = new THREE.CanvasTexture(canvas);
+            overlayTextures.sponsor = fallbackTexture;
+            updateCompositeTexture();
+        }
+
+        function loadBadge(badgeType, position) {
+            let badgeUrl;
+            
+            switch(position) {
+                case 'center':
+                    badgeUrl = 'https://cdn.shopify.com/s/files/1/0768/3709/3601/files/Scudetto.svg?v=1754203248';
+                    break;
+                case 'right-sleeve':
+                    badgeUrl = 'https://cdn.shopify.com/s/files/1/0768/3709/3601/files/italy-national-football-team-seeklogo.png?v=1754160859';
+                    break;
+                case 'left-sleeve':
+                    badgeUrl = 'https://cdn.shopify.com/s/files/1/0768/3709/3601/files/italy-national-football-team-seeklogo_06543622-1e27-4985-9d5f-ab8cdf694d9b.png?v=1754160880';
+                    break;
+                default:
+                    return;
+            }
+            
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                badgeUrl,
+                (texture) => {
+                    // Store in appropriate overlay slot
+                    if (position === 'center') {
+                        overlayTextures.centerBadge = texture;
+                    } else if (position === 'right-sleeve') {
+                        overlayTextures.rightBadge = texture;
+                    } else if (position === 'left-sleeve') {
+                        overlayTextures.leftBadge = texture;
+                    }
+                    
+                    updateCompositeTexture();
+                    console.log(`Loaded badge for ${position} from Shopify CDN`);
+                },
+                undefined,
+                (error) => {
+                    console.error('Badge loading error:', error);
+                    createFallbackBadge(position);
+                }
+            );
+        }
+
+        function createFallbackBadge(position) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = 80;
+            canvas.height = 80;
+            
+            // Create a simple circular badge
+            context.fillStyle = '#ff0000';
+            context.beginPath();
+            context.arc(canvas.width / 2, canvas.height / 2, 35, 0, 2 * Math.PI);
+            context.fill();
+            
+            context.fillStyle = '#ffffff';
+            context.font = 'bold 12px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText('BADGE', canvas.width / 2, canvas.height / 2);
+            
+            const fallbackTexture = new THREE.CanvasTexture(canvas);
+            
+            // Store in appropriate overlay slot
+            if (position === 'center') {
+                overlayTextures.centerBadge = fallbackTexture;
+            } else if (position === 'right-sleeve') {
+                overlayTextures.rightBadge = fallbackTexture;
+            } else if (position === 'left-sleeve') {
+                overlayTextures.leftBadge = fallbackTexture;
+            }
+            
+            updateCompositeTexture();
+        }
+
+        let overlayTextures = {
+            sponsor: null,
+            centerBadge: null,
+            rightBadge: null,
+            leftBadge: null,
+            playerName: null
+        };
+
+        function updateCompositeTexture() {
+            // Get the current pattern texture
+            const baseTexture = currentTexture;
+            if (!baseTexture) return;
+            
+            // Create composite canvas
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            
+            // Draw base pattern
+            if (baseTexture.image) {
+                context.drawImage(baseTexture.image, 0, 0, 1024, 1024);
+            } else {
+                context.fillStyle = currentColors.varone;
+                context.fillRect(0, 0, 1024, 1024);
+            }
+            
+            // Layer sponsor logo on front (center area) - LOWERED POSITION
+            if (overlayTextures.sponsor) {
+                const sponsorSize = 120;
+                const sponsorX = 265 - sponsorSize/2; // Front center area
+                const sponsorY = 480; // Lowered from 450 to 480
+                context.drawImage(overlayTextures.sponsor.image, sponsorX, sponsorY, sponsorSize, sponsorSize);
+            }
+            
+            // Layer center badge on front (above sponsor) - USER'S MODIFIED POSITION
+            if (overlayTextures.centerBadge) {
+                const badgeSize = 50;
+                const badgeX = 230; // User's modification
+                const badgeY = 425; // User's modification
+                context.drawImage(overlayTextures.centerBadge.image, badgeX, badgeY, badgeSize, badgeSize);
+            }
+            
+            // Layer right sleeve badge
+            if (overlayTextures.rightBadge) {
+                const badgeSize = 60;
+                const badgeX = 250 - badgeSize/2; // Right sleeve area
+                const badgeY = 200 - badgeSize/2;
+                context.drawImage(overlayTextures.rightBadge.image, badgeX, badgeY, badgeSize, badgeSize);
+            }
+            
+            // Layer left sleeve badge
+            if (overlayTextures.leftBadge) {
+                const badgeSize = 60;
+                const badgeX = 774 - badgeSize/2; // Left sleeve area
+                const badgeY = 200 - badgeSize/2;
+                context.drawImage(overlayTextures.leftBadge.image, badgeX, badgeY, badgeSize, badgeSize);
+            }
+            
+            // Layer player name on back (top center) - LOWERED POSITION
+            if (overlayTextures.playerName) {
+                const nameWidth = 300;
+                const nameHeight = 60;
+                const nameX = 755 - nameWidth/2; // Back center area
+                const nameY = 400; // Lowered from 360 to 400
+                context.drawImage(overlayTextures.playerName.image, nameX, nameY, nameWidth, nameHeight);
+            }
+            
+            // Create new composite texture
+            const compositeTexture = new THREE.CanvasTexture(canvas);
+            compositeTexture.wrapS = THREE.RepeatWrapping;
+            compositeTexture.wrapT = THREE.RepeatWrapping;
+            compositeTexture.flipY = false;
+            compositeTexture.needsUpdate = true;
+            
+            // Apply to all mesh objects
+            applyCompositeTexture(compositeTexture);
+        }
+
+        function applyCompositeTexture(compositeTexture) {
+            if (tshirtModel) {
+                tshirtModel.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        child.material.map = compositeTexture;
+                        child.material.needsUpdate = true;
+                    }
+                });
+            }
+        }
+
+        function createPlayerNameTexture(name) {
+            if (!name || !selectedSize) {
+                overlayTextures.playerName = null;
+                updateCompositeTexture();
+                return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = 300;
+            canvas.height = 60;
+            
+            // Clear canvas with transparent background
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Set font properties based on size - extended for all sizes
+            let fontSize;
+            switch(selectedSize) {
+                case 'xs': fontSize = 18; break;
+                case 's': fontSize = 20; break;
+                case 'm': fontSize = 22; break;
+                case 'l': fontSize = 24; break;
+                case 'xl': fontSize = 26; break;
+                case 'xxl': fontSize = 28; break;
+                case 'xxxl': fontSize = 30; break;
+                case 'xxxxl': fontSize = 32; break;
+                case 'xxxxxl': fontSize = 34; break;
+                default: fontSize = 22; break;
+            }
+            
+            context.font = `bold ${fontSize}px Arial, sans-serif`;
+            context.fillStyle = textColor;
+            context.strokeStyle = strokeColor;
+            context.lineWidth = 2;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            // Draw text with outline
+            const textX = canvas.width / 2;
+            const textY = canvas.height / 2;
+            
+            context.strokeText(name.toUpperCase(), textX, textY);
+            context.fillText(name.toUpperCase(), textX, textY);
+            
+            // Create texture from canvas
+            const nameTexture = new THREE.CanvasTexture(canvas);
+            nameTexture.needsUpdate = true;
+            
+            // Store in overlay textures
+            overlayTextures.playerName = nameTexture;
+            updateCompositeTexture();
+            
+            console.log(`Created player name texture: "${name}" for size ${selectedSize}`);
+        }
+
+        function updateModelColor() {
+            loadActualSVG(currentPattern);
+        }
+
+        function loadActualSVG(patternNumber) {
+            // Get the SVG URL from the array
+            const svgUrl = patternUrls[patternNumber];
+            
+            if (!svgUrl) {
+                console.warn(`No URL found for pattern ${patternNumber}, using fallback`);
+                loadSVGTexture(patternNumber);
+                return;
+            }
+            
+            console.log(`Loading pattern ${patternNumber} from: ${svgUrl}`);
+            
+            fetch(svgUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(svgText => {
+                    const modifiedSVG = modifySVGWithCSS(svgText);
+                    
+                    const svgBlob = new Blob([modifiedSVG], {type: 'image/svg+xml'});
+                    const svgBlobUrl = URL.createObjectURL(svgBlob);
+                    
+                    const textureLoader = new THREE.TextureLoader();
+                    textureLoader.load(
+                        svgBlobUrl,
+                        (texture) => {
+                            texture.wrapS = THREE.RepeatWrapping;
+                            texture.wrapT = THREE.RepeatWrapping;
+                            texture.flipY = false;
+                            texture.minFilter = THREE.LinearFilter;
+                            texture.magFilter = THREE.LinearFilter;
+                            
+                            currentTexture = texture;
+                            
+                            // Update composite texture with overlays (sponsor, badges, etc.)
+                            updateCompositeTexture();
+                            
+                            URL.revokeObjectURL(svgBlobUrl);
+                            console.log(`Successfully loaded pattern ${patternNumber}`);
+                        },
+                        undefined,
+                        (error) => {
+                            console.error(`SVG texture loading error for pattern ${patternNumber}:`, error);
+                            loadSVGTexture(patternNumber);
+                        }
+                    );
+                })
+                .catch(error => {
+                    console.error(`Failed to load SVG for pattern ${patternNumber}:`, error);
+                    loadSVGTexture(patternNumber);
+                });
+        }
+
+        function modifySVGWithCSS(svgText) {
+            let modifiedSVG = svgText;
+            
+            const cssStyles = `
+                <defs>
+                    <style>
+                        .varone { fill: ${currentColors.varone} !important; }
+                        .vartwo { fill: ${currentColors.vartwo} !important; }
+                        .varthree { fill: ${currentColors.varthree} !important; }
+                        .varfour { fill: ${currentColors.varfour} !important; }
+                    </style>
+                </defs>
+            `;
+            
+            modifiedSVG = modifiedSVG.replace(
+                /<svg([^>]*)>/,
+                `<svg$1>${cssStyles}`
+            );
+            
+            modifiedSVG = modifiedSVG
+                .replace(/fill="#B50707"/g, 'class="varone"')
+                .replace(/fill="#C80707"/g, 'class="varone"')
+                .replace(/fill="#C80101"/g, 'class="varone"')
+                .replace(/fill="#FF0000"/g, 'class="varone"');
+            
+            modifiedSVG = modifiedSVG
+                .replace(/fill="#114DCF"/g, 'class="vartwo"')
+                .replace(/fill="#226CDC"/g, 'class="vartwo"')
+                .replace(/fill="#031C0D"/g, 'class="vartwo"')
+            
+            modifiedSVG = modifiedSVG
+                .replace(/fill="white"/g, 'class="varthree"')
+                .replace(/fill="#FFFFFF"/g, 'class="varthree"')
+                .replace(/fill="#ffffff"/g, 'class="varthree"');
+
+            modifiedSVG = modifiedSVG
+                .replace(/fill="#0E8740"/g, 'class="varfour"')
+                .replace(/fill="#226CDC"/g, 'class="varfour"')
+                .replace(/fill="#031C0D"/g, 'class="varfour"')
+                .replace(/fill="#0E8740"/g, 'class="varfour"');
+            
+            return modifiedSVG;
+        }
+
+        function loadSVGTexture(patternNumber) {
+            const textureLoader = new THREE.TextureLoader();
+            
+            const svgData = createTestSVG();
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml'});
+            const svgUrl = URL.createObjectURL(svgBlob);
+            
+            textureLoader.load(
+                svgUrl,
+                (texture) => {
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    texture.flipY = false;
+                    texture.minFilter = THREE.LinearFilter;
+                    texture.magFilter = THREE.LinearFilter;
+                    
+                    currentTexture = texture;
+                    updateCompositeTexture();
+                    
+                    URL.revokeObjectURL(svgUrl);
+                    console.log(`Loaded fallback pattern ${patternNumber}`);
+                },
+                undefined,
+                (error) => {
+                    console.error('SVG texture loading error:', error);
+                }
+            );
+        }
+
+        function createTestSVG() {
+            return `
+                <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="1024" height="1024" fill="${currentColors.varone}"/>
+                    
+                    <rect x="40" y="0" width="250" height="80" fill="${currentColors.varthree}"/>
+                    <rect x="540" y="0" width="250" height="80" fill="${currentColors.varthree}"/>
+                    <rect x="790" y="0" width="194" height="80" fill="${currentColors.varthree}"/>
+                    
+                    <ellipse cx="250" cy="200" rx="200" ry="120" fill="${currentColors.varthree}" opacity="1.0"/>
+                    <ellipse cx="250" cy="200" rx="150" ry="90" fill="${currentColors.vartwo}"/>
+                    <ellipse cx="250" cy="200" rx="100" ry="60" fill="${currentColors.varthree}"/>
+                    
+                    <ellipse cx="774" cy="200" rx="200" ry="120" fill="${currentColors.varthree}" opacity="1.0"/>
+                    <ellipse cx="774" cy="200" rx="150" ry="90" fill="${currentColors.vartwo}"/>
+                    <ellipse cx="774" cy="200" rx="100" ry="60" fill="${currentColors.varthree}"/>
+                    
+                    <rect x="40" y="350" width="450" height="200" fill="${currentColors.vartwo}" opacity="1.0"/>
+                    <rect x="40" y="550" width="450" height="200" fill="${currentColors.varthree}"/>
+                    <rect x="40" y="750" width="450" height="240" fill="${currentColors.vartwo}"/>
+                    
+                    <rect x="530" y="350" width="450" height="200" fill="${currentColors.vartwo}" opacity="1.0"/>
+                    <rect x="530" y="550" width="450" height="200" fill="${currentColors.varthree}"/>
+                    <rect x="530" y="750" width="450" height="240" fill="${currentColors.vartwo}"/>
+                    
+                    <rect x="0" y="0" width="1024" height="1024" fill="${currentColors.varfour}" opacity="1.0"/>
+                </svg>
+            `;
+        }
+
+        function generatePatternGrid() {
+            const patternGrid = document.getElementById('pattern-grid');
+            patternGrid.innerHTML = '';
+            
+            for (let i = 1; i <= 71; i++) {
+                const patternItem = document.createElement('div');
+                patternItem.className = 'pattern-item';
+                patternItem.dataset.pattern = i;
+                
+                // Map pattern display numbers to actual pattern images (swap 1 and 7)
+                let imageNumber = i;
+                if (i === 1) {
+                    imageNumber = 7; // Position 1 shows pattern7.png
+                } else if (i === 7) {
+                    imageNumber = 1; // Position 7 shows pattern1.png
+                }
+                
+                // Set background image from Shopify CDN
+                const imageUrl = `https://cdn.shopify.com/s/files/1/0768/3709/3601/files/pattern${imageNumber}.png?v=1754159726`;
+                patternItem.style.backgroundImage = `url('${imageUrl}')`;
+                patternItem.style.backgroundSize = 'cover';
+                patternItem.style.backgroundPosition = 'center';
+                
+                // Add pattern number as overlay
+                patternItem.innerHTML = `<span style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold;">${i}</span>`;
+                
+                if (i === 1) {
+                    patternItem.classList.add('active');
+                }
+                
+                patternItem.addEventListener('click', () => {
+                    document.querySelectorAll('.pattern-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    patternItem.classList.add('active');
+                    currentPattern = i;
+                    console.log(`Selected pattern ${i}, loading...`);
+                    loadActualSVG(i);
+                });
+                
+                patternGrid.appendChild(patternItem);
+            }
+        }
+
+        function generateSponsorGrid() {
+            const sponsorGrid = document.getElementById('sponsor-grid');
+            sponsorGrid.innerHTML = '';
+            
+            for (let i = 1; i <= 12; i++) {
+                const sponsorItem = document.createElement('div');
+                sponsorItem.className = 'sponsor-item';
+                sponsorItem.dataset.sponsor = i;
+                
+                // Add sponsor logo placeholder or actual image
+                sponsorItem.innerHTML = `<span style="text-align: center; color: #666; font-size: 0.7rem; font-weight: 500;">Logo ${i}</span>`;
+                
+                sponsorItem.addEventListener('click', () => {
+                    // Toggle functionality
+                    if (sponsorItem.classList.contains('active')) {
+                        sponsorItem.classList.remove('active');
+                        currentSponsor = null;
+                        overlayTextures.sponsor = null;
+                        updateCompositeTexture();
+                    } else {
+                        document.querySelectorAll('.sponsor-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        
+                        sponsorItem.classList.add('active');
+                        currentSponsor = i;
+                        loadSponsorLogo(i);
+                    }
+                });
+                
+                sponsorGrid.appendChild(sponsorItem);
+            }
+        }
+
+        function createFallbackModel() {
+            const geometry = new THREE.BoxGeometry(2, 3, 0.5);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0xffffff,
+                map: currentTexture,
+                metalness: 0.05,
+                roughness: 0.8,
+                envMapIntensity: 0.3
+            });
+            tshirtModel = new THREE.Mesh(geometry, material);
+            scene.add(tshirtModel);
+            loading.style.display = 'none';
+            animate();
+        }
+
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const panels = document.querySelectorAll('.content-panel');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panels.forEach(p => p.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    const panelId = tab.dataset.tab + '-panel';
+                    document.getElementById(panelId).classList.add('active');
+                });
+            });
+        }
+
+        function setupControls() {
+            let activeColorPart = 'varthree'; // Default to first tab (Texture Maglia 1)
+            
+            generatePatternGrid();
+            generateSponsorGrid();
+            
+            // Color picker control
+            const colorPicker = document.getElementById('color-picker');
+            const colorPreview = document.getElementById('color-preview');
+            const colorHex = document.getElementById('color-hex');
+            
+            colorPicker.addEventListener('input', (e) => {
+                const newColor = e.target.value;
+                currentColors[activeColorPart] = newColor;
+                
+                colorPreview.style.backgroundColor = newColor;
+                colorPreview.style.borderColor = newColor === '#FFFFFF' || newColor === '#ffffff' ? '#ccc' : '#e5e5e5';
+                colorHex.textContent = newColor.toUpperCase();
+                
+                document.querySelectorAll('.color-option').forEach(option => {
+                    option.classList.remove('active');
+                });
+                
+                loadActualSVG(currentPattern);
+            });
+            
+            // Color tab controls
+            document.querySelectorAll('.color-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.color-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    activeColorPart = tab.dataset.colorPart;
+                    
+                    const labels = {
+                        'varthree': 'Texture Maglia 1',
+                        'vartwo': 'Texture Maglia 2', 
+                        'varone': 'Texture Maglia 3',
+                        'varfour': 'Texture Maniche'
+                    };
+                    document.getElementById('color-label').textContent = labels[activeColorPart];
+                    
+                    const currentColor = currentColors[activeColorPart];
+                    colorPicker.value = currentColor;
+                    colorPreview.style.backgroundColor = currentColor;
+                    colorPreview.style.borderColor = currentColor === '#FFFFFF' || currentColor === '#ffffff' ? '#ccc' : '#e5e5e5';
+                    colorHex.textContent = currentColor.toUpperCase();
+                    
+                    updateActiveColorOption();
+                });
+            });
+            
+            // Quick color preset controls
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    
+                    const newColor = option.dataset.color;
+                    currentColors[activeColorPart] = newColor;
+                    
+                    colorPicker.value = newColor;
+                    colorPreview.style.backgroundColor = newColor;
+                    colorPreview.style.borderColor = newColor === '#FFFFFF' || newColor === '#ffffff' ? '#ccc' : '#e5e5e5';
+                    colorHex.textContent = newColor.toUpperCase();
+                    
+                    loadActualSVG(currentPattern);
+                });
+            });
+
+            // Size controls
+            document.querySelectorAll('.size-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelector('.size-option.active')?.classList.remove('active');
+                    option.classList.add('active');
+                    
+                    selectedSize = option.dataset.size;
+                    
+                    // Enable name input
+                    const nameInput = document.getElementById('player-name');
+                    const nameMessage = document.getElementById('name-message');
+                    
+                    nameInput.disabled = false;
+                    nameMessage.textContent = 'Inserisci il nome del giocatore per il retro della maglia';
+                    
+                    // Update name texture if text exists
+                    if (playerName) {
+                        createPlayerNameTexture(playerName);
+                    }
+                });
+            });
+
+            // Badge controls with toggle functionality
+            document.querySelectorAll('.badge-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const badgeType = option.dataset.badge;
+                    
+                    // Toggle functionality
+                    if (option.classList.contains('active')) {
+                        option.classList.remove('active');
+                        currentBadges[badgeType.replace('-', '')] = false;
+                        
+                        // Remove badge texture
+                        if (badgeType === 'center') {
+                            overlayTextures.centerBadge = null;
+                        } else if (badgeType === 'right-sleeve') {
+                            overlayTextures.rightBadge = null;
+                        } else if (badgeType === 'left-sleeve') {
+                            overlayTextures.leftBadge = null;
+                        }
+                        
+                        updateCompositeTexture();
+                    } else {
+                        option.classList.add('active');
+                        currentBadges[badgeType.replace('-', '')] = true;
+                        loadBadge(badgeType, badgeType);
+                    }
+                });
+            });
+
+            // Player name input
+            const playerNameInput = document.getElementById('player-name');
+            playerNameInput.addEventListener('input', (e) => {
+                playerName = e.target.value;
+                if (selectedSize && playerName) {
+                    createPlayerNameTexture(playerName);
+                }
+            });
+
+            // Text color controls
+            const textColorPicker = document.getElementById('text-color-picker');
+            const textColorPreview = document.getElementById('text-color-preview');
+            const textColorHex = document.getElementById('text-color-hex');
+            
+            textColorPicker.addEventListener('input', (e) => {
+                textColor = e.target.value;
+                textColorPreview.style.backgroundColor = textColor;
+                textColorPreview.style.borderColor = textColor === '#FFFFFF' ? '#ccc' : '#e5e5e5';
+                textColorHex.textContent = textColor.toUpperCase();
+                
+                if (playerName && selectedSize) {
+                    createPlayerNameTexture(playerName);
+                }
+            });
+
+            // Stroke color controls
+            const strokeColorPicker = document.getElementById('stroke-color-picker');
+            const strokeColorPreview = document.getElementById('stroke-color-preview');
+            const strokeColorHex = document.getElementById('stroke-color-hex');
+            
+            strokeColorPicker.addEventListener('input', (e) => {
+                strokeColor = e.target.value;
+                strokeColorPreview.style.backgroundColor = strokeColor;
+                strokeColorPreview.style.borderColor = strokeColor === '#FFFFFF' ? '#ccc' : '#e5e5e5';
+                strokeColorHex.textContent = strokeColor.toUpperCase();
+                
+                if (playerName && selectedSize) {
+                    createPlayerNameTexture(playerName);
+                }
+            });
+            
+            // Initialize color picker with default values (varthree - Texture Maglia 1)
+            colorPicker.value = currentColors.varthree;
+            colorPreview.style.backgroundColor = currentColors.varthree;
+            colorPreview.style.borderColor = currentColors.varthree === '#FFFFFF' ? '#ccc' : '#e5e5e5';
+            colorHex.textContent = currentColors.varthree.toUpperCase();
+        }
+        
+        function updateActiveColorOption() {
+            const activeColorPart = document.querySelector('.color-tab.active').dataset.colorPart;
+            const currentColor = currentColors[activeColorPart];
+            
+            const colorPicker = document.getElementById('color-picker');
+            const colorPreview = document.getElementById('color-preview');
+            const colorHex = document.getElementById('color-hex');
+            
+            colorPicker.value = currentColor;
+            colorPreview.style.backgroundColor = currentColor;
+            colorPreview.style.borderColor = currentColor === '#FFFFFF' || currentColor === '#ffffff' ? '#ccc' : '#e5e5e5';
+            colorHex.textContent = currentColor.toUpperCase();
+            
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.color === currentColor) {
+                    option.classList.add('active');
+                }
+            });
+        }
+
+        function setupEventListeners() {
+            window.addEventListener('resize', () => {
+                const canvas = document.getElementById('viewer');
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

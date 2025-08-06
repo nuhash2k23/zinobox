@@ -15,6 +15,7 @@ import BridgeScene from "@/components/BridgeComponent";
 import  AJ  from "@/components/hooks/AJ";
 
 import  Blob  from "@/components/hooks/Blob";
+import TShirtConfigurator from "@/components/hooks/Tshirt";
 const GravitasBold = localFont({
   src: "./fonts/Studio K - Gravitas Bold.otf",
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function Home() {
      {/* <Scene/> */}
      {/* <Trial/> */}
      <AJ/>
+     {/* <TShirtConfigurator/> */}
      {/* <BridgeScene/> */}
      {/* <Blob/> */}
      </main>

@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Power Supply Holder Configurator</title>
+    <style>
+        /* Add your CSS styles here */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .main-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #0f172a;
+        }
+
+        .section-description {
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .dimension-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .viewer-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .viewer-canvas {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: #f8fafc;
+        }
+
+        .loading-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #64748b;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .option-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-card:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .option-card.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .option-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f9fafb;
+        }
+
+        .option-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .adapter-count {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-weight: 600;
+            color: #059669;
+            font-size: 1.1rem;
+        }
+
+        .geometry-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .geometry-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .geometry-card:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .geometry-card.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .geometry-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .geometry-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .venting-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .venting-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .venting-card:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .venting-card.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .venting-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .venting-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .production-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .production-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .production-card:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .production-card.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .color-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .color-option.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .color-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        #usage-description {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        #usage-description:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .total-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .total-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: 20px;
+        }
+.export-stl-btn {
+    background: #059669;
+    display: none;
+}
+
+.export-stl-btn:hover {
+    background: #047857;
+}
+        .add-to-cart-btn
+ {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px 20px;
+            transition: background-color 0.2s;
+        }
+
+        .add-to-cart-btn:hover
+    {
+            background: #2563eb;
+        }
+
+        .export-stl-btn {
+            background: #059669;
+        }
+
+        .export-stl-btn:hover {
+            background: #047857;
+        }
+
+        .shipping-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .shipping-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>CUSTOM POWER SUPPLY HOLDER</h1>
+        <p class="subtitle">Precision-engineered holders crafted for your exact dimensions</p>
+    </div>
+
+    <!-- Dimensions Section -->
+    <div class="section">
+        <h2>Your Power Adapter Dimensions</h2>
+        <p class="section-description">Enter the exact dimensions of your power adapter. We'll engineer a holder that's perfectly sized for stability and easy access.</p>
+        
+        <div class="dimensions-grid">
+            <div class="input-group">
+                <label for="units">Units</label>
+                <select id="units">
+                    <option value="mm">Millimeters (mm)</option>
+                    <option value="cm">Centimeters (cm)</option>
+                    <option value="in">Inches (in)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="length">Length</label>
+                <input type="number" id="length" placeholder="100.0" step="0.1" min="100" value="100">
+                <small class="dimension-hint">Minimum: 100.0</small>
+            </div>
+            <div class="input-group">
+                <label for="width">Width</label>
+                <input type="number" id="width" placeholder="53.0" step="0.1" min="53" value="53">
+                <small class="dimension-hint">Minimum: 53.0</small>
+            </div>
+            <div class="input-group">
+                <label for="height">Height</label>
+                <input type="number" id="height" placeholder="2.57" step="0.01" min="2.57" value="2.57">
+                <small class="dimension-hint">Minimum: 2.57</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D Viewer -->
+    <div class="viewer-section">
+        <div id="model-container" class="viewer-canvas">
+            <div class="loading-text" id="loading-model">
+                Loading 3D Model...
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurator Options -->
+    <div class="section">
+        <h2>Configurator Options</h2>
+        <p class="section-description">Choose how many power adapters your holder should accommodate.</p>
+        
+        <div class="options-grid">
+            <div class="option-card active" data-config="single">
+                <h3>Single Holder</h3>
+                <p class="adapter-count">1 Adapter</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card" data-config="row2">
+                <h3>2 in a Row</h3>
+                <p class="adapter-count">2 adapters side by side</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card" data-config="row3">
+                <h3>3 in a Row</h3>
+                <p class="adapter-count">3 adapters in line</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card" data-config="row4">
+                <h3>4 in a Row</h3>
+                <p class="adapter-count">4 adapters in line</p>
+                <p class="price">$0</p>
+            </div>
+            <div class="option-card disabled" data-config="grid2x2">
+                <h3>2×2 Grid</h3>
+                <p class="adapter-count">4 adapters in grid</p>
+                <p class="price">Coming Soon</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Venting Holes Option -->
+    <div class="section">
+        <h2>Venting Options</h2>
+        <p class="section-description">Control airflow through your power supply holder for optimal cooling.</p>
+        
+        <div class="venting-options">
+            <div class="venting-card active" data-venting="sealed">
+                <div class="venting-icon">🔒</div>
+                <h3>Sealed Design</h3>
+                <p>No ventilation holes - solid construction</p>
+            </div>
+            <div class="venting-card" data-venting="vented">
+                <div class="venting-icon">💨</div>
+                <h3>Vented Design</h3>
+                <p>Strategic airflow holes for cooling</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Production Speed -->
+    <div class="section">
+        <h2>PRODUCTION SPEED</h2>
+        
+        <div class="production-options">
+            <div class="production-card active" data-speed="standard">
+                <h3>Standard Production</h3>
+                <p>5-10 business days</p>
+            </div>
+            <div class="production-card" data-speed="rush">
+                <h3>Rush Order (+$20)</h3>
+                <p>2-3 business days</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Selection -->
+    <div class="section">
+        <h2>Color Selection</h2>
+        
+        <div class="color-options">
+            <div class="color-option active" data-color="black">
+                <div class="color-circle" style="background-color: #1a1a1a;"></div>
+                <span>Midnight Black</span>
+            </div>
+            <div class="color-option" data-color="red">
+                <div class="color-circle" style="background-color: #dc2626;"></div>
+                <span>Crimson Red</span>
+            </div>
+            <div class="color-option" data-color="blue">
+                <div class="color-circle" style="background-color: #2563eb;"></div>
+                <span>Ocean Blue</span>
+            </div>
+            <div class="color-option" data-color="gray">
+                <div class="color-circle" style="background-color: #6b7280;"></div>
+                <span>Storm Gray</span>
+            </div>
+            <div class="color-option" data-color="white">
+                <div class="color-circle" style="background-color: #ffffff; border: 2px solid #e5e7eb;"></div>
+                <span>Pure White</span>
+            </div>
+            <div class="color-option" data-color="orange">
+                <div class="color-circle" style="background-color: #ea580c;"></div>
+                <span>Sunset Orange</span>
+            </div>
+            <div class="color-option" data-color="green">
+                <div class="color-circle" style="background-color: #16a34a;"></div>
+                <span>Neon Green</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Description -->
+    <div class="section">
+        <h2>USAGE DESCRIPTION (OPTIONAL)</h2>
+        <p class="section-description">Tell us how you'll use this power supply holder</p>
+        
+        <textarea id="usage-description" placeholder="Describe how you plan to use this power supply holder..." rows="4"></textarea>
+    </div>
+
+    <!-- Total and Cart -->
+    <div class="total-section">
+        <div class="total-price">Total: $0.00</div>
+        <button class="add-to-cart-btn">Add to Cart - $0.00</button>
+        <button class="export-stl-btn">📁 Export STL File</button>
+        
+        <div class="shipping-info">
+            <div class="shipping-item">📦 Ships in 5-10 business days</div>
+            <div class="shipping-item">✨ Custom manufactured with precision PETG plastic</div>
+            <div class="shipping-item">💪 Chemical resistant • Durable • Professional grade</div>
+        </div>
+    </div>
+</div>
+
+<!-- Three.js Script -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.152.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.152.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing HEIGHT-RESPONSIVE 3D configurator...');
+    
+    const container = document.getElementById('model-container');
+    const loadingText = document.getElementById('loading-model');
+    
+    if (!container) {
+        console.error('Model container not found!');
+        return;
+    }
+    
+    // Scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0xf8fafc, 1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // Clear container and add canvas
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+    
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+    
+    const pointLight = new THREE.PointLight(0xffffff, 1.4);
+    pointLight.position.set(-5, -5, -2);
+    scene.add(pointLight);
+    
+    // Camera position
+    camera.position.set(.4, 1.4, -5.4);
+    
+    // OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = true;
+    controls.minDistance = 1;
+    controls.maxDistance = 15;
+    controls.maxPolarAngle = Math.PI;
+    
+    // Model variables
+    let currentModels = [];
+    let currentSecondaryModels = [];
+    let currentLeftModels = [];
+    let currentRoundedModels = [];
+    let currentUShapeModels = [];
+    let currentConfiguration = 'single';
+    let currentColor = 0x1a1a1a;
+    let updateTimeout = null;
+    
+    // Configuration state with initial/minimum dimensions
+    const state = {
+        configuration: 'single',
+        venting: 'sealed',
+        production: 'standard',
+        color: 'black',
+        dimensions: { 
+            length: 100.0, 
+            width: 53, 
+            height: 2.57, 
+            units: 'mm' 
+        },
+        initialDimensions: { 
+            length: 100.0, 
+            width: 53, 
+            height: 2.57, 
+            units: 'mm' 
+        }
+    };
+    
+    // Material setup
+    const createPlasticMaterial = (color) => {
+        return new THREE.MeshPhongMaterial({ 
+            color: color,
+            shininess: 30,        
+            specular: 0x222222,   
+            transparent: false,
+            opacity: 1.0,
+            side: THREE.DoubleSide
+        });
+    };
+    
+    console.log('Materials initialized with black matte plastic appearance');
+    
+    // DYNAMIC SPACING CALCULATION
+    function calculateDynamicSpacing() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentWidthMM = state.dimensions.width * conversionFactor;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        
+        const baseSpacing = 0.98;
+        const clearanceMultiplier = 1;
+        const dynamicSpacing = baseSpacing * widthScaleFactor * clearanceMultiplier;
+        
+        console.log(`Dynamic spacing: base=${baseSpacing}, scale=${widthScaleFactor.toFixed(3)}, final=${dynamicSpacing.toFixed(3)}`);
+        
+        return dynamicSpacing;
+    }
+    
+    // FIXED: REDUCED X-OFFSET FOR LEFT/RIGHT SIDE MODELS (SQUARE ROOT SCALING)
+    function calculateSideOffset() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentWidthMM = state.dimensions.width * conversionFactor;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        
+        // Base offset that works for initial dimensions
+        const baseOffset = 0.545;
+        
+        // FIXED: SQUARE ROOT SCALING - Much less aggressive than linear scaling
+      const dynamicOffset = baseOffset * (1 + (widthScaleFactor - 1) * 0.97);
+        
+        console.log(`FIXED REDUCED side offset: base=${baseOffset}, scale=${widthScaleFactor.toFixed(3)}, sqrt_scale=${Math.sqrt(widthScaleFactor).toFixed(3)}, final=${dynamicOffset.toFixed(3)}`);
+        
+        return dynamicOffset;
+    }
+    
+    // NEW: HEIGHT-BASED Y SCALING FOR LEFT/RIGHT SIDE MODELS WITH 1.5% VERTICAL SCALING
+    function calculateHeightBasedYScaling() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentHeightMM = state.dimensions.height * conversionFactor;
+        const initialHeightMM = state.initialDimensions.height * conversionFactor;
+        const heightScaleFactor = currentHeightMM / initialHeightMM;
+        
+        // Calculate height increase (1.0 = no increase, 2.0 = 100% increase, etc.)
+        const heightIncrease = heightScaleFactor - 1; // 0 = no increase, 1 = 100% increase
+        
+        // Apply 1.5% vertical scaling for each unit of height increase
+        const yScaleMultiplier = 1 + (heightIncrease * 0.015); // 1.5% scaling per unit increase
+        
+        console.log(`HEIGHT Y-SCALING: heightScale=${heightScaleFactor.toFixed(3)}, heightIncrease=${heightIncrease.toFixed(3)}, Y-scale=${yScaleMultiplier.toFixed(4)} (1.5% per unit)`);
+        
+        return yScaleMultiplier;
+    }
+    
+    // FIXED Z-OFFSET FOR LEFT/RIGHT SIDE MODELS (PROPORTIONAL SCALING TO MAINTAIN INTACT MODEL)
+    function calculateSideZOffset() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentWidthMM = state.dimensions.width * conversionFactor;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        
+        // PROPORTIONAL SCALING: Maintains initial -0.25 gap but scales it with width
+        const initialSideZOffset = -0.25;
+        const scaledSideZOffset = initialSideZOffset * widthScaleFactor;
+        
+        console.log(`Proportional side Z offset: initial=${initialSideZOffset}, scale=${widthScaleFactor.toFixed(3)}, scaled=${scaledSideZOffset.toFixed(3)}`);
+        
+        return scaledSideZOffset;
+    }
+    
+    // PROPORTIONAL Z-OFFSET FOR ROUNDED MODELS (MAINTAINS INTACT ASSEMBLY)
+    function calculateRoundedZOffset() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentWidthMM = state.dimensions.width * conversionFactor;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        
+        // PROPORTIONAL SCALING: Maintains initial -0.25 gap but scales it with width
+        const initialRoundedZOffset = -0.25;
+        const scaledRoundedZOffset = initialRoundedZOffset * widthScaleFactor;
+        
+        console.log(`Proportional rounded Z offset: initial=${initialRoundedZOffset}, scale=${widthScaleFactor.toFixed(3)}, scaled=${scaledRoundedZOffset.toFixed(3)}`);
+        
+        return scaledRoundedZOffset;
+    }
+    
+    // NEW: CALCULATE DYNAMIC Y OFFSET FOR ROUNDED RECTANGLE BASED ON LENGTH
+    function calculateLengthYOffset() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentLengthMM = state.dimensions.length * conversionFactor;
+        const initialLengthMM = state.initialDimensions.length * conversionFactor;
+        const lengthScaleFactor = currentLengthMM / initialLengthMM;
+        
+        // Scale factor: how much longer than initial length
+        const lengthIncrease = lengthScaleFactor - 1; // 0 means no change, 0.5 means 50% longer
+        
+        // Move down by calculated amount - well-calculated value
+        const downwardOffset = -lengthIncrease * 0.95; // Negative = move down, 0.85 provides good visual proportion
+        
+        console.log(`Length Y offset: lengthScale=${lengthScaleFactor.toFixed(3)}, lengthIncrease=${lengthIncrease.toFixed(3)}, downward_offset=${downwardOffset.toFixed(3)}`);
+        
+        return downwardOffset;
+    }
+    
+    // PROPORTIONAL Z-OFFSET FOR U-SHAPE MODELS (MAINTAINS INTACT ASSEMBLY)
+    function calculateUShapeZOffset() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentWidthMM = state.dimensions.width * conversionFactor;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        
+        // PROPORTIONAL SCALING: Maintains initial -0.5 gap but scales it with width  
+        const initialUShapeZOffset = -0.492389;
+        const scaledUShapeZOffset = initialUShapeZOffset * widthScaleFactor;
+        
+        console.log(`Proportional U-shape Z offset: initial=${initialUShapeZOffset}, scale=${widthScaleFactor.toFixed(3)}, scaled=${scaledUShapeZOffset.toFixed(3)}`);
+        
+        return scaledUShapeZOffset;
+    }
+    
+    // NEW: CALCULATE DYNAMIC SCALE FACTORS FOR U-SHAPE
+    function calculateUShapeScaling() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentWidthMM = state.dimensions.width * conversionFactor;
+        const currentLengthMM = state.dimensions.length * conversionFactor;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const initialLengthMM = state.initialDimensions.length * conversionFactor;
+        
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        const lengthScaleFactor = currentLengthMM / initialLengthMM;
+        
+        // Width affects X-scale (width), Length affects Y-scale (height) - CORRECTED
+        const scaleX = widthScaleFactor;   // Width increase scales X (width)
+        const scaleY = lengthScaleFactor;  // Length increase scales Y (height)
+        
+        console.log(`U-Shape scaling: scaleX=${scaleX.toFixed(3)} (from width→width), scaleY=${scaleY.toFixed(3)} (from length→height)`);
+        
+        return { scaleX, scaleY };
+    }
+    
+    // CALCULATE ROUNDED RECTANGLE SCALING - ONLY AFFECTED BY WIDTH
+    function calculateRoundedScaling() {
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') conversionFactor = 10;
+        else if (state.dimensions.units === 'in') conversionFactor = 25.4;
+        
+        const currentWidthMM = state.dimensions.width * conversionFactor;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        
+        // ONLY width affects rounded rectangle scaling (both X and Y scale with width)
+        const scaleX = widthScaleFactor;   // Width affects X-scale
+        const scaleY = widthScaleFactor;   // Width affects Y-scale (NOT length)
+        
+        console.log(`Rounded scaling: scaleX=${scaleX.toFixed(3)} (from width), scaleY=${scaleY.toFixed(3)} (from width) - LENGTH IGNORED`);
+        
+        return { scaleX, scaleY };
+    }
+    
+    // CREATE DYNAMIC PRECISION PART GEOMETRY WITH SCALING CIRCULAR HOLES
+    function createPrecisionPart(totalWidth, height, depth, ventingMode = null) {
+        const currentVenting = ventingMode || state.venting;
+        console.log(`Creating DYNAMIC precision part with dimensions: ${totalWidth}x${height}x${depth}, venting: ${currentVenting}`);
+        
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') {
+            conversionFactor = 10;
+        } else if (state.dimensions.units === 'in') {
+            conversionFactor = 25.4;
+        }
+        
+        totalWidth *= conversionFactor ;
+        height *= conversionFactor;
+        depth *= conversionFactor;
+        
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const initialLengthMM = state.initialDimensions.length * conversionFactor;
+        const widthScaleFactor = totalWidth / initialWidthMM;
+        const lengthScaleFactor = height / initialLengthMM;
+        
+        // COMBINED SCALE FACTOR - Uses both width and length for proportional scaling
+        const combinedScaleFactor = Math.sqrt(widthScaleFactor * lengthScaleFactor);
+        
+        const displayScale = 2 / 100;
+        totalWidth *= displayScale ;
+        height *= displayScale;
+        depth *= displayScale;
+        const initialWidthDisplay = initialWidthMM * displayScale;
+        const initialLengthDisplay = initialLengthMM * displayScale;
+        
+        // DYNAMIC HOLE RADIUS - Scales with combined width/length factor for perfect circles
+        const baseHoleRadius = initialWidthDisplay * 0.014 * 1.5;
+        const dynamicHoleRadius = baseHoleRadius * combinedScaleFactor;
+        
+        // DYNAMIC HOLE SPACING - Grows proportionally with width (no artificial limits)
+        const baseHoleSpacing = initialWidthDisplay * 0.40;
+        const dynamicHoleSpacing = baseHoleSpacing * widthScaleFactor;
+        
+        // DYNAMIC CAPSULE DIMENSIONS - Scale with combined factor
+        const baseCapsuleWidth = Math.min(initialWidthDisplay * 0.28, height * 0.8) * 1.65;
+        const capsuleHeight = Math.min(height * 0.40, initialWidthDisplay * 0.24) * 1.5;
+        const capsuleRadius = capsuleHeight / 2;
+        
+        const holeRadius = dynamicHoleRadius;
+        const holeSpacing = dynamicHoleSpacing;
+        const capsuleWidth = Math.min(baseCapsuleWidth * Math.sqrt(widthScaleFactor), height * 0.9);
+        
+        console.log(`DYNAMIC CENTER HOLES: radius=${holeRadius.toFixed(3)} (scale=${combinedScaleFactor.toFixed(3)}), spacing=${holeSpacing.toFixed(3)} (widthScale=${widthScaleFactor.toFixed(3)})`);
+        console.log(`Capsule dimensions: width=${capsuleWidth.toFixed(3)}, height=${capsuleHeight.toFixed(3)}`);
+
+        const rectShape = new THREE.Shape();
+        rectShape.moveTo(-totalWidth/2, -height/2);
+        rectShape.lineTo(totalWidth/2, -height/2);
+        rectShape.lineTo(totalWidth/2, height/2);
+        rectShape.lineTo(-totalWidth/2, height/2);
+        rectShape.lineTo(-totalWidth/2, -height/2);
+
+        console.log('Adding DYNAMIC center circular holes (perfect circles, proportional spacing)...');
+        const hole1 = new THREE.Path();
+        hole1.absarc(-holeSpacing/2, 0, holeRadius, 0, Math.PI * 2, false);
+        
+        const hole2 = new THREE.Path();
+        hole2.absarc(holeSpacing/2, 0, holeRadius, 0, Math.PI * 2, false);
+        
+        rectShape.holes.push(hole1);
+        rectShape.holes.push(hole2);
+        console.log(`✓ Added 2 DYNAMIC center circular holes: radius=${holeRadius.toFixed(3)}, gap=${holeSpacing.toFixed(3)}`);
+
+        function createCapsuleHole(centerX, centerY) {
+            const capsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            capsuleHole.moveTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            capsuleHole.absarc(centerX + halfWidth - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            capsuleHole.lineTo(centerX - halfWidth + capsuleRadius, centerY - halfHeight);
+            capsuleHole.absarc(centerX - halfWidth + capsuleRadius, centerY, capsuleRadius, -Math.PI/2, Math.PI/2, true);
+            capsuleHole.lineTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            
+            return capsuleHole;
+        }
+
+        function createHalfCapsuleHole(centerX, centerY) {
+            const halfCapsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            const cutoffPosition = centerX - halfWidth * 0.85;
+            const rightEnd = centerX + halfWidth;
+            
+            halfCapsuleHole.moveTo(cutoffPosition, centerY + halfHeight);
+            halfCapsuleHole.lineTo(rightEnd - capsuleRadius, centerY + halfHeight);
+            halfCapsuleHole.absarc(rightEnd - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY - halfHeight);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY + halfHeight);
+            
+            return halfCapsuleHole;
+        }
+
+        if (currentVenting === 'vented') {
+            console.log('Adding capsule holes...');
+            
+            const availableHeight = height - (capsuleHeight * 1.2);
+            const availableWidth = totalWidth - (capsuleWidth * 1.2);
+            
+            const offsetY = availableHeight / 3;
+            const offsetX = availableWidth / 3;
+            
+            const minOffsetY = Math.max(offsetY, capsuleHeight * 0.8) * 0.9;
+            const minOffsetX = Math.max(offsetX, capsuleWidth * 0.6) * 1.0;
+            
+            const leftUpperCapsuleHole = createHalfCapsuleHole(-minOffsetX, minOffsetY);
+            const rightUpperCapsuleHole = createCapsuleHole(minOffsetX, minOffsetY);
+            const leftLowerCapsuleHole = createHalfCapsuleHole(-minOffsetX, -minOffsetY);
+            const rightLowerCapsuleHole = createCapsuleHole(minOffsetX, -minOffsetY);
+
+            rectShape.holes.push(leftUpperCapsuleHole);
+            rectShape.holes.push(rightUpperCapsuleHole);
+            rectShape.holes.push(leftLowerCapsuleHole);
+            rectShape.holes.push(rightLowerCapsuleHole);
+            console.log('✓ Added 4 capsule holes');
+        }
+
+        const extrudeSettings = {
+            depth: depth,
+            bevelEnabled: true,
+            bevelThickness: depth * 0.2,
+            bevelSize: depth * 0.12,
+            bevelSegments: 24,
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(rectShape, extrudeSettings);
+        geometry.translate(0, 0, -depth/2);
+
+        console.log(`✓ Precision part geometry created with ${currentVenting} venting`);
+        return geometry;
+    }
+
+    // DYNAMIC SECONDARY GEOMETRY - PROPER SPACING FOR PARTS WITHOUT CENTER HOLES
+    function createSecondaryPart(totalWidth, height, depth, ventingMode = null) {
+        const currentVenting = ventingMode || state.venting;
+        console.log(`Creating DYNAMIC secondary part: ${totalWidth}x${height/2}x${depth}, venting: ${currentVenting}`);
+        
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') {
+            conversionFactor = 10;
+        } else if (state.dimensions.units === 'in') {
+            conversionFactor = 25.4;
+        }
+        
+        totalWidth *= conversionFactor;
+        height *= conversionFactor ;
+        depth *= conversionFactor;
+        
+        // CALCULATE DYNAMIC HEIGHT REDUCTION BASED ON WIDTH INCREASE
+        const currentWidthMM = totalWidth;
+        const initialWidthMM = state.initialDimensions.width * conversionFactor;
+        const widthScaleFactor = currentWidthMM / initialWidthMM;
+        
+        // Calculate width increase (1.0 = no increase, 1.5 = 50% increase, etc.)
+        const widthIncrease = widthScaleFactor - 1; // 0 = no increase, 0.5 = 50% increase
+        
+        // Apply 1% height reduction for each unit of width increase
+        const heightReductionFactor = 1 - (widthIncrease * 0.01); // 1% reduction per unit increase
+        
+        console.log(`Width scale factor: ${widthScaleFactor.toFixed(3)}, Width increase: ${widthIncrease.toFixed(3)}, Height reduction: ${(heightReductionFactor * 100).toFixed(1)}%`);
+        
+        // Secondary geometry uses half height + dynamic reduction
+        height = (height / 2) * heightReductionFactor;
+        
+        const displayScale = 2 / 100;
+        totalWidth *= displayScale;
+        height *= displayScale;
+        depth *= displayScale;
+        
+        // DYNAMIC HOLE DIMENSIONS - SCALED FOR SECONDARY PARTS (NO CENTER HOLES)
+        const initialWidthDisplay = initialWidthMM * displayScale;
+        const widthScaleFactorDisplay = (totalWidth) / initialWidthDisplay;
+        
+        // SECONDARY-SPECIFIC CAPSULE HOLE CALCULATIONS
+        const baseCapsuleWidth = Math.min(initialWidthDisplay * 0.28, height * 0.8) * 1.65;
+        const baseCapsuleHeight = Math.min(height * 0.40, initialWidthDisplay * 0.24) * 1.5;
+        
+        // DYNAMIC HOLE SIZES - Same scaling approach as main but optimized for secondary
+        const fullCapsuleHeight = baseCapsuleHeight;
+        const fullCapsuleWidth = Math.min(baseCapsuleWidth * Math.sqrt(widthScaleFactorDisplay), height * 0.9);
+        const fullCapsuleRadius = fullCapsuleHeight / 2;
+        
+        const halfCapsuleHeight = baseCapsuleHeight;
+        const halfCapsuleWidth = Math.min(baseCapsuleWidth * Math.sqrt(widthScaleFactorDisplay), height * 0.9);
+        const halfCapsuleRadius = halfCapsuleHeight / 2;
+        
+        // DYNAMIC SPACING FOR SECONDARY PARTS (NO CENTER HOLES) - ENSURES PROPER CLEARANCE
+        const minClearance = Math.max(fullCapsuleWidth, halfCapsuleWidth) * 1.2; // 20% clearance between holes
+        const availableWidth = totalWidth - (fullCapsuleWidth + halfCapsuleWidth) / 2; // Available space after hole widths
+        const dynamicSpacing = Math.min(availableWidth * 0.35, minClearance * 1.1); // Safe spacing
+        
+        console.log(`DYNAMIC Secondary spacing: clearance=${minClearance.toFixed(3)}, available=${availableWidth.toFixed(3)}, final=${dynamicSpacing.toFixed(3)}`);
+        console.log(`Secondary part capsules: full=${fullCapsuleWidth.toFixed(3)}x${fullCapsuleHeight.toFixed(3)}, half=${halfCapsuleWidth.toFixed(3)}x${halfCapsuleHeight.toFixed(3)}`);
+
+        // CREATE MAIN SHAPE (NO CENTER HOLES FOR SECONDARY)
+        const mainShape = new THREE.Shape();
+        mainShape.moveTo(-totalWidth/2, -height/2);
+        mainShape.lineTo(totalWidth/2, -height/2);
+        mainShape.lineTo(totalWidth/2, height/2);
+        mainShape.lineTo(-totalWidth/2, height/2);
+        mainShape.lineTo(-totalWidth/2, -height/2);
+
+        console.log('Secondary part created WITHOUT center circular holes (capsule holes only for venting)');
+
+        // Helper functions for capsule holes with DYNAMIC sizing
+        function createCapsuleHole(centerX, centerY) {
+            const capsuleHole = new THREE.Path();
+            const halfHeight = fullCapsuleHeight / 2;
+            const halfWidth = fullCapsuleWidth / 2;
+            
+            capsuleHole.moveTo(centerX + halfWidth - fullCapsuleRadius, centerY + halfHeight);
+            capsuleHole.absarc(centerX + halfWidth - fullCapsuleRadius, centerY, fullCapsuleRadius, Math.PI/2, -Math.PI/2, true);
+            capsuleHole.lineTo(centerX - halfWidth + fullCapsuleRadius, centerY - halfHeight);
+            capsuleHole.absarc(centerX - halfWidth + fullCapsuleRadius, centerY, fullCapsuleRadius, -Math.PI/2, Math.PI/2, true);
+            capsuleHole.lineTo(centerX + halfWidth - fullCapsuleRadius, centerY + halfHeight);
+            
+            return capsuleHole;
+        }
+
+        function createHalfCapsuleHole(centerX, centerY) {
+            const halfCapsuleHole = new THREE.Path();
+            const halfHeight = halfCapsuleHeight / 2;
+            const halfWidth = halfCapsuleWidth / 2;
+            
+            const cutoffPosition = centerX - halfWidth * 0.85;
+            const rightEnd = centerX + halfWidth;
+            
+            halfCapsuleHole.moveTo(cutoffPosition, centerY + halfHeight);
+            halfCapsuleHole.lineTo(rightEnd - halfCapsuleRadius, centerY + halfHeight);
+            halfCapsuleHole.absarc(rightEnd - halfCapsuleRadius, centerY, halfCapsuleRadius, Math.PI/2, -Math.PI/2, true);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY - halfHeight);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY + halfHeight);
+            
+            return halfCapsuleHole;
+        }
+
+        // ADD DYNAMIC VENTING CAPSULE HOLES IF SELECTED (PROPER SPACING FOR INTEGRITY)
+        if (currentVenting === 'vented') {
+            console.log('Adding DYNAMIC capsule holes to secondary part with proper clearance...');
+            
+            // DYNAMIC POSITIONING - Ensures holes don't overlap regardless of dimensions
+            const leftPosition = -dynamicSpacing;
+            const rightPosition = dynamicSpacing;
+            
+            // Add 2 capsule holes with DYNAMIC spacing that maintains integrity
+            const leftCenterCapsuleHole = createHalfCapsuleHole(leftPosition, 0);
+            const rightCenterCapsuleHole = createCapsuleHole(rightPosition, 0);
+
+            mainShape.holes.push(leftCenterCapsuleHole);
+            mainShape.holes.push(rightCenterCapsuleHole);
+            console.log(`✓ Added 2 DYNAMIC capsule holes: left@${leftPosition.toFixed(3)}, right@${rightPosition.toFixed(3)}`);
+        }
+        
+        // DYNAMIC GEOMETRY - SAME BEVEL SETTINGS AS MAIN
+        const extrudeSettings = {
+            depth: depth,
+            bevelEnabled: true,
+            bevelThickness: depth * 0.2,   // Same as main geometry
+            bevelSize: depth * 0.12,       // Same as main geometry
+            bevelSegments: 24,             // Same as main geometry
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(mainShape, extrudeSettings);
+        geometry.translate(0, 0, -depth/2);
+
+        console.log('✓ DYNAMIC secondary geometry with PROPER HOLE SPACING: Maintains part integrity at all dimensions');
+        return geometry;
+    }
+    
+    // NEW: HEIGHT-RESPONSIVE ROUNDED RECTANGLE WITH HOLE GEOMETRY - HOLE GETS SMALLER WITH HEIGHT INCREASE
+    function createRoundedRectWithHole(totalWidth, height, depth) {
+        console.log(`Creating HEIGHT-RESPONSIVE rounded rectangle with hole: ${totalWidth}x${height}x${depth}`);
+        
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') {
+            conversionFactor = 10;
+        } else if (state.dimensions.units === 'in') {
+            conversionFactor = 25.4;
+        }
+        
+        totalWidth *= conversionFactor;
+        height *= conversionFactor;
+        depth *= conversionFactor;
+        
+        const displayScale = 2 / 100;
+        totalWidth *= displayScale * 1.01;
+        height *= displayScale * 1.04;
+        depth *= displayScale;
+        
+        // NEW: CALCULATE HEIGHT-BASED HOLE SHRINKAGE
+        const currentHeightMM = state.dimensions.height * conversionFactor;
+        const initialHeightMM = state.initialDimensions.height * conversionFactor;
+        const heightScaleFactor = currentHeightMM / initialHeightMM;
+        
+        // Calculate height increase (1.0 = no increase, 2.0 = 100% increase, etc.)
+        const heightIncrease = heightScaleFactor - 1; // 0 = no increase, 1 = 100% increase
+        
+        // Shrink hole size as height increases: 2% reduction per unit of height increase
+        const holeShrinkageFactor = 1 - (heightIncrease * 0.02); // 2% shrinkage per unit increase
+        const minHoleShrinkage = 0.4; // Don't shrink below 40% of original size
+        const finalHoleShrinkage = Math.max(holeShrinkageFactor, minHoleShrinkage);
+        
+        console.log(`HEIGHT HOLE SHRINKAGE: heightScale=${heightScaleFactor.toFixed(3)}, heightIncrease=${heightIncrease.toFixed(3)}, holeShrinkage=${finalHoleShrinkage.toFixed(3)} (2% per unit, min 40%)`);
+        
+        // Outer rounded rectangle
+        const outerShape = new THREE.Shape();
+        const radius = Math.min(totalWidth, height) * 0.033;
+        
+        outerShape.moveTo(-totalWidth/2 + radius, -height/2);
+        outerShape.lineTo(totalWidth/2 - radius, -height/2);
+        outerShape.quadraticCurveTo(totalWidth/2, -height/2, totalWidth/2, -height/2 + radius);
+        outerShape.lineTo(totalWidth/2, height/2 - radius);
+        outerShape.quadraticCurveTo(totalWidth/2, height/2, totalWidth/2 - radius, height/2);
+        outerShape.lineTo(-totalWidth/2 + radius, height/2);
+        outerShape.quadraticCurveTo(-totalWidth/2, height/2, -totalWidth/2, height/2 - radius);
+        outerShape.lineTo(-totalWidth/2, -height/2 + radius);
+        outerShape.quadraticCurveTo(-totalWidth/2, -height/2, -totalWidth/2 + radius, -height/2);
+
+        // NEW: HEIGHT-RESPONSIVE INNER HOLE - SHRINKS AS HEIGHT INCREASES
+        const innerShape = new THREE.Shape();
+        const baseInnerWidth = totalWidth * 0.75;
+        const baseInnerHeight = height * 0.7;
+        
+        // Apply height-based shrinkage to hole size
+        const innerWidth = baseInnerWidth * finalHoleShrinkage;
+        const innerHeight = baseInnerHeight * finalHoleShrinkage;
+        const innerRadius = Math.min(innerWidth, innerHeight) * 0.15;
+        
+        console.log(`Hole dimensions: original=${baseInnerWidth.toFixed(2)}x${baseInnerHeight.toFixed(2)}, shrunk=${innerWidth.toFixed(2)}x${innerHeight.toFixed(2)}`);
+        
+        innerShape.moveTo(-innerWidth/2 + innerRadius, -innerHeight/2);
+        innerShape.lineTo(innerWidth/2 - innerRadius, -innerHeight/2);
+        innerShape.quadraticCurveTo(innerWidth/2, -innerHeight/2, innerWidth/2, -innerHeight/2 + innerRadius);
+        innerShape.lineTo(innerWidth/2, innerHeight/2 - innerRadius);
+        innerShape.quadraticCurveTo(innerWidth/2, innerHeight/2, innerWidth/2 - innerRadius, innerHeight/2);
+        innerShape.lineTo(-innerWidth/2 + innerRadius, innerHeight/2);
+        innerShape.quadraticCurveTo(-innerWidth/2, innerHeight/2, -innerWidth/2, innerHeight/2 - innerRadius);
+        innerShape.lineTo(-innerWidth/2, -innerHeight/2 + innerRadius);
+        innerShape.quadraticCurveTo(-innerWidth/2, -innerHeight/2, -innerWidth/2 + innerRadius, -innerHeight/2);
+
+        outerShape.holes.push(innerShape);
+
+        const extrudeSettings = {
+            depth: depth,
+            bevelEnabled: true,
+            bevelSegments: 8,
+            steps: 1,
+            bevelSize: depth * 0.02,
+            bevelThickness: depth * 0.02
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(outerShape, extrudeSettings);
+        geometry.translate(0, 0, -depth/2);
+
+        console.log('✓ HEIGHT-RESPONSIVE rounded rectangle: hole shrinks 2% per unit height increase');
+        return geometry;
+    }
+
+    // INTACT U-SHAPED GEOMETRY - USES FIXED INITIAL DIMENSIONS, SCALING APPLIED VIA TRANSFORM
+    function createUShapedGeometry(uWidth, uLength, depth) {
+        console.log(`Creating INTACT U-shaped geometry with fixed initial dimensions`);
+        
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') {
+            conversionFactor = 10;
+        } else if (state.dimensions.units === 'in') {
+            conversionFactor = 25.4;
+        }
+        
+        // ALWAYS USE INITIAL DIMENSIONS - GEOMETRY STAYS INTACT
+        const fixedUHeight = state.initialDimensions.width * conversionFactor;   // Fixed initial width
+        const fixedUWidth = state.initialDimensions.length * conversionFactor;   // Fixed initial length
+        depth *= conversionFactor;
+        
+        const displayScale = 2 / 100;
+        const scaledUHeight = fixedUHeight * displayScale;  // Always same initial size
+        const scaledUWidth = fixedUWidth * displayScale;     // Always same initial size
+        depth *= displayScale;
+        
+        console.log(`INTACT U-Shape dimensions (fixed): width=${scaledUWidth.toFixed(3)}, height=${scaledUHeight.toFixed(3)}, depth=${depth.toFixed(3)}`);
+        
+        const shape = new THREE.Shape();
+        
+        // U shape parameters - using FIXED initial dimensions
+        const width = scaledUWidth * 0.585;          // Fixed opening width
+        const uHeight = scaledUHeight * 1.885;       // Fixed total height 
+        const thickness = Math.min(scaledUWidth * 0.315, scaledUHeight * 0.315); 
+        const innerRadius = thickness * 0.18;
+        const openSideBevelRadius = thickness * 0.3;
+        
+        // Depth offset to lower the U-curve bottom
+        const uDepthOffset = thickness * 0.3;
+        
+        console.log(`INTACT U-Shape calculated (fixed): opening width=${width.toFixed(3)}, total height=${uHeight.toFixed(3)}, thickness=${thickness.toFixed(3)}`);
+        
+        // Outer shape
+        shape.moveTo(-width/2, uHeight/2);
+        shape.lineTo(-width/2, -uHeight/2);
+        shape.lineTo(width/2, -uHeight/2);
+        shape.lineTo(width/2, uHeight/2);
+        
+        // Inner contour with deeper U-curve
+        shape.lineTo(thickness + openSideBevelRadius, uHeight/2);
+        shape.quadraticCurveTo(thickness, uHeight/2, thickness, uHeight/2 - openSideBevelRadius);
+        
+        // Right inner vertical edge goes deeper
+        shape.lineTo(thickness, -uHeight/2 + thickness + innerRadius - uDepthOffset);
+        
+        // Bottom connection is now deeper
+        shape.quadraticCurveTo(thickness, -uHeight/2 + thickness - uDepthOffset, 
+                              thickness - innerRadius, -uHeight/2 + thickness - uDepthOffset);
+        
+        // Bottom inner edge is now deeper
+        shape.lineTo(-thickness + innerRadius, -uHeight/2 + thickness - uDepthOffset);
+        
+        // Bottom-left connection is now deeper
+        shape.quadraticCurveTo(-thickness, -uHeight/2 + thickness - uDepthOffset, 
+                              -thickness, -uHeight/2 + thickness + innerRadius - uDepthOffset);
+        
+        // Left inner vertical edge goes deeper
+        shape.lineTo(-thickness, uHeight/2 - openSideBevelRadius);
+        
+        shape.quadraticCurveTo(-thickness, uHeight/2, -thickness - openSideBevelRadius, uHeight/2);
+        
+        shape.closePath();
+
+        const extrudeSettings = {
+            depth: depth,
+            bevelEnabled: true,
+            bevelThickness: depth * 0.02,
+            bevelSize: depth * 0.015,
+            bevelSegments: 4,
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        geometry.translate(0, 0, -depth/2);
+
+        console.log('✓ INTACT U-shaped geometry: uses fixed initial dimensions, scaling applied via transform');
+        return geometry;
+    }
+        
+        // GEOMETRY FACTORY FUNCTION
+        function createGeometry(geometryType, totalWidth, height, depth, ventingMode = null) {
+            switch (geometryType) {
+                case 'precision':
+                    return createPrecisionPart(totalWidth, height, depth, ventingMode);
+                case 'secondary':
+                    return createSecondaryPart(totalWidth, height, depth, ventingMode);
+                case 'rounded':
+                    return createRoundedRectWithHole(totalWidth, height, depth);
+                case 'ushape':
+                    return createUShapedGeometry(totalWidth, height, depth);
+                default:
+                    return createPrecisionPart(totalWidth, height, depth, ventingMode);
+            }
+        }
+        
+        function updateConfiguration() {
+            // Clear existing models
+            [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels].forEach(model => {
+                scene.remove(model);
+            });
+            currentModels = [];
+            currentSecondaryModels = [];
+            currentLeftModels = [];
+            currentRoundedModels = [];
+            currentUShapeModels = [];
+            
+            const spacing = calculateDynamicSpacing();
+            const sideOffset = calculateSideOffset(); // FIXED: Now uses square root scaling
+            const sideZOffset = calculateSideZOffset(); // PROPORTIONAL Z positioning for sides
+            const roundedZOffset = calculateRoundedZOffset(); // PROPORTIONAL Z positioning for rounded
+            const lengthYOffset = calculateLengthYOffset(); // NEW: Dynamic Y offset based on length
+            const ushapeZOffset = calculateUShapeZOffset(); // PROPORTIONAL Z positioning for U-shape
+            const ushapeScaling = calculateUShapeScaling(); // Get U-shape scaling factors
+            const roundedScaling = calculateRoundedScaling(); // Get rounded scaling factors (width only)
+            const heightYScaling = calculateHeightBasedYScaling(); // NEW: Height-based Y scaling for sides
+            
+            let positions = [];
+            
+            switch (state.configuration) {
+                case 'single':
+                    positions = [{ x: 0, y: 0, z: 0 }];
+                    break;
+                case 'row2':
+                    positions = [
+                        { x: -spacing/2, y: 0, z: 0 },
+                        { x: spacing/2, y: 0, z: 0 }
+                    ];
+                    break;
+                case 'row3':
+                    positions = [
+                        { x: -spacing, y: 0, z: 0 },
+                        { x: 0, y: 0, z: 0 },
+                        { x: spacing, y: 0, z: 0 }
+                    ];
+                    break;
+                case 'row4':
+                    positions = [
+                        { x: -spacing*1.5, y: 0, z: 0 },
+                        { x: -spacing/2, y: 0, z: 0 },
+                        { x: spacing/2, y: 0, z: 0 },
+                        { x: spacing*1.5, y: 0, z: 0 }
+                    ];
+                    break;
+                case 'grid2x2':
+                    positions = [{ x: 0, y: 0, z: 0 }];
+                    console.log('2x2 Grid is disabled, falling back to single configuration');
+                    break;
+            }
+            
+            console.log(`Creating HEIGHT-RESPONSIVE configuration: ${state.configuration} - sides scale Y by ${heightYScaling.toFixed(3)}x, rounded hole shrinks with height, secondary holes dynamic`);
+            
+            // Create models with all 5 geometry types
+            positions.forEach((pos, index) => {
+                // 1. CREATE CENTER MODELS (Precision Geometry)
+                const centerGeometry = createGeometry(
+                    'precision',
+                    state.dimensions.length, 
+                    state.dimensions.width, 
+                    state.dimensions.height,
+                    state.venting
+                );
+                const centerMaterial = createPlasticMaterial(currentColor);
+                const centerModel = new THREE.Mesh(centerGeometry, centerMaterial);
+                
+                centerModel.name = `CenterModel_${index + 1}`;
+                centerModel.userData.type = 'center';
+                centerModel.userData.index = index;
+                   
+                centerModel.position.set(pos.x, pos.y, pos.z - 0.016); // Center stays at original Z=0
+                centerModel.castShadow = true;
+                centerModel.receiveShadow = true;
+                centerModel.rotation.z = Math.PI / 2;
+                
+                scene.add(centerModel);
+                currentModels.push(centerModel);
+
+                // 2. CREATE RIGHT SIDE MODELS (DYNAMIC SECONDARY + HEIGHT-RESPONSIVE Y SCALING)
+                const rightGeometry = createGeometry(
+                    'secondary',
+                    state.dimensions.length, 
+                    state.dimensions.width, 
+                    state.dimensions.height,
+                    state.venting
+                );
+                const rightMaterial = createPlasticMaterial(currentColor);
+                const rightModel = new THREE.Mesh(rightGeometry, rightMaterial);
+                
+                rightModel.name = `RightModel_${index + 1}`;
+                rightModel.userData.type = 'right';
+                rightModel.userData.index = index;
+                
+                // FIXED: Uses square root scaling for reduced X offset
+                rightModel.position.set(pos.x + sideOffset, pos.y, pos.z + sideZOffset);
+                
+                // NEW: Apply height-based Y scaling with 1.5% vertical scaling
+                rightModel.scale.set(1, heightYScaling, 1); // Y-scale affected by height
+                
+                rightModel.castShadow = true;
+                rightModel.receiveShadow = true;
+                rightModel.rotation.z = Math.PI / 2;
+                rightModel.rotation.y = Math.PI / 2;
+                
+                scene.add(rightModel);
+                currentSecondaryModels.push(rightModel);
+
+                // 3. CREATE LEFT SIDE MODELS (DYNAMIC SECONDARY + HEIGHT-RESPONSIVE Y SCALING)
+                const leftGeometry = createGeometry(
+                    'secondary',
+                    state.dimensions.length, 
+                    state.dimensions.width, 
+                    state.dimensions.height,
+                    state.venting
+                );
+                const leftMaterial = createPlasticMaterial(currentColor);
+                const leftModel = new THREE.Mesh(leftGeometry, leftMaterial);
+                
+                leftModel.name = `LeftModel_${index + 1}`;
+                leftModel.userData.type = 'left';
+                leftModel.userData.index = index;
+                
+                // FIXED: Uses square root scaling for reduced X offset
+                leftModel.position.set(pos.x - sideOffset, pos.y, pos.z + sideZOffset);
+                
+                // NEW: Apply height-based Y scaling with 1.5% vertical scaling
+                leftModel.scale.set(1, heightYScaling, 1); // Y-scale affected by height
+                
+                leftModel.castShadow = true;
+                leftModel.receiveShadow = true;
+                leftModel.rotation.z = Math.PI / 2;
+                leftModel.rotation.y = -Math.PI / 2;
+                
+                scene.add(leftModel);
+                currentLeftModels.push(leftModel);
+
+                // 4. CREATE HEIGHT-RESPONSIVE ROUNDED RECTANGLE MODELS (HOLE SHRINKS WITH HEIGHT)
+                const roundedGeometry = createGeometry(
+                    'rounded',
+                    state.initialDimensions.length * 0.58,  // FIXED: Use initial length (no length scaling)
+                    state.initialDimensions.width * 0.5,    // FIXED: Use initial width (scaling applied via transform)
+                    state.dimensions.height
+                );
+                const roundedMaterial = createPlasticMaterial(currentColor);
+                const roundedModel = new THREE.Mesh(roundedGeometry, roundedMaterial);
+                
+                roundedModel.name = `RoundedModel_${index + 1}`;
+                roundedModel.userData.type = 'rounded';
+                roundedModel.userData.index = index;
+                
+                // FIXED: Dynamic Y positioning based on length + proportional Z offset
+                const baseY = -.985; // Original base position
+                roundedModel.position.set(pos.x, baseY + lengthYOffset, roundedZOffset);
+             
+                
+                // WIDTH-ONLY SCALING: Only width affects rounded rectangle (both X and Y scale with width)
+                roundedModel.scale.set(
+                    roundedScaling.scaleX * .9,  // Width affects X-scale + base scale
+                    roundedScaling.scaleY * 0.9,          // Width affects Y-scale (NOT length)
+                    .9                               // Keep Z-scale as 1
+                );
+                
+                roundedModel.castShadow = true;
+                roundedModel.receiveShadow = true;
+                roundedModel.rotation.x = Math.PI / 2;
+                
+                scene.add(roundedModel);
+                currentRoundedModels.push(roundedModel);
+
+                // 5. CREATE U-SHAPED MODELS (PROPORTIONALLY POSITIONED + Dynamic Scaling)
+                const ushapeGeometry = createGeometry(
+                    'ushape',
+                    state.dimensions.width,  // INTACT: uses fixed initial dimensions internally
+                    state.dimensions.length, // INTACT: uses fixed initial dimensions internally
+                    state.dimensions.height
+                );
+                const ushapeMaterial = createPlasticMaterial(currentColor);
+                const ushapeModel = new THREE.Mesh(ushapeGeometry, ushapeMaterial);
+                
+                ushapeModel.name = `UShapeModel_${index + 1}`;
+                ushapeModel.userData.type = 'ushape';
+                ushapeModel.userData.index = index;
+                
+                // PROPORTIONAL: Use proportional Z offset to maintain intact assembly
+                ushapeModel.position.set(pos.x, pos.y, pos.z + ushapeZOffset);
+                
+                // APPLY DYNAMIC SCALING: Width affects X-scale (width), Length affects Y-scale (height)
+                ushapeModel.scale.set(
+                    ushapeScaling.scaleX * 0.9,  // Width affects X-scale (width) + base scale
+                    ushapeScaling.scaleY * 1.0065,        // Length affects Y-scale (height)
+                    1                            // Keep Z-scale as 1
+                );
+                
+                ushapeModel.castShadow = true;
+                ushapeModel.receiveShadow = true;
+                
+                scene.add(ushapeModel);
+                currentUShapeModels.push(ushapeModel);
+            });
+            
+            adjustCameraToFitModels();
+            
+            console.log(`✓ HEIGHT-RESPONSIVE ASSEMBLY WITH DYNAMIC HOLES: ${currentModels.length} center + ${currentSecondaryModels.length} right + ${currentLeftModels.length} left + ${currentRoundedModels.length} rounded + ${currentUShapeModels.length} ushape models`);
+            console.log('✓ DYNAMIC EFFECTS: Left/right sides scale Y with 1.5% per unit height increase, rounded hole shrinks 2% per unit height increase, secondary holes maintain proper spacing');
+        }
+        
+        function adjustCameraToFitModels() {
+            const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
+            if (allModels.length === 0) return;
+            
+            const box = new THREE.Box3();
+            allModels.forEach(model => {
+                box.expandByObject(model);
+            });
+            
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            
+            const maxSize = Math.max(size.x, size.y, size.z);
+            const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * camera.fov / 360));
+            const fitWidthDistance = fitHeightDistance / camera.aspect;
+            const distance = Math.max(fitHeightDistance, fitWidthDistance) * 1.5;
+            
+            controls.target.copy(center);
+            controls.update();
+        }
+        
+        function updateVenting() {
+            console.log(`\n=== VENTING UPDATE ===`);
+            console.log(`Venting mode: ${state.venting}`);
+            
+            updateConfiguration();
+            
+            console.log('=== END VENTING UPDATE ===\n');
+        }
+        
+        function updateModelColors() {
+            console.log(`Updating model colors to: ${state.color}`);
+            
+            [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels].forEach((model, index) => {
+                model.material = createPlasticMaterial(currentColor);
+            });
+        }
+        
+        function debouncedUpdateDimensions() {
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+            }
+            
+            updateTimeout = setTimeout(() => {
+                updateDimensions();
+            }, 500);
+        }
+        
+        function updateDimensions() {
+            console.log('\n=== HEIGHT-RESPONSIVE DIMENSIONS UPDATE ===');
+            console.log('Current dimensions:', state.dimensions);
+            
+            updateConfiguration();
+            
+            console.log('=== END HEIGHT-RESPONSIVE DIMENSIONS UPDATE ===\n');
+        }
+        
+        function exportSTL() {
+            console.log('\n=== STL EXPORT STARTED ===');
+            
+            const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
+            if (allModels.length === 0) {
+                alert('No models to export. Please wait for the model to load.');
+                return;
+            }
+            
+            try {
+                const exporter = new STLExporter();
+                const exportGroup = new THREE.Group();
+                
+                allModels.forEach((model, index) => {
+                    const modelClone = model.clone();
+                    exportGroup.add(modelClone);
+                    console.log(`Added model ${index + 1} (${model.userData.type}) to export group`);
+                });
+                
+                console.log(`Exporting ${allModels.length} HEIGHT-RESPONSIVE model(s) with all 5 geometries, venting: ${state.venting}`);
+                
+                const stlString = exporter.parse(exportGroup);
+                
+                const timestamp = new Date().toISOString().slice(0, 10);
+                const filename = `power_supply_holder_HEIGHT_RESPONSIVE_${state.configuration}_${state.venting}_${state.dimensions.length}x${state.dimensions.width}x${state.dimensions.height}${state.dimensions.units}_${state.color}_${timestamp}.stl`;
+                
+                const blob = new Blob([stlString], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+                
+                console.log(`✓ HEIGHT-RESPONSIVE STL exported successfully: ${filename}`);
+                console.log('=== STL EXPORT COMPLETED ===\n');
+                
+            } catch (error) {
+                console.error('Error exporting STL:', error);
+                alert('Error exporting STL file. Please try again.');
+            }
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // Edge clicking functionality for debugging
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        function onMouseClick(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            
+            const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels];
+            const intersects = raycaster.intersectObjects(allModels);
+            
+            if (intersects.length > 0) {
+                const intersectedObject = intersects[0].object;
+                const intersectionPoint = intersects[0].point;
+                const face = intersects[0].face;
+                
+                console.log('\n=== EDGE CLICK DEBUG INFO ===');
+                console.log(`Model: ${intersectedObject.name}`);
+                console.log(`Type: ${intersectedObject.userData.type}`);
+                console.log(`Geometry: ${state.geometry}`);
+                console.log(`Intersection Point:`, intersectionPoint);
+                console.log('=== END EDGE DEBUG INFO ===\n');
+            }
+        }
+        
+        renderer.domElement.addEventListener('click', onMouseClick, false);
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const newWidth = container.offsetWidth;
+            const newHeight = container.offsetHeight;
+            
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(newWidth, newHeight);
+        });
+        
+        // Initialize the first model
+        updateConfiguration();
+        
+        // Hide loading text
+        if (loadingText) {
+            setTimeout(() => {
+                loadingText.style.display = 'none';
+            }, 1000);
+        }
+        
+        // Initialize UI interactions
+        initializeUI();
+        
+        function initializeUI() {
+            // Geometry type selection
+            const geometryCards = document.querySelectorAll('.geometry-card');
+            geometryCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    geometryCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    state.geometry = this.dataset.geometry;
+                    console.log('Selected geometry:', state.geometry);
+                    updateConfiguration();
+                });
+            });
+
+            // Configuration options
+            const optionCards = document.querySelectorAll('.option-card');
+            optionCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    if (this.classList.contains('disabled')) {
+                        console.log('Configuration disabled:', this.dataset.config);
+                        return;
+                    }
+                    
+                    optionCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    state.configuration = this.dataset.config;
+                    console.log('Selected configuration:', state.configuration);
+                    updateConfiguration();
+                });
+            });
+            
+            // Venting options
+            const ventingCards = document.querySelectorAll('.venting-card');
+            ventingCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    ventingCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    state.venting = this.dataset.venting;
+                    console.log('Selected venting:', state.venting);
+                    updateVenting();
+                });
+            });
+            
+            // Production speed
+            const productionCards = document.querySelectorAll('.production-card');
+            productionCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    productionCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    state.production = this.dataset.speed;
+                    console.log('Selected production speed:', state.production);
+                });
+            });
+            
+            // Color selection
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    state.color = this.dataset.color;
+                    console.log('Selected color:', state.color);
+                    
+                    const colorMap = {
+                        'black': 0x1a1a1a,
+                        'red': 0xdc2626,
+                        'blue': 0x2563eb,
+                        'gray': 0x6b7280,
+                        'white': 0xffffff,
+                        'orange': 0xea580c,
+                        'green': 0x16a34a
+                    };
+                    currentColor = colorMap[this.dataset.color] || 0x1a1a1a;
+                    updateModelColors();
+                });
+            });
+            
+            // Dimension inputs
+            const dimensionInputs = document.querySelectorAll('#length, #width, #height');
+            dimensionInputs.forEach(input => {
+                const dimensionType = input.id;
+                input.min = state.initialDimensions[dimensionType];
+                
+                input.addEventListener('input', function() {
+                    const newValue = parseFloat(this.value) || 0;
+                    const minValue = state.initialDimensions[dimensionType];
+                    
+                    if (newValue < minValue && this.value !== '') {
+                        this.style.borderColor = '#ef4444';
+                        this.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)';
+                    } else {
+                        this.style.borderColor = '';
+                        this.style.boxShadow = '';
+                    }
+                    
+                    if (newValue >= minValue) {
+                        state.dimensions[dimensionType] = newValue;
+                        console.log(`${dimensionType}: ${newValue} (min: ${minValue})`);
+                        debouncedUpdateDimensions();
+                    }
+                });
+                
+                input.addEventListener('blur', function() {
+                    const newValue = parseFloat(this.value) || 0;
+                    const minValue = state.initialDimensions[dimensionType];
+                    
+                    if (newValue < minValue || this.value === '') {
+                        this.value = minValue;
+                        state.dimensions[dimensionType] = minValue;
+                        this.style.borderColor = '';
+                        this.style.boxShadow = '';
+                        updateDimensions();
+                        
+                        this.style.borderColor = '#f59e0b';
+                        setTimeout(() => {
+                            this.style.borderColor = '';
+                        }, 2000);
+                    }
+                });
+            });
+            
+            // Units selector
+            const unitsSelector = document.getElementById('units');
+            unitsSelector.addEventListener('change', function() {
+                const oldUnits = state.dimensions.units;
+                const newUnits = this.value;
+                
+                let conversionFactor = 1;
+                if (oldUnits === 'mm' && newUnits === 'cm') conversionFactor = 0.1;
+                else if (oldUnits === 'mm' && newUnits === 'in') conversionFactor = 0.0393701;
+                else if (oldUnits === 'cm' && newUnits === 'mm') conversionFactor = 10;
+                else if (oldUnits === 'cm' && newUnits === 'in') conversionFactor = 0.393701;
+                else if (oldUnits === 'in' && newUnits === 'mm') conversionFactor = 25.4;
+                else if (oldUnits === 'in' && newUnits === 'cm') conversionFactor = 2.54;
+                
+                ['length', 'width', 'height'].forEach(dim => {
+                    const newValue = state.dimensions[dim] * conversionFactor;
+                    const newMinValue = state.initialDimensions[dim] * conversionFactor;
+                    
+                    state.dimensions[dim] = newValue;
+                    state.initialDimensions[dim] = newMinValue;
+                    
+                    const input = document.getElementById(dim);
+                    input.value = newValue.toFixed(dim === 'height' ? 2 : 1);
+                    input.min = newMinValue;
+                    
+                    const hint = input.nextElementSibling;
+                    if (hint && hint.classList.contains('dimension-hint')) {
+                        hint.textContent = `Minimum: ${newMinValue.toFixed(dim === 'height' ? 2 : 1)}`;
+                    }
+                });
+                
+                state.dimensions.units = newUnits;
+                console.log(`Units changed from ${oldUnits} to ${newUnits}, conversion factor: ${conversionFactor}`);
+                updateDimensions();
+            });
+            
+            // Usage description
+            const usageDescription = document.getElementById('usage-description');
+            usageDescription.addEventListener('input', function() {
+                console.log('Usage description:', this.value);
+            });
+            
+            // Add to cart button
+            const addToCartBtn = document.querySelector('.add-to-cart-btn');
+            addToCartBtn.addEventListener('click', function() {
+                console.log('Add to cart clicked');
+                console.log('Current state:', state);
+            });
+            
+            // Export STL button
+            const exportBtn = document.querySelector('.export-stl-btn');
+            exportBtn.addEventListener('click', function() {
+                console.log('Export STL clicked');
+                exportSTL();
+            });
+        }
+        
+        console.log('✓ HEIGHT-RESPONSIVE MODEL WITH DYNAMIC SECONDARY HOLES: Left/right sides scale Y by 1.5% per unit height increase, rounded hole shrinks 2% per unit height increase, secondary parts maintain proper hole spacing at all dimensions');
+    });
+    </script>
+
+</body>
+</html>

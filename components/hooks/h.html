@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secondary Geometry Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .main-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-section h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+        .viewer-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .viewer-canvas {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: #f8fafc;
+        }
+
+        .loading-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #64748b;
+        }
+
+        .controls-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .venting-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .venting-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .venting-card:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .venting-card.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .venting-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .color-option.active {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+
+        .color-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .export-button {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .export-button:hover {
+            background: #047857;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1>Secondary Geometry Viewer</h1>
+        <p class="subtitle">Testing and visualizing the secondary geometry component</p>
+    </div>
+
+    <!-- 3D Viewer -->
+    <div class="viewer-section">
+        <div id="model-container" class="viewer-canvas">
+            <div class="loading-text" id="loading-model">
+                Loading Secondary Geometry...
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Section -->
+    <div class="controls-section">
+        <h2 style="margin-bottom: 15px;">Geometry Controls</h2>
+        
+        <div class="controls-grid">
+            <div class="input-group">
+                <label for="length">Length</label>
+                <input type="number" id="length" value="100" step="0.1" min="50">
+            </div>
+            <div class="input-group">
+                <label for="width">Width</label>
+                <input type="number" id="width" value="53" step="0.1" min="25">
+            </div>
+            <div class="input-group">
+                <label for="height">Height</label>
+                <input type="number" id="height" value="2.57" step="0.01" min="1">
+            </div>
+            <div class="input-group">
+                <label for="units">Units</label>
+                <select id="units">
+                    <option value="mm">Millimeters (mm)</option>
+                    <option value="cm">Centimeters (cm)</option>
+                    <option value="in">Inches (in)</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <label>Venting Options</label>
+            <div class="venting-options">
+                <div class="venting-card active" data-venting="sealed">
+                    <div class="venting-icon">🔒</div>
+                    <h3>Sealed</h3>
+                </div>
+                <div class="venting-card" data-venting="vented">
+                    <div class="venting-icon">💨</div>
+                    <h3>Vented</h3>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <label>Color Selection</label>
+            <div class="color-options">
+                <div class="color-option active" data-color="black">
+                    <div class="color-circle" style="background-color: #1a1a1a;"></div>
+                    <span>Black</span>
+                </div>
+                <div class="color-option" data-color="red">
+                    <div class="color-circle" style="background-color: #dc2626;"></div>
+                    <span>Red</span>
+                </div>
+                <div class="color-option" data-color="blue">
+                    <div class="color-circle" style="background-color: #2563eb;"></div>
+                    <span>Blue</span>
+                </div>
+                <div class="color-option" data-color="gray">
+                    <div class="color-circle" style="background-color: #6b7280;"></div>
+                    <span>Gray</span>
+                </div>
+                <div class="color-option" data-color="white">
+                    <div class="color-circle" style="background-color: #ffffff; border: 1px solid #ccc;"></div>
+                    <span>White</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="export-button" id="export-btn">📁 Export STL File</button>
+    </div>
+</div>
+
+<!-- Three.js Script -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.152.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.152.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing Secondary Geometry Viewer...');
+    
+    const container = document.getElementById('model-container');
+    const loadingText = document.getElementById('loading-model');
+    
+    // Scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0xf8fafc, 1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+    
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+    
+    const pointLight = new THREE.PointLight(0xffffff, 0.4);
+    pointLight.position.set(-5, -5, 2);
+    scene.add(pointLight);
+    
+    // Camera position
+    camera.position.set(2, 2, 3);
+    
+    // OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(0, 0, 0);
+    
+    // State
+    let currentModel = null;
+    let currentColor = 0x1a1a1a;
+    const state = {
+        dimensions: { length: 100, width: 53, height: 2.57, units: 'mm' },
+        venting: 'sealed'
+    };
+    
+    // Material creation
+    const createPlasticMaterial = (color) => {
+        return new THREE.MeshPhongMaterial({ 
+            color: color,
+            shininess: 30,        
+            specular: 0x222222,   
+            transparent: false,
+            opacity: 1.0,
+            side: THREE.DoubleSide
+        });
+    };
+    
+    // CREATE SECONDARY GEOMETRY FUNCTION
+    function createSecondaryPart(totalWidth, height, depth, ventingMode = null) {
+        const currentVenting = ventingMode || state.venting;
+        console.log(`Creating secondary part: ${totalWidth}x${height/2}x${depth}, venting: ${currentVenting}`);
+        
+        let conversionFactor = 1;
+        if (state.dimensions.units === 'cm') {
+            conversionFactor = 10;
+        } else if (state.dimensions.units === 'in') {
+            conversionFactor = 25.4;
+        }
+        
+        totalWidth *= conversionFactor;
+        height *= conversionFactor;
+        depth *= conversionFactor;
+        
+        // Secondary geometry uses half height
+        height = height / 2;
+        
+        const initialWidthMM = 53 * conversionFactor; // Base reference width
+        const widthScaleFactor = totalWidth / initialWidthMM;
+        
+        const displayScale = 2 / 100;
+        totalWidth *= displayScale;
+        height *= displayScale;
+        depth *= displayScale;
+        const initialWidthDisplay = initialWidthMM * displayScale;
+        
+        const baseCapsuleWidth = Math.min(initialWidthDisplay * 0.28, height * 0.8) * 1.65;
+        const capsuleHeight = Math.min(height * 0.40, initialWidthDisplay * 0.24) * 1.5;
+        const capsuleRadius = capsuleHeight / 2;
+        const capsuleWidth = Math.min(baseCapsuleWidth * Math.sqrt(widthScaleFactor), height * 0.9);
+        
+        // Helper functions for capsule holes
+        function createCapsuleHole(centerX, centerY) {
+            const capsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            capsuleHole.moveTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            capsuleHole.absarc(centerX + halfWidth - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            capsuleHole.lineTo(centerX - halfWidth + capsuleRadius, centerY - halfHeight);
+            capsuleHole.absarc(centerX - halfWidth + capsuleRadius, centerY, capsuleRadius, -Math.PI/2, Math.PI/2, true);
+            capsuleHole.lineTo(centerX + halfWidth - capsuleRadius, centerY + halfHeight);
+            
+            return capsuleHole;
+        }
+
+        function createHalfCapsuleHole(centerX, centerY) {
+            const halfCapsuleHole = new THREE.Path();
+            const halfHeight = capsuleHeight / 2;
+            const halfWidth = capsuleWidth / 2;
+            
+            const cutoffPosition = centerX - halfWidth * 0.85;
+            const rightEnd = centerX + halfWidth;
+            
+            halfCapsuleHole.moveTo(cutoffPosition, centerY + halfHeight);
+            halfCapsuleHole.lineTo(rightEnd - capsuleRadius, centerY + halfHeight);
+            halfCapsuleHole.absarc(rightEnd - capsuleRadius, centerY, capsuleRadius, Math.PI/2, -Math.PI/2, true);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY - halfHeight);
+            halfCapsuleHole.lineTo(cutoffPosition, centerY + halfHeight);
+            
+            return halfCapsuleHole;
+        }
+
+        // CREATE MAIN SHAPE
+        const mainShape = new THREE.Shape();
+        mainShape.moveTo(-totalWidth/2, -height/2);
+        mainShape.lineTo(totalWidth/2, -height/2);
+        mainShape.lineTo(totalWidth/2, height/2);
+        mainShape.lineTo(-totalWidth/2, height/2);
+        mainShape.lineTo(-totalWidth/2, -height/2);
+
+        // Add venting holes if selected
+        if (currentVenting === 'vented') {
+            const availableWidth = totalWidth - (capsuleWidth * 1.1);
+            const optimalSpacing = Math.min(capsuleWidth * 0.6, availableWidth * 0.25);
+            
+            const leftCenterCapsuleHole = createHalfCapsuleHole(-optimalSpacing, 0);
+            const rightCenterCapsuleHole = createCapsuleHole(optimalSpacing, 0);
+
+            mainShape.holes.push(leftCenterCapsuleHole);
+            mainShape.holes.push(rightCenterCapsuleHole);
+            console.log('✓ Added capsule holes for venting');
+        }
+
+        // CREATE SEAMLESS ASYMMETRIC GEOMETRY
+        // Start with beveled extrusion
+        const extrudeSettings = {
+            depth: depth,
+            bevelEnabled: true,
+            bevelThickness: depth * 0.4,   // 40% of depth for very high bevels
+            bevelSize: depth * 0.3,        // 30% of depth for very wide bevels
+            bevelSegments: 8,              // Ultra-smooth transitions
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(mainShape, extrudeSettings);
+        geometry.translate(0, 0, -depth/2);
+
+        // POST-PROCESS: Flatten the back face while keeping front face beveled
+        const positions = geometry.attributes.position.array;
+        const backZ = -depth/2; // Back face Z position
+        const tolerance = depth * 0.05; // Tolerance for identifying back face vertices
+        
+        // Find and flatten back face vertices
+        for (let i = 0; i < positions.length; i += 3) {
+            const z = positions[i + 2];
+            
+            // If vertex is on the back face (within tolerance), snap it to exact back position
+            if (z <= backZ + tolerance) {
+                positions[i + 2] = backZ; // Flatten to exact back Z position
+            }
+        }
+        
+        // Update the geometry with modified positions
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals(); // Recompute normals for proper lighting
+
+        console.log('✓ Seamless asymmetric secondary geometry: BACK face flat, FRONT face beveled');
+        console.log('✓ Single continuous piece with no seams');
+        return geometry;
+    }
+    
+    // Update the model
+    function updateModel() {
+        // Remove existing model
+        if (currentModel) {
+            scene.remove(currentModel);
+        }
+        
+        // Create new secondary geometry
+        const geometry = createSecondaryPart(
+            state.dimensions.length, 
+            state.dimensions.width, 
+            state.dimensions.height,
+            state.venting
+        );
+        
+        const material = createPlasticMaterial(currentColor);
+        currentModel = new THREE.Mesh(geometry, material);
+        
+        currentModel.castShadow = true;
+        currentModel.receiveShadow = true;
+        currentModel.rotation.z = Math.PI / 2;
+        currentModel.rotation.y = Math.PI / 2;
+        
+        scene.add(currentModel);
+        
+        // Adjust camera to fit the model
+        const box = new THREE.Box3().setFromObject(currentModel);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        const maxSize = Math.max(size.x, size.y, size.z);
+        const distance = maxSize * 2;
+        
+        controls.target.copy(center);
+        controls.update();
+        
+        console.log('Model updated successfully');
+    }
+    
+    // Export STL function
+    function exportSTL() {
+        if (!currentModel) {
+            alert('No model to export');
+            return;
+        }
+        
+        try {
+            const exporter = new STLExporter();
+            const stlString = exporter.parse(currentModel);
+            
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `secondary_geometry_${state.dimensions.length}x${state.dimensions.width}x${state.dimensions.height}${state.dimensions.units}_${state.venting}_${timestamp}.stl`;
+            
+            const blob = new Blob([stlString], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+            
+            console.log(`STL exported: ${filename}`);
+            
+        } catch (error) {
+            console.error('Error exporting STL:', error);
+            alert('Error exporting STL file');
+        }
+    }
+    
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+    
+    // Initialize UI
+    function initializeUI() {
+        // Dimension inputs
+        const dimensionInputs = document.querySelectorAll('#length, #width, #height');
+        dimensionInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                state.dimensions[this.id] = value;
+                updateModel();
+            });
+        });
+        
+        // Units selector
+        document.getElementById('units').addEventListener('change', function() {
+            const oldUnits = state.dimensions.units;
+            const newUnits = this.value;
+            
+            let conversionFactor = 1;
+            if (oldUnits === 'mm' && newUnits === 'cm') conversionFactor = 0.1;
+            else if (oldUnits === 'mm' && newUnits === 'in') conversionFactor = 0.0393701;
+            else if (oldUnits === 'cm' && newUnits === 'mm') conversionFactor = 10;
+            else if (oldUnits === 'cm' && newUnits === 'in') conversionFactor = 0.393701;
+            else if (oldUnits === 'in' && newUnits === 'mm') conversionFactor = 25.4;
+            else if (oldUnits === 'in' && newUnits === 'cm') conversionFactor = 2.54;
+            
+            ['length', 'width', 'height'].forEach(dim => {
+                const newValue = state.dimensions[dim] * conversionFactor;
+                state.dimensions[dim] = newValue;
+                document.getElementById(dim).value = newValue.toFixed(dim === 'height' ? 2 : 1);
+            });
+            
+            state.dimensions.units = newUnits;
+            updateModel();
+        });
+        
+        // Venting options
+        const ventingCards = document.querySelectorAll('.venting-card');
+        ventingCards.forEach(card => {
+            card.addEventListener('click', function() {
+                ventingCards.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                state.venting = this.dataset.venting;
+                updateModel();
+            });
+        });
+        
+        // Color options
+        const colorOptions = document.querySelectorAll('.color-option');
+        colorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                colorOptions.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                
+                const colorMap = {
+                    'black': 0x1a1a1a,
+                    'red': 0xdc2626,
+                    'blue': 0x2563eb,
+                    'gray': 0x6b7280,
+                    'white': 0xffffff
+                };
+                currentColor = colorMap[this.dataset.color] || 0x1a1a1a;
+                
+                if (currentModel) {
+                    currentModel.material = createPlasticMaterial(currentColor);
+                }
+            });
+        });
+        
+        // Export button
+        document.getElementById('export-btn').addEventListener('click', exportSTL);
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        const newWidth = container.offsetWidth;
+        const newHeight = container.offsetHeight;
+        
+        camera.aspect = newWidth / newHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(newWidth, newHeight);
+    });
+    
+    // Initialize everything
+    initializeUI();
+    updateModel();
+    
+    // Hide loading text
+    setTimeout(() => {
+        if (loadingText) {
+            loadingText.style.display = 'none';
+        }
+    }, 1000);
+    
+    console.log('Secondary Geometry Viewer initialized successfully');
+});
+</script>
+
+</body>
+</html>

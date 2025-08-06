@@ -71,10 +71,6 @@ const pinkGlowFragmentShader = `
 `;
 
 // --- Modified Black Blob Fragment Shader ---
-// Key changes:
-// - Added uFluidRippleStrength uniform.
-// - Removed internal fadeIn logic from fluidRipples function.
-// - Applied uFluidRippleStrength in main() where fluidRipples are added.
 const blackBlobFragmentShader = `
   varying vec2 vUv;
   uniform float uTime;
@@ -88,7 +84,8 @@ const blackBlobFragmentShader = `
   uniform float uTransitionProgress;
   uniform bool uHasClickRipple;
   uniform bool uFromSpeaking; // Track if transitioning from speaking to listening
-  uniform float uFluidRippleStrength; // NEW UNIFORM FOR SMOOTHER RIPPLE CONTROL
+  uniform float uFluidRippleStrength; // Uniform for smoother ripple control
+  uniform float uBlobRadius; // Dynamic blob radius for relative shadow sizing
   
   float random(vec2 st) {
     return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -141,22 +138,22 @@ const blackBlobFragmentShader = `
     
     if (time <= 0.0) return 0.0;
     
-    float waveSpeed = 0.42;
-    float waveRadius = time * waveSpeed;
+    float waveSpeed = 0.462;
+    float waveRadius = time * waveSpeed * 1.1;
     
     float distFromWave = dist - waveRadius;
     
     float waveLength = 0.12;
-    float amplitude = 0.03;
+    float amplitude = 0.05;
     
     float pushPull = sin(distFromWave / waveLength * 6.28318) * amplitude;
-    float envelope = exp(-abs(distFromWave) / 0.06);
-    float timeDecay = exp(-time * 1.0); // Faster decay to complete in ~1s
+    float envelope = exp(-abs(distFromWave) / 0.08);
+    float timeDecay = exp(-time * 1.0);
     
     return pushPull * envelope * timeDecay;
   }
   
-  // Fluid edge ripples - REMOVED INTERNAL FADE-IN
+  // Fluid edge ripples
   float fluidRipples(vec2 pos, float time) {
     if (time < 0.0) return 0.0;
     
@@ -172,7 +169,7 @@ const blackBlobFragmentShader = `
     
     float timeVariation = sin(adjustedTime * 0.8) * 0.1 + 0.9;
     
-    return totalRipple * timeVariation; // Return raw ripple value
+    return totalRipple * timeVariation;
   }
   
   void main() {
@@ -195,27 +192,24 @@ const blackBlobFragmentShader = `
         rippleDistortion += waterRipple(vUv, uClickPos, uClickRippleTime);
       }
       
-      // Add circle formation during listening
+      // Circle formation during listening
       if (uFromSpeaking) {
-        // When coming from speaking, start circle formation from fluid ripples state
-        // Fluid ripples themselves are faded out by uFluidRippleStrength in JS
-        float fluidRipplesBase = dist + fluidRipples(pos, uEdgeRippleTime); // Get the ripple pattern
+        // When coming from speaking, transition from fluid ripples state to clean circle
+        float fluidRipplesBase = dist + fluidRipples(pos, uEdgeRippleTime) * uFluidRippleStrength;
         baseShape = mix(fluidRipplesBase, dist, uCircleProgress);
       } else {
-        // When coming from disconnected, start circle formation from organic blob
+        // When coming from disconnected, transition from organic blob to circle
         baseShape = mix(blobDist, dist, uCircleProgress);
       }
-      // Ensure no fluid ripples visually when in listening, as uFluidRippleStrength is 0
-      // during this phase via JS.
     }
     else if (uAnimationState == 2) { // Speaking - circle formation + fluid ripples
       float dist = length(pos);
       float blobDist = organicBlob(pos, uTime);
       
-      // Interpolate between organic blob and circle based on progress (uCircleProgress is 1.0 here)
-      baseShape = mix(blobDist, dist, uCircleProgress);
+      // Maintain circle shape with fluid ripples
+      baseShape = dist; // Always circle in speaking
       
-      // Add fluid ripples, now scaled by uFluidRippleStrength
+      // Add fluid ripples, scaled by uFluidRippleStrength
       rippleDistortion += fluidRipples(pos, uEdgeRippleTime) * uFluidRippleStrength;
     }
     else if (uAnimationState == 3) { // Transitioning - ease from circle back to organic blob
@@ -232,15 +226,15 @@ const blackBlobFragmentShader = `
     
     float distortedDist = baseShape + rippleDistortion;
     
-    // Main blob rendering (kept intact)
-    float blobRadius = 0.35;
+    // Main blob rendering with dynamic radius
+    float blobRadius = uBlobRadius;
     float blobBlurAmount = 0.00013;
     
     float borderWidth = 0.044;
     float borderOuterRadius = blobRadius + borderWidth;
     float borderInnerRadius = blobRadius;
     
-    float borderCore = 1.05- smoothstep(borderInnerRadius, blobRadius, distortedDist);
+    float borderCore = 1.05 - smoothstep(borderInnerRadius, blobRadius, distortedDist);
     float borderOuter = 1.0 - smoothstep(blobRadius, borderOuterRadius, distortedDist);
     
     float noiseTexture = fbm(vUv * 2.0) * 0.3 + 0.5;
@@ -248,11 +242,12 @@ const blackBlobFragmentShader = `
     
     float blob = 1.0 - smoothstep(blobRadius - blobBlurAmount, blobRadius + blobBlurAmount, distortedDist);
     
+    // Shadow with relative sizing (20% larger than blob)
     float shadowOffset = 0.008;
     vec2 shadowPos = pos + vec2(shadowOffset, -shadowOffset);
     float shadowDist = baseShape + rippleDistortion;
-    float shadowBlurAmount = 9.15;
-    float shadowOuterRadius = blobRadius + uStrokeWidth;
+    float shadowBlurAmount = blobRadius * 0.3; // Relative to blob size
+    float shadowOuterRadius = blobRadius * 1.2; // 20% larger than blob
     
     float shadow = smoothstep(blobRadius, blobRadius + shadowBlurAmount, shadowDist) * (1.0 - smoothstep(shadowOuterRadius - shadowBlurAmount, shadowOuterRadius, shadowDist));
     float shadowSoftness = 1.0 - smoothstep(blobRadius, shadowOuterRadius, shadowDist);
@@ -338,8 +333,8 @@ function PinkGlowBlob({ shouldRestart, onRestartComplete }) {
   });
   
   return (
-    <mesh ref={meshRef} position={[0.5, -0.64, -0.001]}>
-      <planeGeometry args={[8.5, 8.5]}/>
+    <mesh ref={meshRef} position={[0.2, -0.41, -0.001]} >
+      <planeGeometry args={[7, 7]}/>
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
@@ -353,28 +348,26 @@ function PinkGlowBlob({ shouldRestart, onRestartComplete }) {
 }
 
 // --- MODIFIED BlackBlob Component ---
-function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBlur = .1, shouldRestart, onRestartComplete}) {
+function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleStateChange, strokeWidth = 0.035, strokeBlur = .1, shouldRestart, onRestartComplete}) {
   const meshRef = useRef();
   const materialRef = useRef();
   const [hasScaled, setHasScaled] = useState(false);
-  const [cssRipples, setCssRipples] = useState([]); // Note: CSS ripples are handled in Scene now. This state is redundant here but kept as per instruction.
   const [clickData, setClickData] = useState({
     hasClick: false,
     clickPos: [0.5, 0.5],
     clickTime: 0,
-    fromSpeaking: false // Track if click came from speaking state
+    fromSpeaking: false
   });
   const [circleProgress, setCircleProgress] = useState(0);
   const [transitionProgress, setTransitionProgress] = useState(0);
-  const [pendingSpeakingTransition, setPendingSpeakingTransition] = useState(false);
-  const [fluidRippleStrength, setFluidRippleStrength] = useState(0); // NEW: State for fluid ripple intensity
+  const [fluidRippleStrength, setFluidRippleStrength] = useState(0);
 
   const startTime = useRef(null);
   const edgeRippleStartTime = useRef(null);
   const clickStartTime = useRef(null);
   const circleStartTime = useRef(null);
   const transitionStartTime = useRef(null);
-  const speakingTransitionTimeoutRef = useRef(null);
+  const rippleTimeoutRef = useRef(null);
   const { camera, gl } = useThree();
   
   // Handle restart
@@ -384,9 +377,7 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       setClickData({ hasClick: false, clickPos: [0.5, 0.5], clickTime: 0, fromSpeaking: false });
       setCircleProgress(0);
       setTransitionProgress(0);
-      setPendingSpeakingTransition(false);
-      setCssRipples([]); // Reset CSS ripples
-      setFluidRippleStrength(0); // Reset fluid ripple strength on restart
+      setFluidRippleStrength(0);
       
       startTime.current = null;
       edgeRippleStartTime.current = null;
@@ -394,9 +385,9 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       circleStartTime.current = null;
       transitionStartTime.current = null;
       
-      if (speakingTransitionTimeoutRef.current) {
-        clearTimeout(speakingTransitionTimeoutRef.current);
-        speakingTransitionTimeoutRef.current = null;
+      if (rippleTimeoutRef.current) {
+        clearTimeout(rippleTimeoutRef.current);
+        rippleTimeoutRef.current = null;
       }
       
       if (meshRef.current) {
@@ -411,13 +402,14 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
     uClickRippleTime: { value: 0 },
     uStrokeWidth: { value: strokeWidth },
     uStrokeBlur: { value: strokeBlur },
-    uAnimationState: { value: 0 }, // 0=disconnected, 1=listening, 2=speaking, 3=transitioning
+    uAnimationState: { value: 0 },
     uEdgeRippleTime: { value: 0 },
     uCircleProgress: { value: 0 },
     uTransitionProgress: { value: 0 },
     uHasClickRipple: { value: false },
     uFromSpeaking: { value: false },
-    uFluidRippleStrength: { value: 0.0 } // NEW UNIFORM
+    uFluidRippleStrength: { value: 0.0 },
+    uBlobRadius: { value: 0.35 } // Dynamic blob radius
   }), [strokeWidth, strokeBlur]);
   
   // Handle useragent prop changes and animation triggers
@@ -426,55 +418,54 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       setClickData({ hasClick: false, clickPos: [0.5, 0.5], clickTime: 0, fromSpeaking: false });
       setCircleProgress(0);
       setTransitionProgress(0);
-      setPendingSpeakingTransition(false);
       edgeRippleStartTime.current = null;
       clickStartTime.current = null;
       circleStartTime.current = null;
       transitionStartTime.current = null;
-      setFluidRippleStrength(0); // Ensure fluid ripples are off
+      setFluidRippleStrength(0);
       
-      if (speakingTransitionTimeoutRef.current) {
-        clearTimeout(speakingTransitionTimeoutRef.current);
-        speakingTransitionTimeoutRef.current = null;
+      if (rippleTimeoutRef.current) {
+        clearTimeout(rippleTimeoutRef.current);
+        rippleTimeoutRef.current = null;
+      }
+      
+      if (onRippleStateChange) {
+        onRippleStateChange(false);
       }
     } else if (useragent === 'listening') {
       setTransitionProgress(0);
       transitionStartTime.current = null;
-      setFluidRippleStrength(0); // Ensure fluid ripples are off when entering listening
       
-      // Clear any pending speaking transitions when entering listening
-      if (speakingTransitionTimeoutRef.current) {
-        clearTimeout(speakingTransitionTimeoutRef.current);
-        speakingTransitionTimeoutRef.current = null;
-      }
-      setPendingSpeakingTransition(false);
+      // Delay circle formation when coming from speaking to show ripple first
+      const circleDelay = clickData.fromSpeaking ? 300 : 0; // 300ms delay when coming from speaking
       
-      // Start circle formation after water ripple (1s), but only if not from speaking
-      if (!clickData.fromSpeaking) {
-        const circleFormationTimeout = setTimeout(() => {
-          if (circleStartTime.current === null) {
-            circleStartTime.current = Date.now();
-          }
-        }, 1000); // Start circle formation after 1s water ripple
-        
-        // Auto-transition to speaking after total 1.5s (1s water + 0.5s circle)
-        const autoTransitionTimeout = setTimeout(() => {
-          if (onUseragentChange) {
-            onUseragentChange('speaking');
-          }
-        }, 1500);
-        
-        return () => {
-          clearTimeout(circleFormationTimeout);
-          clearTimeout(autoTransitionTimeout);
-        };
-      } else {
-        // From speaking - start circle formation immediately (no water ripple)
-        // Fluid ripples fade out during this 0.5s circle formation
+      setTimeout(() => {
+        // Start circle formation after delay
         if (circleStartTime.current === null) {
           circleStartTime.current = Date.now();
         }
-        // Stay in listening state - no auto-transition back to speaking
+      }, circleDelay);
+      
+      // Set appropriate fluid ripple strength based on origin
+      if (clickData.fromSpeaking) {
+        // Coming from speaking - start with ripples and fade them out
+        setFluidRippleStrength(1.0);
+        // Animate fluid ripples fade-out - slower for smoother transition
+        const strengthFadeOutDuration = 1.2;
+        const strengthStartTime = Date.now();
+        const animateStrength = () => {
+          const elapsed = (Date.now() - strengthStartTime) / 1000;
+          const progress = Math.min(elapsed / strengthFadeOutDuration, 1.0);
+          const easedProgress = 1 - Math.pow(1 - progress, 3);
+          setFluidRippleStrength(1.0 - easedProgress);
+          if (progress < 1.0) {
+            requestAnimationFrame(animateStrength);
+          }
+        };
+        requestAnimationFrame(animateStrength);
+      } else {
+        // Coming from disconnected - no fluid ripples
+        setFluidRippleStrength(0);
       }
     } else if (useragent === 'speaking') {
       if (edgeRippleStartTime.current === null) {
@@ -482,53 +473,45 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       }
       setTransitionProgress(0);
       transitionStartTime.current = null;
-      // Reset circle formation for potential re-listening
-      circleStartTime.current = null;
-      setCircleProgress(0);
-      setPendingSpeakingTransition(false);
+      setCircleProgress(1.0); // Immediately circle in speaking
       
-      if (speakingTransitionTimeoutRef.current) {
-        clearTimeout(speakingTransitionTimeoutRef.current);
-        speakingTransitionTimeoutRef.current = null;
+      if (onRippleStateChange) {
+        onRippleStateChange(false);
       }
-
-      // NEW: Animate fluidRippleStrength from 0 to 1 for smooth fade-in
-      const strengthFadeInDuration = 0.7; // Adjust as needed
+      
+      // Animate fluid ripples fade-in
+      const strengthFadeInDuration = 0.7;
       const strengthStartTime = Date.now();
       const animateStrength = () => {
-          const elapsed = (Date.now() - strengthStartTime) / 1000;
-          const progress = Math.min(elapsed / strengthFadeInDuration, 1.0);
-          const easedProgress = 1 - Math.pow(1 - progress, 3); // Ease-out for fade-in
-          setFluidRippleStrength(easedProgress);
-          if (progress < 1.0) {
-              requestAnimationFrame(animateStrength);
-          }
+        const elapsed = (Date.now() - strengthStartTime) / 1000;
+        const progress = Math.min(elapsed / strengthFadeInDuration, 1.0);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        setFluidRippleStrength(easedProgress);
+        if (progress < 1.0) {
+          requestAnimationFrame(animateStrength);
+        }
       };
       requestAnimationFrame(animateStrength);
-
     } else if (useragent === 'transitioning') {
-      // Start transition back to disconnected
       if (transitionStartTime.current === null) {
         transitionStartTime.current = Date.now();
       }
       
-      setPendingSpeakingTransition(false);
-      if (speakingTransitionTimeoutRef.current) {
-        clearTimeout(speakingTransitionTimeoutRef.current);
-        speakingTransitionTimeoutRef.current = null;
+      if (onRippleStateChange) {
+        onRippleStateChange(false);
       }
       
-      // NEW: Animate fluidRippleStrength from 1 to 0 for smooth fade-out
-      const strengthFadeOutDuration = 0.7; // Adjust as needed
+      // Animate fluid ripples fade-out
+      const strengthFadeOutDuration = 0.7;
       const strengthStartTime = Date.now();
       const animateStrength = () => {
-          const elapsed = (Date.now() - strengthStartTime) / 1000;
-          const progress = Math.min(elapsed / strengthFadeOutDuration, 1.0);
-          const easedProgress = 1 - Math.pow(1 - progress, 3); // Ease-out
-          setFluidRippleStrength(1.0 - easedProgress); // From 1.0 down to 0.0
-          if (progress < 1.0) {
-              requestAnimationFrame(animateStrength);
-          }
+        const elapsed = (Date.now() - strengthStartTime) / 1000;
+        const progress = Math.min(elapsed / strengthFadeOutDuration, 1.0);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        setFluidRippleStrength(1.0 - easedProgress);
+        if (progress < 1.0) {
+          requestAnimationFrame(animateStrength);
+        }
       };
       requestAnimationFrame(animateStrength);
 
@@ -541,7 +524,7 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       
       return () => clearTimeout(transitionTimeout);
     }
-  }, [useragent, onUseragentChange, clickData.fromSpeaking]);
+  }, [useragent, onUseragentChange, clickData.fromSpeaking, onRippleStateChange]);
   
   const handleClick = (event) => {
     event.stopPropagation();
@@ -556,10 +539,18 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
     const screenX = (event.clientX - rect.left) / rect.width;
     const screenY = 1.0 - (event.clientY - rect.top) / rect.height;
     
+    // Add CSS ripple through callback
+    if (onAddCssRipple) {
+      onAddCssRipple({
+        id: Date.now(),
+        x: event.clientX,
+        y: event.clientY
+      });
+    }
+    
     if (useragent === 'disconnected') {
       console.log('Click detected from disconnected - setting to listening with water ripple');
       
-      // Set click data with water ripple
       setClickData({
         hasClick: true,
         clickPos: [screenX, screenY],
@@ -568,32 +559,62 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       });
       clickStartTime.current = Date.now();
       
-      // Change useragent to listening
+      // Notify parent that ripple is active
+      if (onRippleStateChange) {
+        onRippleStateChange(true);
+      }
+      
+      // Set timeout to end ripple state after 1 second (water ripple duration)
+      if (rippleTimeoutRef.current) {
+        clearTimeout(rippleTimeoutRef.current);
+      }
+      
+      rippleTimeoutRef.current = setTimeout(() => {
+        if (onRippleStateChange) {
+          onRippleStateChange(false);
+        }
+        rippleTimeoutRef.current = null;
+      }, 1000);
+      
       if (onUseragentChange) {
         onUseragentChange('listening');
       }
       
     } else if (useragent === 'speaking') {
-      console.log('Click detected from speaking - setting to listening without water ripple');
+      console.log('Click detected from speaking - setting to listening with water ripple');
       
-      // Set click data without water ripple
       setClickData({
-        hasClick: false, // No water ripple for speaking clicks
+        hasClick: true,
         clickPos: [screenX, screenY],
         clickTime: 0,
         fromSpeaking: true
       });
-      clickStartTime.current = null; // No water ripple timing needed
+      clickStartTime.current = Date.now();
       
-      // Change useragent to listening
+      // Notify parent that ripple is active
+      if (onRippleStateChange) {
+        onRippleStateChange(true);
+      }
+      
+      // Set timeout to end ripple state after 1 second
+      if (rippleTimeoutRef.current) {
+        clearTimeout(rippleTimeoutRef.current);
+      }
+      
+      rippleTimeoutRef.current = setTimeout(() => {
+        if (onRippleStateChange) {
+          onRippleStateChange(false);
+        }
+        rippleTimeoutRef.current = null;
+      }, 1000);
+      
       if (onUseragentChange) {
         onUseragentChange('listening');
       }
       
     } else if (useragent === 'listening') {
-      console.log('Click detected from listening - water ripple first, then transition to speaking');
+      console.log('Click detected from listening - adding water ripple');
       
-      // Set click data with water ripple
       setClickData({
         hasClick: true,
         clickPos: [screenX, screenY],
@@ -602,22 +623,21 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       });
       clickStartTime.current = Date.now();
       
-      // Set pending speaking transition flag
-      setPendingSpeakingTransition(true);
-      
-      // Clear any existing timeout
-      if (speakingTransitionTimeoutRef.current) {
-        clearTimeout(speakingTransitionTimeoutRef.current);
+      // Notify parent that ripple is active
+      if (onRippleStateChange) {
+        onRippleStateChange(true);
       }
       
-      // Transition to speaking after water ripple completes (1 second)
-      speakingTransitionTimeoutRef.current = setTimeout(() => {
-        console.log('Water ripple complete - transitioning to speaking');
-        if (onUseragentChange) {
-          onUseragentChange('speaking');
+      // Set timeout to end ripple state after 1 second
+      if (rippleTimeoutRef.current) {
+        clearTimeout(rippleTimeoutRef.current);
+      }
+      
+      rippleTimeoutRef.current = setTimeout(() => {
+        if (onRippleStateChange) {
+          onRippleStateChange(false);
         }
-        setPendingSpeakingTransition(false);
-        speakingTransitionTimeoutRef.current = null;
+        rippleTimeoutRef.current = null;
       }, 1000);
     }
   };
@@ -629,7 +649,7 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       materialRef.current.uniforms.uTime.value = time;
       materialRef.current.uniforms.uStrokeWidth.value = strokeWidth;
       materialRef.current.uniforms.uStrokeBlur.value = strokeBlur;
-      materialRef.current.uniforms.uFluidRippleStrength.value = fluidRippleStrength; // NEW: Pass strength to shader
+      materialRef.current.uniforms.uFluidRippleStrength.value = fluidRippleStrength;
       
       const now = Date.now();
       
@@ -640,12 +660,14 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
         materialRef.current.uniforms.uEdgeRippleTime.value = 0;
         materialRef.current.uniforms.uCircleProgress.value = 0;
         materialRef.current.uniforms.uTransitionProgress.value = 0;
+        materialRef.current.uniforms.uFromSpeaking.value = false;
       }
       else if (useragent === 'listening') {
         materialRef.current.uniforms.uAnimationState.value = 1;
+        materialRef.current.uniforms.uFromSpeaking.value = clickData.fromSpeaking;
         
-        // Handle click ripple (only for clicks from disconnected OR when pending speaking transition)
-        if (clickData.hasClick && clickStartTime.current && (!clickData.fromSpeaking || pendingSpeakingTransition)) {
+        // Handle click ripple
+        if (clickData.hasClick && clickStartTime.current) {
           const clickElapsed = (now - clickStartTime.current) / 1000;
           materialRef.current.uniforms.uHasClickRipple.value = true;
           materialRef.current.uniforms.uClickRippleTime.value = clickElapsed;
@@ -657,10 +679,9 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
         // Handle circle formation during listening
         if (circleStartTime.current) {
           const circleElapsed = (now - circleStartTime.current) / 1000;
-          const circleFormationDuration = 0.5; // 0.5s for circle formation
+          const circleFormationDuration = clickData.fromSpeaking ? 1.0 : 0.5; // Even longer when coming from speaking
           const progress = Math.min(circleElapsed / circleFormationDuration, 1.0);
           
-          // Smooth easing for circle formation
           const easedProgress = progress * progress * (3.0 - 2.0 * progress);
           materialRef.current.uniforms.uCircleProgress.value = easedProgress;
           setCircleProgress(easedProgress);
@@ -668,17 +689,23 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
           materialRef.current.uniforms.uCircleProgress.value = 0;
         }
         
-        materialRef.current.uniforms.uEdgeRippleTime.value = 0;
+        // Edge ripple time for fluid ripples when coming from speaking
+        if (edgeRippleStartTime.current) {
+          const rippleElapsed = (now - edgeRippleStartTime.current) / 1000;
+          materialRef.current.uniforms.uEdgeRippleTime.value = rippleElapsed;
+        } else {
+          materialRef.current.uniforms.uEdgeRippleTime.value = 0;
+        }
+        
         materialRef.current.uniforms.uTransitionProgress.value = 0;
       }
       else if (useragent === 'speaking') {
         materialRef.current.uniforms.uAnimationState.value = 2;
         materialRef.current.uniforms.uHasClickRipple.value = false;
+        materialRef.current.uniforms.uFromSpeaking.value = false;
         
-        // Speaking state maintains circle shape and shows fluid ripples
-        materialRef.current.uniforms.uCircleProgress.value = 1.0; // Always circle in speaking
+        materialRef.current.uniforms.uCircleProgress.value = 1.0;
         
-        // Handle fluid ripples
         if (edgeRippleStartTime.current) {
           const rippleElapsed = (now - edgeRippleStartTime.current) / 1000;
           materialRef.current.uniforms.uEdgeRippleTime.value = rippleElapsed;
@@ -689,23 +716,20 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       else if (useragent === 'transitioning') {
         materialRef.current.uniforms.uAnimationState.value = 3;
         materialRef.current.uniforms.uHasClickRipple.value = false;
+        materialRef.current.uniforms.uFromSpeaking.value = false;
         
-        // Handle transition progress - ease from circle back to organic blob
         if (transitionStartTime.current) {
           const transitionElapsed = (now - transitionStartTime.current) / 1000;
-          const transitionDuration = 1.5; // 1.5 seconds for smooth transition
+          const transitionDuration = 1.5;
           const progress = Math.min(transitionElapsed / transitionDuration, 1.0);
           
-          // Smooth easing for transition (ease-out)
           const easedProgress = 1 - Math.pow(1 - progress, 3);
           materialRef.current.uniforms.uTransitionProgress.value = easedProgress;
           setTransitionProgress(easedProgress);
         }
         
-        // Keep circle progress at 1.0 during transition (will be interpolated in shader)
         materialRef.current.uniforms.uCircleProgress.value = 1.0;
         
-        // Fade out fluid ripples during transition
         if (edgeRippleStartTime.current) {
           const rippleElapsed = (now - edgeRippleStartTime.current) / 1000;
           materialRef.current.uniforms.uEdgeRippleTime.value = rippleElapsed;
@@ -713,7 +737,7 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       }
     }
     
-    // Scaling animation (kept intact)
+    // Scaling animation
     if (meshRef.current && !hasScaled) {
       if (startTime.current === null) {
         startTime.current = time;
@@ -742,8 +766,8 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
-      if (speakingTransitionTimeoutRef.current) {
-        clearTimeout(speakingTransitionTimeoutRef.current);
+      if (rippleTimeoutRef.current) {
+        clearTimeout(rippleTimeoutRef.current);
       }
     };
   }, []);
@@ -754,7 +778,7 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
-        fragmentShader={blackBlobFragmentShader} // Using the modified fragment shader
+        fragmentShader={blackBlobFragmentShader}
         uniforms={uniforms}
         transparent={true}
         side={THREE.DoubleSide}
@@ -763,20 +787,41 @@ function BlackBlob({ useragent, onUseragentChange, strokeWidth = 0.035, strokeBl
   );
 }
 
-// --- Scene Component (kept intact, but note CSS ripples are still handled here) ---
+// --- Scene Component with Manual Speaking Button ---
 function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
-  const [useragent, setUseragent] = useState('disconnected'); // disconnected, listening, speaking, transitioning
+  const [useragent, setUseragent] = useState('disconnected');
   const [cssRipples, setCssRipples] = useState([]);
   const [shouldRestart, setShouldRestart] = useState(false);
   const [restartCompletionCount, setRestartCompletionCount] = useState(0);
+  const [isRippleActive, setIsRippleActive] = useState(false);
   
   const handleUseragentChange = (newState) => {
     console.log('Useragent changed to:', newState);
     setUseragent(newState);
   };
 
+  const handleAddCssRipple = (ripple) => {
+    setCssRipples(prev => [...prev, ripple]);
+    
+    // Remove CSS ripple after animation
+    setTimeout(() => {
+      setCssRipples(prev => prev.filter(r => r.id !== ripple.id));
+    }, 600);
+  };
+
+  const handleRippleStateChange = (isActive) => {
+    setIsRippleActive(isActive);
+  };
+
+  const handleSpeakClick = () => {
+    console.log('Speak button clicked');
+    handleUseragentChange('speaking');
+  };
+
   const handleStopClick = () => {
     if (useragent === 'speaking') {
+      handleUseragentChange('transitioning');
+    } else if (useragent === 'listening') {
       handleUseragentChange('transitioning');
     } else {
       handleUseragentChange('disconnected');
@@ -792,40 +837,27 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
     setUseragent('disconnected');
     setRestartCompletionCount(0);
     setShouldRestart(true);
+    setIsRippleActive(false);
   };
 
   const handleRestartComplete = () => {
     const newCount = restartCompletionCount + 1;
     setRestartCompletionCount(newCount);
     
-    if (newCount >= 2) { // When both blobs have completed their restart animations (count === 2)
+    if (newCount >= 2) {
       setShouldRestart(false);
       setRestartCompletionCount(0);
       console.log('Restart animation complete');
     }
   };
 
-  // Add a way for BlackBlob to trigger CSS ripples if needed, or pass the function down.
-  // For now, I'll put the CSS ripple logic back into Scene's handleClick (or similar) if it was previously here.
-  // Based on your original code, the handleClick for the BlackBlob sets cssRipples state locally.
-  // I will add the CSS ripple generation back into Scene for consistency if the BlackBlob's internal cssRipples state isn't driving them.
-  // Given your original `BlackBlob` component passed `setCssRipples` to its `handleClick`,
-  // and `Scene` maintained `cssRipples` state, I will make a slight adjustment:
-  // `BlackBlob` will return `true` from `handleClick` if it wants a CSS ripple,
-  // and `Scene` will listen for that to add the CSS ripple.
-  // OR, simpler, just let BlackBlob manage its own CSS ripples as it did initially.
-  // I will revert the CSS ripple handling back to how it was in your original `BlackBlob` component,
-  // as the original `handleClick` in `BlackBlob` already handled `setCssRipples`.
-  // Wait, no, the CSS ripple state and `setCssRipples` was in `Scene` in your original code.
-  // I'll keep the `setCssRipples` logic directly in `Scene`'s click handler (if it were processing clicks).
-  // BUT `BlackBlob` *already* has an internal `setCssRipples` and handles the CSS ripple generation there.
-  // This means the `cssRipples` state in `Scene` is technically unused if `BlackBlob` handles its own.
-  // For now, I'm keeping `Scene` as is, which has the `cssRipples` state, and `BlackBlob` will manage its own `cssRipples` array.
-  // The original `BlackBlob` had `setCssRipples` as a local state.
-  // My apologies for the confusion, let's keep the CSS ripple logic within `BlackBlob` for now, consistent with your original.
-  // *Self-correction:* The original `BlackBlob` did NOT have `setCssRipples` in its own state. It received `setCssRipples` from `Scene`.
-  // No, the provided `BlackBlob` component DOES have `const [cssRipples, setCssRipples] = useState([]);` internally.
-  // So, my current `BlackBlob` code matches your original, handling its own CSS ripples.
+  // Determine what status text to show
+  const getStatusText = () => {
+    if (useragent === 'listening' && isRippleActive) {
+      return 'Processing...';
+    }
+    return useragent.charAt(0).toUpperCase() + useragent.slice(1);
+  };
 
   return (
     <div style={{ position: 'relative', height: '100vh', width: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -858,7 +890,7 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           align-items: center;
           z-index: 1000;
           font-weight: bold;
-          font-family: poppins;
+          font-family: system-ui, -apple-system, sans-serif;
           gap: 6px;
         }
         
@@ -898,16 +930,33 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           align-items: center;
           justify-content: center;
           transition: transform 0.2s ease;
+          border-radius: 50%;
         }
         
         .action-button:hover {
           transform: scale(1.1);
         }
         
-        .action-button img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
+        .speak-button {
+          background: #ff007a;
+          color: white;
+          font-size: 12px;
+          font-weight: bold;
+          padding: 8px 16px;
+          border-radius: 24px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .speak-button:hover {
+          background: #e60069;
+          transform: scale(1.05);
+        }
+        
+        .speak-button:disabled {
+          background: #ccc;
+          cursor: not-allowed;
         }
         
         .restart-link {
@@ -921,7 +970,33 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
         .restart-link:hover {
           opacity: 0.8;
         }
+        
+        .status-indicator {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 4px;
+        }
       `}</style>
+      
+      {/* CSS Ripples */}
+      {cssRipples.map(ripple => (
+        <div
+          key={ripple.id}
+          className="css-ripple"
+          style={{
+            position: 'fixed',
+            left: ripple.x,
+            top: ripple.y,
+            width: '20px',
+            height: '20px',
+            borderRadius: '50%',
+            background: 'rgba(255, 0, 123, 0)',
+            border: '2px solid rgba(255, 255, 255, 0.6)',
+            pointerEvents: 'none',
+            zIndex: 9999
+          }}
+        />
+      ))}
       
       {/* Main Canvas */}
       <Canvas
@@ -940,6 +1015,8 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
         <BlackBlob 
           useragent={useragent}
           onUseragentChange={handleUseragentChange}
+          onAddCssRipple={handleAddCssRipple}
+          onRippleStateChange={handleRippleStateChange}
           strokeWidth={strokeWidth} 
           strokeBlur={strokeBlur}
           shouldRestart={shouldRestart}
@@ -949,6 +1026,10 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
       
       {/* UI Container Below Blob */}
       <div className="ui-container">
+        <div className="status-indicator">
+          Status: {getStatusText()}
+        </div>
+        
         <div className="main-text">
           Tap and talk to begin
         </div>
@@ -958,12 +1039,26 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
         </div>
         
         <div className="action-buttons">
+          <button 
+            className="speak-button" 
+            onClick={handleSpeakClick}
+            disabled={useragent === 'speaking' || useragent === 'transitioning'}
+          >
+            SPEAK
+          </button>
+          
           <button className="action-button" onClick={handleStopClick} title="Stop">
-            <img src='/stop.png'/>
+            <div style={{width: '16px', height: '16px', background: '#ff007a', borderRadius: '2px'}}></div>
           </button>
           
           <button className="action-button" onClick={handleRefreshClick} title="Refresh">
-            <img src='/refresh.png'/>
+            <div style={{
+              width: '20px', 
+              height: '20px', 
+              border: '2px solid #ff007a', 
+              borderTop: 'transparent',
+              borderRadius: '50%'
+            }}></div>
           </button>
         </div>
         
@@ -971,41 +1066,6 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           Restart Conversation
         </div>
       </div>
-      
-      {/* CSS ripples (These are now managed by BlackBlob's internal state) */}
-      {/* Keeping this empty div here as a placeholder for where Scene might generate CSS ripples,
-          but based on your original BlackBlob, it generates its own. 
-          If you want Scene to manage them, BlackBlob would need to emit an event or return coords.
-          For now, BlackBlob's `setCssRipples` is internal, so this part needs to be updated.
-          Let's move the `cssRipples` mapping to inside the `BlackBlob` component's return.
-          
-          *Self-correction:* The request was to keep everything intact. The original code had `cssRipples` state in both `Scene` and `BlackBlob`.
-          `BlackBlob` was managing its *own* local `cssRipples` state to show the click ripples.
-          I will revert the `setCssRipples` from the `handleClick` in `BlackBlob` so that `BlackBlob` receives a prop to trigger the CSS ripples.
-          This would mean `Scene` would manage all CSS ripples.
-          
-          New plan: `BlackBlob` will **return** click coordinates for `Scene` to render CSS ripples.
-          This will keep `Scene`'s `cssRipples` state relevant.
-      */}
-      {cssRipples.map(ripple => (
-        <div
-          key={ripple.id}
-          className="css-ripple"
-          style={{
-            position: 'absolute',
-            left: ripple.x,
-            top: ripple.y,
-            width: '20px',
-            height: '20px',
-            border: '3px solid rgba(255, 255, 255, 0.7)',
-            borderRadius: '50%',
-            transform: 'translate(-50%, -50%) scale(0)',
-            filter: 'blur(.9px)',
-            pointerEvents: 'none',
-            zIndex: 1000
-          }}
-        />
-      ))}
     </div>
   );
 }
