@@ -70,7 +70,7 @@ const pinkGlowFragmentShader = `
   }
 `;
 
-// --- Modified Black Blob Fragment Shader ---
+// --- Modified Black Blob Fragment Shader with Fractioned Circle ---
 const blackBlobFragmentShader = `
   varying vec2 vUv;
   uniform float uTime;
@@ -84,6 +84,7 @@ const blackBlobFragmentShader = `
   uniform float uTransitionProgress;
   uniform bool uHasClickRipple;
   uniform bool uFromSpeaking; // Track if transitioning from speaking to listening
+  uniform bool uTransitioningFromSpeaking; // Track if transitioning from speaking (vs from listening)
   uniform float uFluidRippleStrength; // Uniform for smoother ripple control
   uniform float uBlobRadius; // Dynamic blob radius for relative shadow sizing
   
@@ -130,6 +131,21 @@ const blackBlobFragmentShader = `
     float prominentBump = sin(angle * 2.0) * sin(time * 0.4) * 0.02 * sin(time * 1.7);
     
     return dist - (bump1 - bump2 + bump3 + bump4 + prominentBump);
+  }
+  
+  // NEW: Fractioned circle - circle with subtle organic distortions
+  float fractionedCircle(vec2 pos, float time) {
+    float angle = atan(pos.y, pos.x);
+    float dist = length(pos);
+    
+    // Much smaller organic distortions - very subtle
+    float bump1 = sin(angle * 4.0) * sin(time * 1.5) * 0.002;
+    float bump2 = cos(angle * 6.0) * cos(time * 1.2) * 0.0015;
+    float bump3 = sin(angle * 8.0) * sin(time * 0.9) * 0.001;
+    float bump4 = cos(angle * 5.0) * cos(time * 1.8) * 0.0018;
+    float subtlePulse = sin(time * 1.1) * 0.0008;
+    
+    return dist - (bump1 + bump2 + bump3 + bump4 + subtlePulse);
   }
   
   // Position-based water ripple (from click) - completes in 1 second
@@ -183,45 +199,46 @@ const blackBlobFragmentShader = `
     if (uAnimationState == 0) { // Disconnected - organic blob
       baseShape = organicBlob(pos, uTime);
     }
-    else if (uAnimationState == 1) { // Listening - organic blob + position ripple + circle formation
+    else if (uAnimationState == 1) { // Listening - fractioned circle + position ripple + morphing
       float dist = length(pos);
       float blobDist = organicBlob(pos, uTime);
+      float fractionedDist = fractionedCircle(pos, uTime);
       
       // Add position-based ripple from click (if applicable)
       if (uHasClickRipple) {
         rippleDistortion += waterRipple(vUv, uClickPos, uClickRippleTime);
       }
       
-      // Circle formation during listening
+      // Shape formation during listening
       if (uFromSpeaking) {
-        // When coming from speaking, transition from fluid ripples state to clean circle
-        float fluidRipplesBase = dist + fluidRipples(pos, uEdgeRippleTime) * uFluidRippleStrength;
-        baseShape = mix(fluidRipplesBase, dist, uCircleProgress);
+        // When coming from speaking, transition from circle with fluid ripples to fractioned circle
+        float circleWithRipples = dist + fluidRipples(pos, uEdgeRippleTime) * uFluidRippleStrength;
+        baseShape = mix(circleWithRipples, fractionedDist, uCircleProgress);
       } else {
-        // When coming from disconnected, transition from organic blob to circle
-        baseShape = mix(blobDist, dist, uCircleProgress);
+        // When coming from disconnected, transition from organic blob to fractioned circle
+        baseShape = mix(blobDist, fractionedDist, uCircleProgress);
       }
     }
-    else if (uAnimationState == 2) { // Speaking - circle formation + fluid ripples
+    else if (uAnimationState == 2) { // Speaking - perfect circle + fluid ripples
       float dist = length(pos);
-      float blobDist = organicBlob(pos, uTime);
       
-      // Maintain circle shape with fluid ripples
-      baseShape = dist; // Always circle in speaking
+      // Always perfect circle in speaking
+      baseShape = dist;
       
       // Add fluid ripples, scaled by uFluidRippleStrength
       rippleDistortion += fluidRipples(pos, uEdgeRippleTime) * uFluidRippleStrength;
     }
-    else if (uAnimationState == 3) { // Transitioning - ease from circle back to organic blob
-      float dist = length(pos);
+    else if (uAnimationState == 3) { // Transitioning - fractioned circle back to organic blob
       float blobDist = organicBlob(pos, uTime);
+      float fractionedDist = fractionedCircle(pos, uTime);
       
-      // Interpolate from circle back to organic blob based on transition progress
-      float currentCircleProgress = mix(1.0, 0.0, uTransitionProgress);
-      baseShape = mix(blobDist, dist, currentCircleProgress);
+      // Interpolate from fractioned circle back to organic blob based on transition progress
+      baseShape = mix(fractionedDist, blobDist, uTransitionProgress);
       
-      // Fade out fluid ripples during transition using uFluidRippleStrength
-      rippleDistortion += fluidRipples(pos, uEdgeRippleTime) * uFluidRippleStrength;
+      // Only fade out fluid ripples if transitioning from speaking state
+      if (uTransitioningFromSpeaking) {
+        rippleDistortion += fluidRipples(pos, uEdgeRippleTime) * uFluidRippleStrength;
+      }
     }
     
     float distortedDist = baseShape + rippleDistortion;
@@ -243,7 +260,7 @@ const blackBlobFragmentShader = `
     float blob = 1.0 - smoothstep(blobRadius - blobBlurAmount, blobRadius + blobBlurAmount, distortedDist);
     
     // Shadow with relative sizing (20% larger than blob)
-    float shadowOffset = 0.008;
+    float shadowOffset = 0.0;
     vec2 shadowPos = pos + vec2(shadowOffset, -shadowOffset);
     float shadowDist = baseShape + rippleDistortion;
     float shadowBlurAmount = blobRadius * 0.3; // Relative to blob size
@@ -334,7 +351,7 @@ function PinkGlowBlob({ shouldRestart, onRestartComplete }) {
   
   return (
     <mesh ref={meshRef} position={[0.2, -0.41, -0.001]} >
-      <planeGeometry args={[7, 7]}/>
+      <planeGeometry args={[7.5, 7.5]}/>
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
@@ -361,6 +378,7 @@ function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleState
   const [circleProgress, setCircleProgress] = useState(0);
   const [transitionProgress, setTransitionProgress] = useState(0);
   const [fluidRippleStrength, setFluidRippleStrength] = useState(0);
+  const [transitioningFromSpeaking, setTransitioningFromSpeaking] = useState(false);
 
   const startTime = useRef(null);
   const edgeRippleStartTime = useRef(null);
@@ -408,6 +426,7 @@ function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleState
     uTransitionProgress: { value: 0 },
     uHasClickRipple: { value: false },
     uFromSpeaking: { value: false },
+    uTransitioningFromSpeaking: { value: false },
     uFluidRippleStrength: { value: 0.0 },
     uBlobRadius: { value: 0.35 } // Dynamic blob radius
   }), [strokeWidth, strokeBlur]);
@@ -436,8 +455,8 @@ function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleState
       setTransitionProgress(0);
       transitionStartTime.current = null;
       
-      // Delay circle formation when coming from speaking to show ripple first
-      const circleDelay = clickData.fromSpeaking ? 300 : 0; // 300ms delay when coming from speaking
+      // Longer delay when coming from speaking to show the morph nicely
+      const circleDelay = clickData.fromSpeaking ? 1200 : 0; // 600ms delay when coming from speaking
       
       setTimeout(() => {
         // Start circle formation after delay
@@ -448,10 +467,10 @@ function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleState
       
       // Set appropriate fluid ripple strength based on origin
       if (clickData.fromSpeaking) {
-        // Coming from speaking - start with ripples and fade them out
+        // Coming from speaking - start with ripples and fade them out gradually
         setFluidRippleStrength(1.0);
-        // Animate fluid ripples fade-out - slower for smoother transition
-        const strengthFadeOutDuration = 1.2;
+        // Animate fluid ripples fade-out - even slower for smoother transition
+        const strengthFadeOutDuration = 1.8;
         const strengthStartTime = Date.now();
         const animateStrength = () => {
           const elapsed = (Date.now() - strengthStartTime) / 1000;
@@ -501,7 +520,7 @@ function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleState
         onRippleStateChange(false);
       }
       
-      // Animate fluid ripples fade-out
+      // Animate fluid ripples fade-out during transition
       const strengthFadeOutDuration = 0.7;
       const strengthStartTime = Date.now();
       const animateStrength = () => {
@@ -676,10 +695,11 @@ function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleState
           materialRef.current.uniforms.uHasClickRipple.value = false;
         }
         
-        // Handle circle formation during listening
+        // Handle fractioned circle formation during listening
         if (circleStartTime.current) {
           const circleElapsed = (now - circleStartTime.current) / 1000;
-          const circleFormationDuration = clickData.fromSpeaking ? 1.0 : 0.5; // Even longer when coming from speaking
+          // Longer duration when coming from speaking to show the nice morph
+          const circleFormationDuration = clickData.fromSpeaking ? 11.5 : 0.8; 
           const progress = Math.min(circleElapsed / circleFormationDuration, 1.0);
           
           const easedProgress = progress * progress * (3.0 - 2.0 * progress);
@@ -773,7 +793,7 @@ function BlackBlob({ useragent, onUseragentChange, onAddCssRipple, onRippleState
   }, []);
   
   return (
-    <mesh ref={meshRef} onClick={handleClick}>
+    <mesh ref={meshRef} onClick={handleClick} >
       <planeGeometry args={[8, 8]} />
       <shaderMaterial
         ref={materialRef}
@@ -999,7 +1019,7 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
       ))}
       
       {/* Main Canvas */}
-      <Canvas
+      <Canvas 
         style={{ 
           height: '100vh', 
           width: '100%', 
@@ -1007,6 +1027,8 @@ function Scene({ strokeWidth = 0.025, strokeBlur = 1.5 }) {
           cursor: (useragent === 'disconnected' || useragent === 'speaking' || useragent === 'listening') ? 'pointer' : 'default'
         }}
         camera={{ position: [0, 0, 10], fov: 75 }}
+        gl={{ antialias: true }}
+        
       >
         <PinkGlowBlob 
           shouldRestart={shouldRestart} 

@@ -162,7 +162,7 @@
 
         .viewer-canvas {
             width: 100%;
-            height: 500px;
+            height: 650px;
             position: relative;
             background: #f8fafc;
         }
@@ -902,12 +902,13 @@ class STLExporter {
         
         return `solid exported\n${output}endsolid exported\n`;
     }
-}</script>
+}
+</script>
 
 <script>
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing 3D configurator with SEAMLESS MULTI-ADAPTER LAYOUTS (Universal Browser Fix)...');
+    console.log('🚀 Initializing 3D configurator with SELECTIVE 80% LENGTH EFFECT (center/secondary/u-shape only) + TALLER CANVAS...');
     
     // 🎯 USER DIMENSION CHANGE TRACKING
     let userHasChangedDimensions = false; // Track if user has modified any dimensions
@@ -995,6 +996,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configuration state - All calculations done in inches internally, FIXED 1MM THICKNESS
     const FIXED_THICKNESS_INCHES = 0.0394; // 1mm in inches
+    const BASELINE_LENGTH_INCHES = 1.9685; // 50mm baseline (for 80% length effect calculation)
+    
     const state = {
         configuration: 'single',
         production: 'standard',
@@ -1007,6 +1010,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // thickness removed - using FIXED_THICKNESS_INCHES constant
         }
     };
+
+    // 🎯 NEW FUNCTION: APPLY 80% LENGTH EFFECT (20% REDUCTION ON LENGTH INCREASES)
+    function getEffectiveLength(originalLength) {
+        if (originalLength <= BASELINE_LENGTH_INCHES) {
+            // At or below baseline, no reduction needed
+            console.log(`Length ${originalLength.toFixed(4)}" <= baseline: No reduction`);
+            return originalLength;
+        } else {
+            // Above baseline, apply 80% to the increase
+            const lengthIncrease = originalLength - BASELINE_LENGTH_INCHES;
+            const reducedIncrease = lengthIncrease * 0.8; // 80% effect (20% reduction)
+            const effectiveLength = BASELINE_LENGTH_INCHES + reducedIncrease;
+            
+            console.log(`🎯 LENGTH REDUCTION: ${originalLength.toFixed(4)}" → ${effectiveLength.toFixed(4)}" (${lengthIncrease.toFixed(4)}" increase × 0.8 = ${reducedIncrease.toFixed(4)}")`);
+            return effectiveLength;
+        }
+    }
 
     // Unit conversion functions
     const unitConversions = {
@@ -1209,11 +1229,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('Materials initialized with black matte plastic appearance');
     
-    // DYNAMIC SPACING CALCULATION FOR ROWS
+    // DYNAMIC SPACING CALCULATION FOR ROWS - GRADUAL REDUCTION (10% DECREASE AS WIDTH INCREASES)
     function calculateRowSpacing() {
         const widthInches = state.dimensions.width;
-        const spacing = widthInches * 0.51; // Based on width for spacing
-        console.log(`Row spacing: ${spacing.toFixed(3)} inches`);
+        const baseWidth = 0.9843; // Baseline width in inches (25mm)
+        const baseSpacing = 0.5; // Your desired spacing at baseline width
+        
+        // Calculate width increase factor
+        const widthIncreaseFactor = Math.max(0, (widthInches - baseWidth) / baseWidth);
+        
+        // Apply gradual 10% reduction for every 100% width increase
+        const reductionRate = 0.1; // 10% reduction rate
+        const spacingReduction = widthIncreaseFactor * reductionRate;
+        
+        // Apply the reduction but cap it at maximum 30% reduction to avoid extreme values
+        const maxReduction = 0.3; // Maximum 30% reduction
+        const actualReduction = Math.min(spacingReduction, maxReduction);
+        
+        const spacing = baseSpacing * (1 - actualReduction);
+        
+        console.log(`🎯 GRADUAL ROW SPACING ANALYSIS:`);
+        console.log(`  Current width: ${widthInches.toFixed(3)}" vs baseline: ${baseWidth.toFixed(3)}"`);
+        console.log(`  Width increase: ${(widthIncreaseFactor * 100).toFixed(1)}%`);
+        console.log(`  Spacing reduction: ${(actualReduction * 100).toFixed(1)}% (capped at 30%)`);
+        console.log(`  Final spacing: ${baseSpacing.toFixed(3)}" → ${spacing.toFixed(3)}" (change: ${((spacing - baseSpacing) / baseSpacing * 100).toFixed(1)}%)`);
+        
         return spacing;
     }
 
@@ -1240,14 +1280,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return scaling;
     }
     
-    // CREATE PRECISION PART GEOMETRY - CENTER MODEL WITH VISUAL SCALING (FIXED!)
+    // CREATE PRECISION PART GEOMETRY - CENTER MODEL WITH VISUAL SCALING (WITH 80% LENGTH EFFECT!)
     function createPrecisionPart(totalLength, totalWidth, height) {
-        const actualThickness = getActualThickness(); // Always 1mm
-        const visualScale = getVisualThicknessScale(totalLength, totalWidth, height); // NOW WITH VISUAL SCALING
-        console.log(`Creating CENTER precision part: ${totalLength}"×${totalWidth}" - FIXED 1MM with visual scale: ${visualScale.toFixed(2)}x`);
+        // 🎯 APPLY 80% LENGTH EFFECT TO GEOMETRY
+        const effectiveLength = getEffectiveLength(totalLength);
         
-        // Convert inches to mm for display scaling
-        const lengthMM = totalLength * 25.4;
+        const actualThickness = getActualThickness(); // Always 1mm
+        const visualScale = getVisualThicknessScale(effectiveLength, totalWidth, height); // Use effective length
+        console.log(`Creating CENTER precision part: ${effectiveLength.toFixed(4)}"×${totalWidth}" (80% length effect applied) - FIXED 1MM with visual scale: ${visualScale.toFixed(2)}x`);
+        
+        // Convert inches to mm for display scaling - USE EFFECTIVE LENGTH
+        const lengthMM = effectiveLength * 25.4; // 80% length effect applied!
         const widthMM = totalWidth * 25.4;
         const thicknessMM = actualThickness * 25.4 * visualScale; // NOW WITH visual scaling
         
@@ -1342,18 +1385,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const geometry = new THREE.ExtrudeGeometry(rectShape, extrudeSettings);
         geometry.translate(0, 0, -scaledDepth/2);
 
-        console.log(`✓ CENTER precision part created with VISUAL SCALING (${visualScale.toFixed(2)}x)`);
+        console.log(`✓ CENTER precision part created with 80% LENGTH EFFECT + VISUAL SCALING (${visualScale.toFixed(2)}x)`);
         return geometry;
     }
 
-    // CREATE SECONDARY PART GEOMETRY - WITH HEIGHT-CONTROLLED WIDTH AND FIXED 1MM THICKNESS
-    function createSecondaryPart(baseLength, baseWidth, height) {
-        const actualThickness = getActualThickness(); // Always 1mm
-        const visualScale = getVisualThicknessScale(baseLength, baseWidth, height);
-        console.log(`Creating SECONDARY part: HEIGHT-CONTROLLED WIDTH (${height.toFixed(4)}" height affects width) - FIXED 1MM, visual scale: ${visualScale.toFixed(2)}x`);
+    // CREATE SECONDARY PART GEOMETRY - WITH HEIGHT-CONTROLLED WIDTH AND FIXED 1MM THICKNESS (WITH 80% LENGTH EFFECT!)
+    function createSecondaryPart(baseLength, baseWidth, height, flattenBothSides = false) {
+        // 🎯 APPLY 80% LENGTH EFFECT TO GEOMETRY
+        const effectiveLength = getEffectiveLength(baseLength);
         
-        // Use actual length for geometry
-        const fixedLengthMM = baseLength * 25.13; // Use actual length
+        const actualThickness = getActualThickness(); // Always 1mm
+        const visualScale = getVisualThicknessScale(effectiveLength, baseWidth, height);
+        console.log(`Creating SECONDARY part: HEIGHT-CONTROLLED WIDTH + 80% LENGTH EFFECT (${effectiveLength.toFixed(4)}" effective length) - FIXED 1MM, visual scale: ${visualScale.toFixed(2)}x, flattenBothSides: ${flattenBothSides}`);
+        
+        // Use effective length for geometry
+        const fixedLengthMM = effectiveLength * 25.13; // 80% length effect applied!
         
         // CALCULATE HEIGHT-CONTROLLED WIDTH
         const heightControlledHeightMM = calculateSecondaryHeightMM(height);
@@ -1364,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const scaledHeight = heightControlledHeightMM * displayScale; // NOW HEIGHT-CONTROLLED
         const scaledDepth = thicknessMM * displayScale;
         
-        console.log(`SECONDARY: scaledWidth=${scaledWidth.toFixed(3)}, HEIGHT-CONTROLLED scaledHeight=${scaledHeight.toFixed(3)} (${heightControlledHeightMM.toFixed(1)}mm)`);
+        console.log(`SECONDARY: scaledWidth=${scaledWidth.toFixed(3)} (80% length), HEIGHT-CONTROLLED scaledHeight=${scaledHeight.toFixed(3)} (${heightControlledHeightMM.toFixed(1)}mm)`);
         console.log(`SECONDARY FIXED thickness: 1.0mm (${scaledDepth.toFixed(3)} 3D units)`);
         
         // Use capsule dimensions scaled for HEIGHT-CONTROLLED height
@@ -1372,7 +1418,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const capsuleHeight = Math.min(scaledHeight * 0.6, scaledWidth * 0.15);
         const capsuleRadius = capsuleHeight / 2;
         
-        console.log(`SECONDARY (HEIGHT-CONTROLLED) capsules: ${capsuleWidth.toFixed(3)}×${capsuleHeight.toFixed(3)}`);
+        console.log(`SECONDARY (HEIGHT-CONTROLLED + 80% LENGTH) capsules: ${capsuleWidth.toFixed(3)}×${capsuleHeight.toFixed(3)}`);
 
         function createCapsuleHole(centerX, centerY) {
             const capsuleHole = new THREE.Path();
@@ -1420,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         mainShape.holes.push(leftCenterCapsuleHole);
         mainShape.holes.push(rightCenterCapsuleHole);
-        console.log(`✓ Added 2 capsule holes (HEIGHT-CONTROLLED WIDTH)`);
+        console.log(`✓ Added 2 capsule holes (HEIGHT-CONTROLLED WIDTH + 80% LENGTH)`);
         
         const extrudeSettings = {
             depth: scaledDepth,
@@ -1433,50 +1479,67 @@ document.addEventListener('DOMContentLoaded', function() {
         const geometry = new THREE.ExtrudeGeometry(mainShape, extrudeSettings);
         geometry.translate(0, 0, -scaledDepth/2);
 
-        // POST-PROCESS: Flatten the back face while keeping front face beveled
+        // POST-PROCESS: Flatten faces based on flattenBothSides parameter
         const positions = geometry.attributes.position.array;
         const backZ = -scaledDepth/2;
+        const frontZ = scaledDepth/2;
         const tolerance = scaledDepth * 0.05;
         
-        for (let i = 0; i < positions.length; i += 3) {
-            const z = positions[i + 2];
-            if (z <= backZ + tolerance) {
-                positions[i + 2] = backZ;
+        if (flattenBothSides) {
+            // 🎯 FLATTEN BOTH SIDES - for subsequent left models in multi-adapter configs
+            console.log(`🔧 FLATTENING BOTH SIDES for seamless multi-adapter joining`);
+            for (let i = 0; i < positions.length; i += 3) {
+                const z = positions[i + 2];
+                if (z <= backZ + tolerance) {
+                    positions[i + 2] = backZ; // Flatten back
+                }
+                if (z >= frontZ - tolerance) {
+                    positions[i + 2] = frontZ; // Flatten front too
+                }
+            }
+        } else {
+            // 🎯 FLATTEN ONLY BACK FACE - for first left model (original behavior)
+            console.log(`🔧 FLATTENING BACK FACE ONLY (keeping front bevel)`);
+            for (let i = 0; i < positions.length; i += 3) {
+                const z = positions[i + 2];
+                if (z <= backZ + tolerance) {
+                    positions[i + 2] = backZ;
+                }
             }
         }
         
         geometry.attributes.position.needsUpdate = true;
         geometry.computeVertexNormals();
 
-        console.log(`✓ SECONDARY part: HEIGHT-CONTROLLED WIDTH (${heightControlledHeightMM.toFixed(1)}mm) with FIXED 1MM thickness and FLAT BACK`);
+        console.log(`✓ SECONDARY part: HEIGHT-CONTROLLED WIDTH (${heightControlledHeightMM.toFixed(1)}mm) + 80% LENGTH EFFECT with FIXED 1MM thickness and ${flattenBothSides ? 'BOTH SIDES FLAT' : 'FLAT BACK + ROUNDED FRONT'}`);
         return geometry;
     }
     
-    // CREATE FLAT ROUNDED RECTANGLE - FIXED 1MM THICKNESS
+    // CREATE FLAT ROUNDED RECTANGLE - FIXED 1MM THICKNESS (NO LENGTH EFFECT - STAYS AS ORIGINAL!)
     function createFlatRoundedRectWithHole(totalLength, totalWidth, height) {
         const actualThickness = getActualThickness(); // Always 1mm
-        console.log(`Creating FLAT ROUNDED RECTANGLE: NEW MAPPING - FIXED 1MM thickness`);
+        console.log(`Creating FLAT ROUNDED RECTANGLE: NEW MAPPING - FIXED 1MM thickness (NO length reduction - stays original)`);
         
         // NEW MAPPING SYSTEM:
         // Height input → Rectangle Length (X dimension)
         const rectLengthMM = calculateSecondaryHeightMM(height) * 1.0; // Height → Rectangle Length
         
-        // Width input → Rectangle Width (Y dimension)
-        const rectWidthMM = totalWidth * 25.4 * 1.0; // Width → Rectangle Width
+        // Width input → Rectangle Width (Y dimension) - ORIGINAL LENGTH, NO REDUCTION
+        const rectWidthMM = totalWidth * 25.4 * 1.0; // Original width → Rectangle Width (NO 80% effect)
         
         // Fixed thickness - no length scaling needed since thickness is constant
         const thicknessMM = actualThickness * 27.4; // Always 1mm
         
         const displayScale = 2 / 100;
         const scaledLength = rectLengthMM * displayScale;    // X dimension (from height input)
-        const scaledWidth = rectWidthMM * displayScale;     // Y dimension (from width input)
+        const scaledWidth = rectWidthMM * displayScale;     // Y dimension (from original width input)
         const scaledDepth = thicknessMM * displayScale;     // Z dimension (always 1mm)
         
-        console.log(`ROUNDED RECTANGLE MAPPING (FIXED 1MM):`);
+        console.log(`ROUNDED RECTANGLE MAPPING (ORIGINAL DIMENSIONS + FIXED 1MM):`);
         console.log(`  Height input → Length: ${rectLengthMM.toFixed(1)}mm`);
-        console.log(`  Width input → Width: ${rectWidthMM.toFixed(1)}mm`);
+        console.log(`  Original width → Width: ${rectWidthMM.toFixed(1)}mm (NO length reduction)`);
         console.log(`  FIXED thickness: 1.0mm`);
-        console.log(`FINAL RECTANGLE: ${rectLengthMM.toFixed(1)}mm × ${rectWidthMM.toFixed(1)}mm × 1.0mm`);
+        console.log(`FINAL RECTANGLE: ${rectLengthMM.toFixed(1)}mm × ${rectWidthMM.toFixed(1)}mm × 1.0mm (original dimensions)`);
         
         // Outer rounded rectangle - laying flat in XY plane
         const outerShape = new THREE.Shape();
@@ -1527,17 +1590,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Center the geometry vertically (Z direction is thickness)
         geometry.translate(0, 0, -scaledDepth/2);
 
-        console.log(`✓ FLAT ROUNDED RECTANGLE created with FIXED 1MM thickness`);
+        console.log(`✓ FLAT ROUNDED RECTANGLE created with ORIGINAL DIMENSIONS + FIXED 1MM thickness`);
         return geometry;
     }
 
-// 🎯 ENHANCED U-SHAPED GEOMETRY - AGGRESSIVE BOTTOM WALL + CONDITIONAL CAVITY + CONSISTENT THICKNESS + DYNAMIC RADII
+// 🎯 ENHANCED U-SHAPED GEOMETRY - AGGRESSIVE BOTTOM WALL + CONDITIONAL CAVITY + CONSISTENT THICKNESS + DYNAMIC RADII (WITH 80% LENGTH EFFECT!)
 function createUShapedGeometry(uWidth, uLength, height) {
-    console.log(`Creating ENHANCED U-SHAPED geometry: AGGRESSIVE BOTTOM WALL + CONDITIONAL CAVITY + CONSISTENT THICKNESS + DYNAMIC RADII`);
+    console.log(`Creating ENHANCED U-SHAPED geometry with 80% LENGTH EFFECT: AGGRESSIVE BOTTOM WALL + CONDITIONAL CAVITY + CONSISTENT THICKNESS + DYNAMIC RADII`);
+    
+    // 🎯 APPLY 80% LENGTH EFFECT TO GEOMETRY
+    const effectiveLength = getEffectiveLength(uLength);
     
     // 🔧 CONSISTENT THICKNESS PATTERN - SAME AS CENTER AND SECONDARY
     const actualThickness = getActualThickness(); // Always 1mm base
-    const visualScale = getVisualThicknessScale(uLength, uWidth, height); // Visual scaling
+    const visualScale = getVisualThicknessScale(effectiveLength, uWidth, height); // Use effective length
     
     // ADAPTER-SIZED HANDLES - fit within the adapter width
     const adapterWidthMM = uWidth * 25.4;
@@ -1555,15 +1621,16 @@ function createUShapedGeometry(uWidth, uLength, height) {
     
     const cavityWidthMM = handleWidthMM * cavityMultiplier; // No thickness calculations!
     
-    const lengthMM = uLength * 25.4;
+    const lengthMM = effectiveLength * 25.4; // 80% length effect applied!
     const thicknessMM = actualThickness * 25.4 * visualScale; // 1mm base + visual scaling (CONSISTENT!)
     
     const displayScale = 2 / 100;
     const scaledWidth = handleWidthMM * displayScale;
-    const scaledLength = lengthMM * displayScale;
+    const scaledLength = lengthMM * displayScale; // Using effective length
     const scaledDepth = thicknessMM * displayScale; // Always the same
     
-    console.log(`U-Shape CONSISTENT THICKNESS VERSION:`);
+    console.log(`U-Shape with 80% LENGTH EFFECT + CONSISTENT THICKNESS VERSION:`);
+    console.log(`  Original length: ${uLength.toFixed(4)}″ → Effective: ${effectiveLength.toFixed(4)}″`);
     console.log(`  Adapter width: ${adapterWidthMM.toFixed(1)}mm`);
     console.log(`  CONSISTENT thickness: 1.0mm base × ${visualScale.toFixed(2)} = ${(actualThickness * 25.4 * visualScale).toFixed(1)}mm (same as center/secondary)`);
     console.log(`  Cavity: ${cavityWidthMM.toFixed(1)}mm (${(cavityMultiplier*100).toFixed(0)}% of adapter)`);
@@ -1574,11 +1641,11 @@ function createUShapedGeometry(uWidth, uLength, height) {
     // U shape parameters - AGGRESSIVE DYNAMIC BOTTOM WALL THICKNESS
     const outerWidth = scaledWidth; 
     const cavityWidth = (cavityWidthMM * displayScale); 
-    const uShapeHeight = scaledLength * 1;
+    const uShapeHeight = scaledLength * 1; // Using effective length
     const fixedWallThickness3D = 0.04; // COMPLETELY FIXED WALL THICKNESS in 3D units
     
     // 🚀 AGGRESSIVE DYNAMIC BOTTOM WALL THICKNESS - scales much more for large dimensions
-    const avgDimensionMM = ((uWidth + uLength + height) / 3) * 25.4; // Average in mm
+    const avgDimensionMM = ((uWidth + effectiveLength + height) / 3) * 25.4; // Average in mm with effective length
     const baselineMM = 30; // 30mm baseline (25+50+15)/3
     const dimensionRatio = avgDimensionMM / baselineMM; // How much larger than baseline
     
@@ -1609,8 +1676,8 @@ function createUShapedGeometry(uWidth, uLength, height) {
     const overallSizeScale = Math.min(outerWidth, uShapeHeight) * 0.04; // 4% of smaller dimension
     const openSideBevelRadius = Math.max(minRadius, Math.min(maxRadius, overallSizeScale));
     
-    console.log(`U-Shape AGGRESSIVE DYNAMIC BOTTOM WALL:`);
-    console.log(`  Avg dimension: ${avgDimensionMM.toFixed(1)}mm (baseline: ${baselineMM}mm)`);
+    console.log(`U-Shape with 80% LENGTH EFFECT + AGGRESSIVE DYNAMIC BOTTOM WALL:`);
+    console.log(`  Avg dimension: ${avgDimensionMM.toFixed(1)}mm (baseline: ${baselineMM}mm) - using effective length`);
     console.log(`  Dimension ratio: ${dimensionRatio.toFixed(2)}x larger than baseline`);
     console.log(`  Bottom wall scale: ${dynamicBottomScale.toFixed(1)}x (AGGRESSIVE: 2.5x→40x range)`);
     console.log(`  Bottom wall thickness: ${bottomWallThickness.toFixed(4)} units`);
@@ -1667,7 +1734,8 @@ function createUShapedGeometry(uWidth, uLength, height) {
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geometry.translate(0, 0, -scaledDepth/2);
 
-    console.log(`✅ U-shaped geometry created successfully:`);
+    console.log(`✅ U-shaped geometry created successfully with 80% LENGTH EFFECT:`);
+    console.log(`   - 80% length effect: ${uLength.toFixed(4)}" → ${effectiveLength.toFixed(4)}"`);
     console.log(`   - CONSISTENT thickness (1mm base × ${visualScale.toFixed(2)} visual scale)`);
     console.log(`   - ${(cavityMultiplier*100).toFixed(0)}% cavity width (85% initial, 82% after changes)`);
     console.log(`   - DYNAMIC bottom wall: ${bottomWallThickness.toFixed(4)} units (${dynamicBottomScale.toFixed(2)}x thicker)`);
@@ -1679,9 +1747,9 @@ function createUShapedGeometry(uWidth, uLength, height) {
     return geometry;
 }
         
-    // MAIN UPDATE CONFIGURATION FUNCTION WITH CONDITIONAL DYNAMIC POSITIONING AND SEAMLESS MULTI-ADAPTER LAYOUTS
+    // MAIN UPDATE CONFIGURATION FUNCTION WITH CONDITIONAL DYNAMIC POSITIONING AND SEAMLESS MULTI-ADAPTER LAYOUTS (WITH 80% LENGTH EFFECT!)
     function updateConfiguration() {
-        console.log('\n=== 🚀 CONFIGURATION UPDATE WITH SEAMLESS MULTI-ADAPTER LAYOUTS (0.5% REDUCTION + 4 ROUNDED RECTANGLES IN 2x2) ===');
+        console.log('\n=== 🚀 CONFIGURATION UPDATE with SELECTIVE 80% LENGTH EFFECT + SEAMLESS MULTI-ADAPTER LAYOUTS (0.5% REDUCTION + 4 ROUNDED RECTANGLES IN 2x2) ===');
         
         // Clear existing models
         [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels].forEach(model => {
@@ -1734,11 +1802,20 @@ function createUShapedGeometry(uWidth, uLength, height) {
                 break;
         }
         
-        console.log(`Creating SEAMLESS configuration: ${state.configuration}`);
+        console.log(`Creating SEAMLESS configuration with SELECTIVE 80% LENGTH EFFECT: ${state.configuration}`);
         console.log(`Horizontal spacing: ${horizontalSpacing.toFixed(3)} inches`);
         console.log(`Vertical spacing: ${verticalSpacing.toFixed(3)} inches`);
         console.log(`Seamless Y scaling for secondary models: ${seamlessScaling.y} (0.5% reduction for tight fit)`);
-        console.log(`All components using FIXED thickness: 1.0mm with proportional visual scaling`);
+        console.log(`All components using FIXED thickness: 1.0mm with proportional visual scaling + SELECTIVE 80% LENGTH EFFECT`);
+        
+        // 🎯 3D POSITION ANALYSIS
+        console.log(`\n🎯 3D POSITION ANALYSIS FOR ${state.configuration.toUpperCase()}:`);
+        positions.forEach((pos, index) => {
+            console.log(`  Adapter ${index + 1}: X=${pos.x.toFixed(3)}, Y=${pos.y.toFixed(3)}, Z=${pos.z.toFixed(3)}`);
+        });
+        console.log(`  Total X spread: ${positions.length > 1 ? (Math.max(...positions.map(p => p.x)) - Math.min(...positions.map(p => p.x))).toFixed(3) : '0.000'} inches`);
+        console.log(`  Total Y spread: ${positions.length > 1 ? (Math.max(...positions.map(p => p.y)) - Math.min(...positions.map(p => p.y))).toFixed(3) : '0.000'} inches`);
+        console.log('');
         
         // Calculate Z-axis adjustments based on height
         const zAdjustments = calculateZAxisAdjustment(state.dimensions.height);
@@ -1746,21 +1823,27 @@ function createUShapedGeometry(uWidth, uLength, height) {
         // CHECK IF ALL THREE INPUTS ARE VALID BEFORE APPLYING DYNAMIC POSITIONING
         const hasCompleteInputs = state.dimensions.length > 0 && state.dimensions.width > 0 && state.dimensions.height > 0;
         
-        // ===== CALCULATE DYNAMIC POSITIONING VALUES =====
+        // ===== CALCULATE DYNAMIC POSITIONING VALUES (WITH 80% LENGTH EFFECT!) =====
         const displayScale = 2 / 100; // 0.02
         
         let dynamicY, dynamicZ, centerZ_dynamic, roundedZ_dynamic, secondaryZ, ushapeZ;
         
         if (hasCompleteInputs) {
-            console.log(`✅ ALL THREE INPUTS PROVIDED - APPLYING FULL DYNAMIC POSITIONING`);
+            console.log(`✅ ALL THREE INPUTS PROVIDED - APPLYING FULL DYNAMIC POSITIONING with SELECTIVE 80% LENGTH EFFECT`);
             
-            // DYNAMIC Y CALCULATION (Length effect - center model growth) - REDUCED BY HALF
-            const currentLengthMM = state.dimensions.length * 25.4; // Convert to mm
-            const defaultLengthMM = 50; // 50mm baseline
+            // 🎯 DYNAMIC Y CALCULATION USING EFFECTIVE LENGTH (Length effect - center model growth) - REDUCED BY HALF
+            const effectiveLength = getEffectiveLength(state.dimensions.length); // Apply 80% effect
+            const currentLengthMM = effectiveLength * 25.4; // Convert effective length to mm
+            const defaultLengthMM = BASELINE_LENGTH_INCHES * 25.4; // 50mm baseline
             const lengthIncreaseMM = Math.max(0, currentLengthMM - defaultLengthMM); // Only positive increases
             const lengthIncrease3D = lengthIncreaseMM * displayScale; // Convert to 3D units
             const baseDynamicY = -0.488; // Original Y position
             dynamicY = baseDynamicY - (lengthIncrease3D * 0.5); // Move further down (HALF movement)
+            
+            console.log(`🎯 DYNAMIC Y with SELECTIVE 80% LENGTH EFFECT (center/secondary/u-shape only):`);
+            console.log(`  Original: ${state.dimensions.length.toFixed(4)}" → Effective: ${effectiveLength.toFixed(4)}"`);
+            console.log(`  Effective length MM: ${currentLengthMM.toFixed(1)}mm (${lengthIncreaseMM.toFixed(1)}mm increase)`);
+            console.log(`  Dynamic Y: ${baseDynamicY} → ${dynamicY.toFixed(3)} (down ${(lengthIncrease3D * 0.5).toFixed(3)})`);
             
             // DYNAMIC Z CALCULATION (Height effect - reduced from U-shape) - REDUCED BY HALF
             const baseDynamicZ = 0.03; // Original Z position  
@@ -1777,14 +1860,15 @@ function createUShapedGeometry(uWidth, uLength, height) {
             const additionalCenterZ = widthScale * maxZMovement; // Additional Z movement
             centerZ_dynamic = -0.0873 + additionalCenterZ; // Base position + additional movement
             
-            // DYNAMIC U-SHAPE Z CALCULATION (All three inputs combined - Length + Width + Height)
+            // 🎯 DYNAMIC U-SHAPE Z CALCULATION (All three inputs combined - Effective Length + Width + Height)
             const currentHeightMM = state.dimensions.height * 25.4; // Convert to mm
-            const baseLengthMM = 50; // 50mm baseline
+            const baseLengthMM = BASELINE_LENGTH_INCHES * 25.4; // 50mm baseline
             const baseHeightMM = 15; // 15mm baseline
             const targetCombinedMM = 750; // Combined target (250+250+250) for full movement
             
-            // Calculate combined dimensional increase
-            const lengthIncrease = Math.max(0, currentLengthMM - baseLengthMM);
+            // Calculate combined dimensional increase using effective length
+            const effectiveLengthMM = effectiveLength * 25.4;
+            const lengthIncrease = Math.max(0, effectiveLengthMM - baseLengthMM);
             const heightIncrease = Math.max(0, currentHeightMM - baseHeightMM);
             const combinedIncrease = lengthIncrease + widthIncrease + heightIncrease;
             const combinedScale = combinedIncrease / (targetCombinedMM - (baseLengthMM + baseWidthMM + baseHeightMM)); // Scale factor
@@ -1792,17 +1876,15 @@ function createUShapedGeometry(uWidth, uLength, height) {
             const maxUshapeZMovement = -0.0245; // Maximum additional Z movement for U-shape (POSITIVE - away from camera)
             const additionalUshapeZ = combinedScale * maxUshapeZMovement; // Additional Z movement based on ALL THREE inputs
             
+            console.log(`🎯 U-SHAPE Z with SELECTIVE 80% LENGTH EFFECT (center/secondary/u-shape only):`);
+            console.log(`  Using effective length: ${effectiveLengthMM.toFixed(1)}mm (vs original ${(state.dimensions.length * 25.4).toFixed(1)}mm)`);
+            console.log(`  Combined increase: ${combinedIncrease.toFixed(1)}mm (length: ${lengthIncrease.toFixed(1)}, width: ${widthIncrease.toFixed(1)}, height: ${heightIncrease.toFixed(1)})`);
+            
             // FIXED Z positions for other components + height-based adjustments
             roundedZ_dynamic = dynamicZ; // 🚀 DYNAMIC based on height
             secondaryZ = 0.03 + zAdjustments.secondary; // Base level + half width increase
             ushapeZ = 0.1497 + zAdjustments.ushape + additionalUshapeZ; // Fixed base + height adjustment + ALL-THREE-INPUTS Z offset
             
-            console.log(`🎯 DYNAMIC POSITIONING CALCULATIONS (REDUCED BY HALF):`);
-            console.log(`  Length: ${currentLengthMM.toFixed(1)}mm (${lengthIncreaseMM.toFixed(1)}mm increase)`);
-            console.log(`  Length 3D effect: ${lengthIncrease3D.toFixed(3)} units (reduced to ${(lengthIncrease3D * 0.5).toFixed(3)})`);
-            console.log(`  Dynamic Y: ${baseDynamicY} → ${dynamicY.toFixed(3)} (down ${(lengthIncrease3D * 0.5).toFixed(3)} - HALF movement)`);
-            console.log(`  Height Z adjustment: +${zAdjustments.ushape.toFixed(4)} units (reduced to ${(zAdjustments.ushape * 0.5).toFixed(4)})`);
-            console.log(`  Dynamic Z: ${baseDynamicZ} → ${dynamicZ.toFixed(4)} (up ${(zAdjustments.ushape * 0.5).toFixed(4)} - HALF movement)`);
         } else {
             console.log(`⏳ INCOMPLETE INPUTS - USING DEFAULT POSITIONING`);
             console.log(`  Length: ${state.dimensions.length > 0 ? '✓' : '✗'}`);
@@ -1826,9 +1908,9 @@ function createUShapedGeometry(uWidth, uLength, height) {
             const widthIncrease = state.dimensions.width - 0.9843; // Increase from baseline (25mm in inches)
             const widthXOffset = (widthIncrease * 25.4 * (2/100)) / 1.99; // Half the increase for X positioning
             
-            // 1. CREATE FLAT ROUNDED RECTANGLE (BOTTOM SUPPORT) - 🚀 CONDITIONAL DYNAMIC POSITIONING
+            // 1. CREATE FLAT ROUNDED RECTANGLE (BOTTOM SUPPORT) - 🚀 CONDITIONAL DYNAMIC POSITIONING (NO 80% LENGTH EFFECT)
             const roundedGeometry = createFlatRoundedRectWithHole(
-                state.dimensions.length,  // Pass length (NO SCALING for thickness)
+                state.dimensions.length,  // Pass length (ORIGINAL - NO 80% EFFECT)
                 state.dimensions.width,   // Pass width (affects rectangle width)
                 state.dimensions.height   // Pass height (affects rectangle length)
             );
@@ -1844,7 +1926,7 @@ function createUShapedGeometry(uWidth, uLength, height) {
             
             roundedModel.rotation.x = Math.PI / 2;
             roundedModel.scale.y= 1.02;
-                        roundedModel.scale.z= 1.02;
+            roundedModel.scale.z= 1.02;
             roundedModel.rotation.z = Math.PI / 2;
             // Shadows disabled for performance
             
@@ -1853,9 +1935,9 @@ function createUShapedGeometry(uWidth, uLength, height) {
 
             console.log(`✅ ROUNDED positioned at: (${pos.x.toFixed(2)}, ${roundedY.toFixed(3)}, ${roundedZ_dynamic.toFixed(4)})`);
 
-            // 2. CREATE CENTER MODEL (ON TOP OF ROUNDED) - NOW WITH VISUAL SCALING AND CONDITIONAL DYNAMIC Z
+            // 2. CREATE CENTER MODEL (ON TOP OF ROUNDED) - NOW WITH VISUAL SCALING AND CONDITIONAL DYNAMIC Z + 80% LENGTH EFFECT
             const centerGeometry = createPrecisionPart(
-                state.dimensions.length,  // Pass length
+                state.dimensions.length,  // Pass length (WITH 80% EFFECT)
                 state.dimensions.width,   // Pass width
                 state.dimensions.height   // Pass height for visual scaling
             );
@@ -1873,39 +1955,23 @@ function createUShapedGeometry(uWidth, uLength, height) {
             
             console.log(`✅ CENTER model positioned at: (${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${centerZ_dynamic.toFixed(5)})`);
 
-            // 3. CREATE RIGHT SIDE MODEL - HEIGHT-CONTROLLED WIDTH + CONDITIONAL Z POSITIONING + SEAMLESS SCALING
-            const rightGeometry = createSecondaryPart(
-                state.dimensions.length,  // Pass length for geometry
-                state.dimensions.width,   // Pass width
-                state.dimensions.height   // Pass height for width control and visual scaling
-            );
-            const rightMaterial = createPlasticMaterial(currentColor);
-            const rightModel = new THREE.Mesh(rightGeometry, rightMaterial);
+            // 3. CREATE LEFT SIDE MODEL - HEIGHT-CONTROLLED WIDTH + CONDITIONAL Z POSITIONING + SEAMLESS SCALING + 80% LENGTH EFFECT
+            // 🎯 DETERMINE IF LEFT MODEL SHOULD BE COMPLETELY FLAT (both sides)
+            const shouldFlattenBothSides = (config, adapterIndex) => {
+                // For single adapter, keep original behavior (one flat, one rounded)
+                if (config === 'single') return false;
+                
+                // For multi-adapter configs: first adapter keeps rounded bevel, others are completely flat
+                return adapterIndex > 0;
+            };
             
-            rightModel.name = `RightModel_${index + 1}`;
+            const flattenLeftModel = shouldFlattenBothSides(state.configuration, index);
             
-            // FIXED BASE + WIDTH OFFSET: No length-based effects, only width-based X positioning
-            const baseRightX = pos.x + 0.262; // FIXED base position (no length scaling)
-            const rightX = baseRightX + widthXOffset; // Add width-based X offset
-            
-            rightModel.position.set(rightX, pos.y, secondaryZ); // CONDITIONAL Z position
-            rightModel.rotation.z = Math.PI / 2;
-            rightModel.rotation.y = Math.PI / 2;
-            rightModel.scale.x = 1.001;
-            // 🚀 APPLY SEAMLESS SCALING FOR MULTI-ADAPTER CONFIGURATIONS (0.5% reduction)
-            rightModel.scale.y = seamlessScaling.y;
-            // Shadows disabled for performance
-            
-            scene.add(rightModel);
-            currentSecondaryModels.push(rightModel);
-
-            console.log(`✅ RIGHT model positioned at: (${rightX.toFixed(2)}, ${pos.y.toFixed(2)}, ${secondaryZ.toFixed(3)}) with Y scale: ${seamlessScaling.y}`);
-
-            // 4. CREATE LEFT SIDE MODEL - HEIGHT-CONTROLLED WIDTH + CONDITIONAL Z POSITIONING + SEAMLESS SCALING
             const leftGeometry = createSecondaryPart(
-                state.dimensions.length,  // Pass length for geometry
+                state.dimensions.length,  // Pass length for geometry (WITH 80% EFFECT)
                 state.dimensions.width,   // Pass width
-                state.dimensions.height   // Pass height for width control and visual scaling
+                state.dimensions.height,  // Pass height for width control and visual scaling
+                flattenLeftModel          // 🎯 NEW: Control bevel behavior
             );
             const leftMaterial = createPlasticMaterial(currentColor);
             const leftModel = new THREE.Mesh(leftGeometry, leftMaterial);
@@ -1927,12 +1993,59 @@ function createUShapedGeometry(uWidth, uLength, height) {
             scene.add(leftModel);
             currentLeftModels.push(leftModel);
 
-            console.log(`✅ LEFT model positioned at: (${leftX.toFixed(2)}, ${pos.y.toFixed(2)}, ${secondaryZ.toFixed(3)}) with Y scale: ${seamlessScaling.y}`);
+            const bevelType = flattenLeftModel ? 'BOTH SIDES FLAT' : 'BACK FLAT + FRONT ROUNDED';
+            console.log(`✅ LEFT model positioned at: (${leftX.toFixed(2)}, ${pos.y.toFixed(2)}, ${secondaryZ.toFixed(3)}) with Y scale: ${seamlessScaling.y} [${bevelType}]`);
 
-            // 5. 🚀 CREATE ENHANCED U-SHAPE MODEL - DYNAMIC BOTTOM WALL + CONDITIONAL CAVITY WIDTH + DYNAMIC RADII
+            // 🎯 CONDITIONAL RIGHT-SIDE MODEL CREATION - ONLY FOR RIGHTMOST ADAPTERS
+            const shouldShowRightModel = (config, adapterIndex) => {
+                switch(config) {
+                    case 'single': return adapterIndex === 0; // Single adapter (index 0)
+                    case 'row2': return adapterIndex === 1; // Show on 2nd adapter (rightmost)
+                    case 'row3': return adapterIndex === 2; // Show on 3rd adapter (rightmost)
+                    case 'row4': return adapterIndex === 3; // Show on 4th adapter (rightmost)
+                    case 'grid2x2': return adapterIndex === 1 || adapterIndex === 3; // Show on top-right (index 1) and bottom-right (index 3)
+                    default: return false;
+                }
+            };
+
+            if (shouldShowRightModel(state.configuration, index)) {
+                // CREATE RIGHT SIDE MODEL - HEIGHT-CONTROLLED WIDTH + CONDITIONAL Z POSITIONING + SEAMLESS SCALING + 80% LENGTH EFFECT
+                // 🎯 RIGHT MODELS ALWAYS KEEP ROUNDED BEVEL (they're end caps)
+                const rightGeometry = createSecondaryPart(
+                    state.dimensions.length,  // Pass length for geometry (WITH 80% EFFECT)
+                    state.dimensions.width,   // Pass width
+                    state.dimensions.height,  // Pass height for width control and visual scaling
+                    false                     // 🎯 Always keep rounded bevel for right models (end caps)
+                );
+                const rightMaterial = createPlasticMaterial(currentColor);
+                const rightModel = new THREE.Mesh(rightGeometry, rightMaterial);
+                
+                rightModel.name = `RightModel_${index + 1}`;
+                
+                // FIXED BASE + WIDTH OFFSET: No length-based effects, only width-based X positioning
+                const baseRightX = pos.x + 0.262; // FIXED base position (no length scaling)
+                const rightX = baseRightX + widthXOffset; // Add width-based X offset
+                
+                rightModel.position.set(rightX, pos.y, secondaryZ); // CONDITIONAL Z position
+                rightModel.rotation.z = Math.PI / 2;
+                rightModel.rotation.y = Math.PI / 2;
+                rightModel.scale.x = 1.001;
+                // 🚀 APPLY SEAMLESS SCALING FOR MULTI-ADAPTER CONFIGURATIONS (0.5% reduction)
+                rightModel.scale.y = seamlessScaling.y;
+                // Shadows disabled for performance
+                
+                scene.add(rightModel);
+                currentSecondaryModels.push(rightModel);
+
+                console.log(`✅ RIGHT model positioned at: (${rightX.toFixed(2)}, ${pos.y.toFixed(2)}, ${secondaryZ.toFixed(3)}) with Y scale: ${seamlessScaling.y} [${state.configuration.toUpperCase()} - ADAPTER ${index + 1}] [ROUNDED BEVEL - END CAP]`);
+            } else {
+                console.log(`🚫 RIGHT model SKIPPED for adapter ${index + 1} in ${state.configuration} configuration (only rightmost adapters get right-side models)`);
+            }
+
+            // 5. 🚀 CREATE ENHANCED U-SHAPE MODEL - DYNAMIC BOTTOM WALL + CONDITIONAL CAVITY WIDTH + DYNAMIC RADII + 80% LENGTH EFFECT
             const ushapeGeometry = createUShapedGeometry(
                 state.dimensions.width,   // Pass width (for cavity widening)
-                state.dimensions.length,  // Pass length
+                state.dimensions.length,  // Pass length (WITH 80% EFFECT)
                 state.dimensions.height   // Pass height (for dynamic bottom wall scaling)
             );
             const ushapeMaterial = createPlasticMaterial(currentColor);
@@ -1952,20 +2065,47 @@ function createUShapedGeometry(uWidth, uLength, height) {
         
         adjustCameraToFitModels();
         
-        console.log(`✅ SEAMLESS MULTI-ADAPTER ASSEMBLY COMPLETE:`);
+        console.log(`✅ SEAMLESS MULTI-ADAPTER ASSEMBLY COMPLETE with 80% LENGTH EFFECT:`);
         console.log(`   Configuration: ${state.configuration} (${positions.length} adapters)`);
-        console.log(`   ${currentRoundedModels.length} rounded + ${currentModels.length} center + ${currentSecondaryModels.length} right + ${currentLeftModels.length} left + ${currentUShapeModels.length} ushape models`);
-        console.log(`   🎯 ALL COMPONENTS: Consistent 1mm base + visual scaling (except rounded rectangle)`);
+        
+        // Dynamic model count display based on configuration
+        const rightModelCount = currentSecondaryModels.length;
+        let rightModelDescription = '';
+        
+        switch(state.configuration) {
+            case 'single':
+                rightModelDescription = 'All adapters have right-side models';
+                break;
+            case 'row2':
+                rightModelDescription = 'Right-side model on 2nd adapter (rightmost)';
+                break;
+            case 'row3':
+                rightModelDescription = 'Right-side model on 3rd adapter (rightmost)';
+                break;
+            case 'row4':
+                rightModelDescription = 'Right-side model on 4th adapter (rightmost)';
+                break;
+            case 'grid2x2':
+                rightModelDescription = 'Right-side models on top-right & bottom-right adapters';
+                break;
+        }
+        
+        console.log(`   ${currentRoundedModels.length} rounded + ${currentModels.length} center + ${rightModelCount} right + ${currentLeftModels.length} left + ${currentUShapeModels.length} ushape models`);
+        console.log(`   🎯 RIGHT-SIDE MODEL LOGIC: ${rightModelDescription}`);
+        console.log(`   🔧 LEFT-SIDE BEVEL LOGIC: First adapter keeps rounded bevel, subsequent adapters are completely flat for seamless joining`);
+        
+        console.log(`   🎯 MOST COMPONENTS: 80% LENGTH EFFECT (center, secondary, u-shape) + 1mm base + visual scaling`);
+        console.log(`   📐 ROUNDED RECTANGLE: Original dimensions (NO length reduction) + FIXED 1MM thickness`);
         console.log(`   🚀 SEAMLESS JOINING: Secondary models scaled to Y=${seamlessScaling.y} (0.5% reduction) for ${state.configuration}`);
         console.log(`   🌐 GRID SUPPORT: 2x2 grid enabled with ${currentRoundedModels.length} properly positioned rounded rectangles`);
         
         if (hasCompleteInputs) {
-            console.log(`   🚀 FULL DYNAMIC POSITIONING APPLIED (all 3 inputs provided)`);
+            console.log(`   🚀 FULL DYNAMIC POSITIONING APPLIED with SELECTIVE 80% LENGTH EFFECT (all 3 inputs provided)`);
         } else {
             console.log(`   ⏳ DEFAULT POSITIONING USED (waiting for complete inputs)`);
         }
         
-        console.log('=== END SEAMLESS MULTI-ADAPTER CONFIGURATION (0.5% REDUCTION + ALL RECTANGLES VISIBLE) ===\n');
+        console.log('=== END SEAMLESS MULTI-ADAPTER CONFIGURATION with SELECTIVE 80% LENGTH EFFECT (center/secondary/u-shape only) ===\n');
     }
     
     function adjustCameraToFitModels() {
@@ -2006,18 +2146,18 @@ function createUShapedGeometry(uWidth, uLength, height) {
     }
     
     function updateDimensions() {
-        console.log('\n=== 🚀 DIMENSIONS UPDATE WITH SEAMLESS MULTI-ADAPTER LAYOUTS (0.5% REDUCTION) ===');
+        console.log('\n=== 🚀 DIMENSIONS UPDATE with SELECTIVE 80% LENGTH EFFECT + SEAMLESS MULTI-ADAPTER LAYOUTS (0.5% REDUCTION) ===');
         console.log('Current dimensions (inches):', state.dimensions);
         console.log('Current configuration:', state.configuration);
         console.log(`User has changed dimensions: ${userHasChangedDimensions} (affects U-shape cavity: 85%→82%)`);
         
         updateConfiguration();
         
-        console.log('=== END SEAMLESS MULTI-ADAPTER UPDATE ===\n');
+        console.log('=== END SEAMLESS MULTI-ADAPTER UPDATE with SELECTIVE 80% LENGTH EFFECT ===\n');
     }
     
     function exportSTL() {
-        console.log('\n=== STL EXPORT STARTED (SEAMLESS MULTI-ADAPTER LAYOUTS) ===');
+        console.log('\n=== STL EXPORT STARTED with SELECTIVE 80% LENGTH EFFECT (SEAMLESS MULTI-ADAPTER LAYOUTS) ===');
         
         const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
         if (allModels.length === 0) {
@@ -2035,12 +2175,12 @@ function createUShapedGeometry(uWidth, uLength, height) {
                 console.log(`Added model ${index + 1} (${model.userData.type || model.name}) to export group`);
             });
             
-            console.log(`Exporting ${allModels.length} SEAMLESS MULTI-ADAPTER model(s) for ${state.configuration}`);
+            console.log(`Exporting ${allModels.length} SEAMLESS MULTI-ADAPTER model(s) with SELECTIVE 80% LENGTH EFFECT for ${state.configuration}`);
             
             const stlString = exporter.parse(exportGroup);
             
             const timestamp = new Date().toISOString().slice(0, 10);
-            const filename = `power_supply_holder_SEAMLESS_${state.configuration}_${state.dimensions.length.toFixed(2)}x${state.dimensions.width.toFixed(2)}x${state.dimensions.height.toFixed(2)}in_${state.color}_${timestamp}.stl`;
+            const filename = `power_supply_holder_SEAMLESS_80pct_${state.configuration}_${state.dimensions.length.toFixed(2)}x${state.dimensions.width.toFixed(2)}x${state.dimensions.height.toFixed(2)}in_${state.color}_${timestamp}.stl`;
             
             const blob = new Blob([stlString], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
@@ -2056,7 +2196,7 @@ function createUShapedGeometry(uWidth, uLength, height) {
             
             URL.revokeObjectURL(url);
             
-            console.log(`✅ SEAMLESS MULTI-ADAPTER STL exported successfully: ${filename}`);
+            console.log(`✅ SEAMLESS MULTI-ADAPTER STL with SELECTIVE 80% LENGTH EFFECT exported successfully: ${filename}`);
             console.log('=== STL EXPORT COMPLETED ===\n');
             
         } catch (error) {
@@ -2281,14 +2421,14 @@ function createUShapedGeometry(uWidth, uLength, height) {
         // Add to cart button
         const addToCartBtn = document.querySelector('.add-to-cart-btn');
         addToCartBtn.addEventListener('click', function() {
-            console.log('🚀 Add to cart clicked (SEAMLESS MULTI-ADAPTER - 0.5% REDUCTION)');
-            console.log('Current state with SEAMLESS LAYOUTS:', state);
+            console.log('🚀 Add to cart clicked with SELECTIVE 80% LENGTH EFFECT (SEAMLESS MULTI-ADAPTER - 0.5% REDUCTION)');
+            console.log('Current state with SEAMLESS LAYOUTS + SELECTIVE 80% LENGTH EFFECT:', state);
         });
         
         // Export STL button
         const exportBtn = document.querySelector('.export-stl-btn');
         exportBtn.addEventListener('click', function() {
-            console.log('🚀 Export STL clicked (SEAMLESS MULTI-ADAPTER - 0.5% REDUCTION)');
+            console.log('🚀 Export STL clicked with SELECTIVE 80% LENGTH EFFECT (SEAMLESS MULTI-ADAPTER - 0.5% REDUCTION)');
             exportSTL();
         });
 
@@ -2296,8 +2436,10 @@ function createUShapedGeometry(uWidth, uLength, height) {
         updateUIForUnit(state.currentUnit);
     }
     
-    console.log('✅ 🚀 SEAMLESS MULTI-ADAPTER CONFIGURATOR INITIALIZED (Universal Browser Fix)');
-    console.log('🎯 THICKNESS CONSISTENCY: All components use 1mm base + visual scaling (except rounded rectangle)');
+    console.log('✅ 🚀 SEAMLESS MULTI-ADAPTER CONFIGURATOR INITIALIZED with 80% LENGTH EFFECT (Universal Browser Fix)');
+    console.log('🎯 THICKNESS CONSISTENCY: All components use 1mm base + visual scaling');
+    console.log('📏 80% LENGTH EFFECT: Applied to center, secondary, and u-shape components (20% reduction on length increases)');
+    console.log('📐 ROUNDED RECTANGLE: Uses original dimensions (NO length reduction) for better base support');
     console.log('🚀 SEAMLESS JOINING: Secondary models scale with 0.5% reduction for perfect multi-adapter layouts');
     console.log('🌐 2x2 GRID ENABLED: With 4 properly positioned rounded rectangles and dynamic spacing');
     console.log('📏 DYNAMIC SPACING: Horizontal (width-based) + Vertical (length-based) spacing');
@@ -2308,6 +2450,9 @@ function createUShapedGeometry(uWidth, uLength, height) {
     console.log('🔥 PERFORMANCE OPTIMIZED: Shadows disabled, FPS counter added for mobile-friendly rendering');
     console.log('📐 DEFAULT UNIT: Inches (in) - User-friendly for US market');
     console.log('🌐 UNIVERSAL COMPATIBILITY: Works in all browsers - Firefox, Chrome, Safari, Edge!');
+    console.log('📺 TALLER CANVAS: Increased height to 650px (30% taller) for better viewing experience');
+    console.log('🎯 RIGHT-SIDE MODELS: Smart visibility - only rightmost adapters in each configuration (Single: all, 2x: 2nd, 3x: 3rd, 4x: 4th, 2x2: top-right & bottom-right)');
+    console.log('🔧 LEFT-SIDE BEVELS: First adapter keeps rounded bevel, all subsequent adapters are completely flat for seamless multi-adapter joining');
 });
 </script>
 
