@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anatomical Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            overflow: hidden;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #enterButton {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            padding: 15px 30px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        #enterButton:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+        }
+        
+        #enterButton:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-size: 16px;
+            z-index: 100;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <button id="enterButton">🌸 ENTER 🌸</button>
+        <div class="info">
+            <p>Educational Anatomical Visualization</p>
+            <p>Click ENTER to explore</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, anatomicalStructure;
+        let isAnimating = false;
+        
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 8);
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            const pointLight1 = new THREE.PointLight(0xff69b4, 0.5, 100);
+            pointLight1.position.set(-3, 2, 3);
+            scene.add(pointLight1);
+            
+            const pointLight2 = new THREE.PointLight(0x87ceeb, 0.5, 100);
+            pointLight2.position.set(3, -2, 3);
+            scene.add(pointLight2);
+            
+            // Create anatomical structure
+            createAnatomicalStructure();
+            
+            // Add floating decorative elements
+            addDecoativeElements();
+            
+            // Animation loop
+            animate();
+        }
+        
+        function createAnatomicalStructure() {
+            anatomicalStructure = new THREE.Group();
+            
+            // Outer layers (labia majora - outer petals)
+            const outerLayer1 = createPetalLayer(2.5, 1.8, 0x8B4B8B, -0.3);
+            const outerLayer2 = createPetalLayer(2.3, 1.6, 0x9D5C9D, -0.2);
+            
+            // Inner layers (labia minora - inner petals)
+            const innerLayer1 = createPetalLayer(1.8, 1.3, 0xD8A7D8, -0.1);
+            const innerLayer2 = createPetalLayer(1.5, 1.0, 0xE6B8E6, 0);
+            
+            // Vestibule area
+            const vestibule = createPetalLayer(1.2, 0.8, 0xF0C8F0, 0.1);
+            
+            // Central opening (vaginal orifice)
+            const centralOpening = new THREE.RingGeometry(0.2, 0.5, 16);
+            const centralMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x4A1A4A, 
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.8
+            });
+            const centralMesh = new THREE.Mesh(centralOpening, centralMaterial);
+            centralMesh.position.z = 0.15;
+            
+            // Clitoral area (top)
+            const clitoralArea = new THREE.SphereGeometry(0.3, 8, 6);
+            const clitoralMaterial = new THREE.MeshLambertMaterial({ color: 0xC8A8C8 });
+            const clitoralMesh = new THREE.Mesh(clitoralArea, clitoralMaterial);
+            clitoralMesh.position.set(0, 1.2, 0.1);
+            clitoralMesh.scale.set(1, 0.6, 0.8);
+            
+            anatomicalStructure.add(outerLayer1);
+            anatomicalStructure.add(outerLayer2);
+            anatomicalStructure.add(innerLayer1);
+            anatomicalStructure.add(innerLayer2);
+            anatomicalStructure.add(vestibule);
+            anatomicalStructure.add(centralMesh);
+            anatomicalStructure.add(clitoralMesh);
+            
+            scene.add(anatomicalStructure);
+        }
+        
+        function createPetalLayer(width, height, color, zPosition) {
+            const shape = new THREE.Shape();
+            
+            // Create an oval petal-like shape
+            const centerX = 0;
+            const centerY = 0;
+            const radiusX = width / 2;
+            const radiusY = height / 2;
+            
+            // Create organic, petal-like curves
+            shape.moveTo(centerX, centerY + radiusY);
+            
+            // Right curve
+            shape.bezierCurveTo(
+                centerX + radiusX * 0.8, centerY + radiusY * 0.6,
+                centerX + radiusX, centerY + radiusY * 0.2,
+                centerX + radiusX * 0.9, centerY
+            );
+            
+            // Bottom right curve
+            shape.bezierCurveTo(
+                centerX + radiusX * 0.8, centerY - radiusY * 0.3,
+                centerX + radiusX * 0.4, centerY - radiusY * 0.8,
+                centerX, centerY - radiusY
+            );
+            
+            // Bottom left curve
+            shape.bezierCurveTo(
+                centerX - radiusX * 0.4, centerY - radiusY * 0.8,
+                centerX - radiusX * 0.8, centerY - radiusY * 0.3,
+                centerX - radiusX * 0.9, centerY
+            );
+            
+            // Left curve
+            shape.bezierCurveTo(
+                centerX - radiusX, centerY + radiusY * 0.2,
+                centerX - radiusX * 0.8, centerY + radiusY * 0.6,
+                centerX, centerY + radiusY
+            );
+            
+            const geometry = new THREE.ShapeGeometry(shape);
+            const material = new THREE.MeshLambertMaterial({ 
+                color: color,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.z = zPosition;
+            
+            return mesh;
+        }
+        
+        function addDecoativeElements() {
+            // Add some floating sparkle elements
+            for (let i = 0; i < 50; i++) {
+                const sparkle = new THREE.SphereGeometry(0.02, 4, 4);
+                const sparkleMaterial = new THREE.MeshBasicMaterial({ 
+                    color: Math.random() > 0.5 ? 0xff69b4 : 0x87ceeb,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const sparkleMesh = new THREE.Mesh(sparkle, sparkleMaterial);
+                
+                sparkleMesh.position.set(
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 20
+                );
+                
+                scene.add(sparkleMesh);
+                
+                // Animate sparkles
+                sparkleMesh.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        (Math.random() - 0.5) * 0.02,
+                        (Math.random() - 0.5) * 0.02
+                    )
+                };
+            }
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate the anatomical structure gently
+            if (anatomicalStructure && !isAnimating) {
+                anatomicalStructure.rotation.z += 0.001;
+            }
+            
+            // Animate sparkles
+            scene.traverse((child) => {
+                if (child.userData && child.userData.velocity) {
+                    child.position.add(child.userData.velocity);
+                    
+                    // Reset position if too far
+                    if (child.position.length() > 15) {
+                        child.position.set(
+                            (Math.random() - 0.5) * 20,
+                            (Math.random() - 0.5) * 20,
+                            (Math.random() - 0.5) * 20
+                        );
+                    }
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        function animateEntry() {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            const button = document.getElementById('enterButton');
+            button.style.display = 'none';
+            
+            // Animate camera movement through the center
+            const startPosition = camera.position.clone();
+            const endPosition = new THREE.Vector3(0, 0, -10);
+            const duration = 3000; // 3 seconds
+            const startTime = Date.now();
+            
+            function updateCamera() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function for smooth animation
+                const eased = 1 - Math.pow(1 - progress, 3);
+                
+                camera.position.lerpVectors(startPosition, endPosition, eased);
+                camera.lookAt(0, 0, 0);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCamera);
+                } else {
+                    // Reset after animation
+                    setTimeout(() => {
+                        camera.position.copy(startPosition);
+                        button.style.display = 'block';
+                        isAnimating = false;
+                    }, 1000);
+                }
+            }
+            
+            updateCamera();
+        }
+        
+        // Event listeners
+        document.getElementById('enterButton').addEventListener('click', animateEntry);
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

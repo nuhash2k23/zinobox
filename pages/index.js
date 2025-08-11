@@ -16,6 +16,7 @@ import  AJ  from "@/components/hooks/AJ";
 
 import  Blob  from "@/components/hooks/Blob";
 import TShirtConfigurator from "@/components/hooks/Tshirt";
+import VerandaConfigurator from "@/components/hooks/Veranext";
 const GravitasBold = localFont({
   src: "./fonts/Studio K - Gravitas Bold.otf",
   variable: "--font-geist-sans",
@@ -44,7 +45,8 @@ export default function Home() {
      {/* <GradientCanvas/> */}
      {/* <Scene/> */}
      {/* <Trial/> */}
-     <AJ/>
+     {/* <AJ/> */}
+     <VerandaConfigurator/>
      {/* <TShirtConfigurator/> */}
      {/* <BridgeScene/> */}
      {/* <Blob/> */}

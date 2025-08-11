@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sperm GLB Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 100;
+            max-width: 300px;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .controls {
+            margin-top: 10px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="loading">Loading sperm.glb...</div>
+        <div id="info" style="display: none;">
+            <h3>Sperm GLB Viewer</h3>
+            <p>Click on the model to play shape key animation</p>
+            <div class="controls">
+                <button id="playBtn" disabled>Play Animation</button>
+                <button id="resetBtn" disabled>Reset</button>
+                <button id="testBtn" disabled>Test Morph (Max)</button>
+            </div>
+            <p id="status">Model not loaded</p>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        
+        // Make THREE and GLTFLoader available globally
+        window.THREE = THREE;
+        window.GLTFLoader = GLTFLoader;
+        
+        // Initialize the app after modules are loaded
+        initApp();
+    </script>
+    <script>
+        // Initialize the application
+        function initApp() {
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x2a2a2a);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 10, 5);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        scene.add(directionalLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 0.5);
+        pointLight.position.set(-10, 10, 10);
+        scene.add(pointLight);
+
+        // Variables for animation
+        let mixer;
+        let model;
+        let animations = [];
+        let currentAction;
+        let isAnimating = false;
+
+        // Raycaster for click detection
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // GLTFLoader
+        const loader = new GLTFLoader();
+
+        // Load the sperm.glb file
+        function loadModel() {
+            const loadingDiv = document.getElementById('loading');
+            const infoDiv = document.getElementById('info');
+            const statusEl = document.getElementById('status');
+
+            loader.load(
+                '/sperm.glb',
+                function(gltf) {
+                    console.log('Model loaded successfully:', gltf);
+                    
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Set up animation mixer
+                    mixer = new THREE.AnimationMixer(model);
+                    animations = gltf.animations;
+
+                    console.log('Available animations:', animations.length);
+                    animations.forEach((clip, index) => {
+                        console.log(`Animation ${index}:`, clip.name, 'Duration:', clip.duration);
+                    });
+
+                    // Enable morph targets if they exist and collect them
+                    model.traverse((child) => {
+                        if (child.isMesh && child.morphTargetInfluences) {
+                            console.log('Found mesh with morph targets:', child.name);
+                            console.log('Morph targets count:', child.morphTargetInfluences.length);
+                            console.log('Morph target dictionary:', child.morphTargetDictionary);
+                            
+                            // Enable morph targets on material
+                            if (child.material) {
+                                child.material.morphTargets = true;
+                                child.material.needsUpdate = true;
+                            }
+                            
+                            // Reset morph target influences to 0
+                            for (let i = 0; i < child.morphTargetInfluences.length; i++) {
+                                child.morphTargetInfluences[i] = 0;
+                            }
+                            
+                            morphMeshes.push(child);
+                        }
+                    });
+
+                    // Position the model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    
+                    model.position.sub(center); // Center the model
+                    
+                    // Position camera based on model size
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    camera.position.set(0, 0, maxDim * 2);
+                    camera.lookAt(0, 0, 0);
+
+                    // Hide loading, show info
+                    loadingDiv.style.display = 'none';
+                    infoDiv.style.display = 'block';
+                    
+                    // Update UI - enable play button if we have animations OR morph targets
+                    const hasPlayableContent = animations.length > 0 || morphMeshes.length > 0;
+                    if (animations.length > 0) {
+                        statusEl.textContent = `Model loaded! ${animations.length} animation(s) found`;
+                    } else if (morphMeshes.length > 0) {
+                        statusEl.textContent = `Model loaded! ${morphMeshes.length} mesh(es) with morph targets found`;
+                    } else {
+                        statusEl.textContent = 'Model loaded! No animations or morph targets found';
+                    }
+                    
+                    document.getElementById('playBtn').disabled = !hasPlayableContent;
+                    document.getElementById('resetBtn').disabled = false;
+                    document.getElementById('testBtn').disabled = morphMeshes.length === 0;
+
+                    console.log('Model setup complete');
+                },
+                function(progress) {
+                    console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
+                },
+                function(error) {
+                    console.error('Error loading model:', error);
+                    document.getElementById('loading').innerHTML = 
+                        'Error loading sperm.glb<br><small>Make sure the file exists in the same directory</small>';
+                }
+            );
+        }
+
+        // Variables for morph target animation
+        let morphMeshes = [];
+        let animationStartTime = 0;
+        const animationDuration = 2000; // 2 seconds
+
+        // Play animation function
+        function playAnimation() {
+            if (isAnimating) return;
+
+            // If we have pre-baked animations, use those
+            if (mixer && animations.length > 0) {
+                // Stop any current animation
+                if (currentAction) {
+                    currentAction.stop();
+                }
+
+                // Play the first animation
+                const clip = animations[0];
+                currentAction = mixer.clipAction(clip);
+                
+                currentAction.setLoop(THREE.LoopOnce);
+                currentAction.clampWhenFinished = true;
+                
+                currentAction.reset();
+                currentAction.play();
+                
+                isAnimating = true;
+                document.getElementById('status').textContent = 'Playing animation...';
+                
+                const onFinished = () => {
+                    isAnimating = false;
+                    document.getElementById('status').textContent = 'Animation finished - Click to play again';
+                    mixer.removeEventListener('finished', onFinished);
+                };
+                
+                mixer.addEventListener('finished', onFinished);
+            } 
+            // If no pre-baked animations but we have morph targets, animate them manually
+            else if (morphMeshes.length > 0) {
+                isAnimating = true;
+                animationStartTime = Date.now();
+                document.getElementById('status').textContent = 'Playing morph animation...';
+                
+                // The animation will be handled in the render loop
+                setTimeout(() => {
+                    isAnimating = false;
+                    document.getElementById('status').textContent = 'Morph animation finished - Click to play again';
+                    resetAnimation();
+                }, animationDuration);
+            }
+        }
+
+        // Test function - set all morph targets to maximum
+        function testMorphTargets() {
+            morphMeshes.forEach((mesh, index) => {
+                if (mesh.morphTargetInfluences && mesh.morphTargetInfluences.length > 0) {
+                    mesh.morphTargetInfluences[0] = 1.0; // Set to maximum
+                    console.log(`Set mesh ${index} (${mesh.name}) morph target to 1.0`);
+                }
+            });
+            document.getElementById('status').textContent = 'Morph targets set to maximum - Click Reset to return to normal';
+        }
+        function resetAnimation() {
+            if (currentAction) {
+                currentAction.stop();
+                currentAction.reset();
+            }
+            
+            isAnimating = false;
+            
+            // Reset morph targets
+            morphMeshes.forEach(mesh => {
+                for (let i = 0; i < mesh.morphTargetInfluences.length; i++) {
+                    mesh.morphTargetInfluences[i] = 0;
+                }
+            });
+            
+            const hasPlayableContent = animations.length > 0 || morphMeshes.length > 0;
+            if (hasPlayableContent) {
+                document.getElementById('status').textContent = 'Animation reset - Click to play';
+            }
+        }
+
+        // Click handling
+        function onMouseClick(event) {
+            if (!model) return;
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(model, true);
+
+            if (intersects.length > 0) {
+                console.log('Model clicked!');
+                playAnimation();
+            }
+        }
+
+        // Event listeners
+        window.addEventListener('click', onMouseClick);
+        document.getElementById('playBtn').addEventListener('click', playAnimation);
+        document.getElementById('resetBtn').addEventListener('click', resetAnimation);
+        document.getElementById('testBtn').addEventListener('click', testMorphTargets);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Animation loop
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            
+            // Update animation mixer for pre-baked animations
+            if (mixer) {
+                mixer.update(delta);
+            }
+            
+            // Handle manual morph target animation
+            if (isAnimating && morphMeshes.length > 0 && animations.length === 0) {
+                const elapsed = Date.now() - animationStartTime;
+                const progress = Math.min(elapsed / animationDuration, 1);
+                
+                // Create more dramatic wave patterns
+                const time = progress * Math.PI * 2; // Full cycle
+                const wave1 = (Math.sin(time * 3) + 1) * 0.5; // Fast oscillation 0-1
+                const wave2 = (Math.sin(time * 2) + 1) * 0.5; // Medium oscillation 0-1
+                const wave3 = (Math.sin(time) + 1) * 0.5; // Slow wave 0-1
+                
+                // Apply different animation patterns to different meshes
+                morphMeshes.forEach((mesh, index) => {
+                    if (mesh.morphTargetInfluences && mesh.morphTargetInfluences.length > 0) {
+                        let value = 0;
+                        switch(index) {
+                            case 0: // First mesh - fast wiggle
+                                value = wave1;
+                                break;
+                            case 1: // Second mesh - medium pulse
+                                value = wave2;
+                                break;
+                            case 2: // Third mesh - slow wave
+                                value = wave3;
+                                break;
+                            default:
+                                value = (Math.sin(time + index) + 1) * 0.5;
+                        }
+                        
+                        // Clamp value between 0 and 1
+                        value = Math.max(0, Math.min(1, value));
+                        mesh.morphTargetInfluences[0] = value;
+                        
+                        // Debug output (remove this later)
+                        if (Math.floor(elapsed / 100) !== Math.floor((elapsed - 16) / 100)) {
+                            console.log(`Mesh ${index} (${mesh.name}): morph value = ${value.toFixed(3)}`);
+                        }
+                    }
+                });
+            }
+
+            // Rotate model slowly for better viewing (only when not animating)
+            if (model && !isAnimating) {
+                model.rotation.y += 0.01;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Basic orbit controls (mouse drag to rotate camera)
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            if (e.button === 2) { // Right mouse button
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaMove = {
+                    x: e.clientX - previousMousePosition.x,
+                    y: e.clientY - previousMousePosition.y
+                };
+
+                const deltaRotationQuaternion = new THREE.Quaternion()
+                    .setFromEuler(new THREE.Euler(
+                        toRadians(deltaMove.y * 1),
+                        toRadians(deltaMove.x * 1),
+                        0,
+                        'XYZ'
+                    ));
+
+                camera.quaternion.multiplyQuaternions(deltaRotationQuaternion, camera.quaternion);
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        renderer.domElement.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Disable context menu on right click
+        renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Mouse wheel zoom
+        renderer.domElement.addEventListener('wheel', (e) => {
+            const delta = e.deltaY * 0.01;
+            camera.position.multiplyScalar(1 + delta);
+        });
+
+        function toRadians(angle) {
+            return angle * (Math.PI / 180);
+        }
+
+        // Start the application
+        loadModel();
+        animate();
+        
+        } // End of initApp function
+    </script>
+</body>
+</html>
