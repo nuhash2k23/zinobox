@@ -525,7 +525,7 @@
     <!-- Total and Cart -->
     <div class="total-section">
         <div class="total-price">Total: $0.00</div>
-        <button class="add-to-cart-btn">Add to Cart - $0.00</button>
+        <button class="add-to-cart-btn">📥 Download STL File - $0.00</button>
         <button class="export-stl-btn">📁 Export STL File</button>
         
         <div class="shipping-info">
@@ -1869,7 +1869,7 @@ function createUShapedGeometry(uWidth, uLength, height) {
             console.log(`✅ ALL THREE INPUTS PROVIDED - APPLYING FULL DYNAMIC POSITIONING with SELECTIVE 80% LENGTH EFFECT + 1% SECONDARY REDUCTION`);
             
             // 🎯 DYNAMIC Y CALCULATION USING EFFECTIVE LENGTH (Length effect - center model growth) - REDUCED BY HALF
-            const effectiveLength = getEffectiveLength(state.dimensions.length); // Apply 80% effect
+            const effectiveLength = getEffectiveLength(state.dimensions.length);
             const currentLengthMM = effectiveLength * 25.4; // Convert effective length to mm
             const defaultLengthMM = BASELINE_LENGTH_INCHES * 25.4; // 50mm baseline
             const lengthIncreaseMM = Math.max(0, currentLengthMM - defaultLengthMM); // Only positive increases
@@ -2199,7 +2199,7 @@ function createUShapedGeometry(uWidth, uLength, height) {
     }
     
     function exportSTL() {
-        console.log('\n=== STL EXPORT STARTED with FIXED COLUMN SPACING ===');
+        console.log('\n=== STL EXPORT STARTED with FIXED COLUMN SPACING (FULL SIZE) ===');
         
         const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
         if (allModels.length === 0) {
@@ -2211,13 +2211,40 @@ function createUShapedGeometry(uWidth, uLength, height) {
             const exporter = new STLExporter();
             const exportGroup = new THREE.Group();
             
+            // 🎯 SCALE FACTOR: Convert from display size back to real-world size
+            const DISPLAY_SCALE = 2 / 100; // 0.02 (what was used to create models)
+            const EXPORT_SCALE = 1 / DISPLAY_SCALE; // 50 (to get back to real size)
+            
+            console.log(`🎯 SCALING MODELS FOR EXPORT:`);
+            console.log(`  Display scale used: ${DISPLAY_SCALE} (models are ${DISPLAY_SCALE * 100}% of real size)`);
+            console.log(`  Export scale factor: ${EXPORT_SCALE}x (to restore actual size)`);
+            
             allModels.forEach((model, index) => {
                 const modelClone = model.clone();
+                
+                // 🚀 SCALE BACK TO ACTUAL SIZE for STL export
+                modelClone.scale.multiplyScalar(EXPORT_SCALE);
+                
+                // Also scale the position to maintain relative spacing
+                modelClone.position.multiplyScalar(EXPORT_SCALE);
+                
                 exportGroup.add(modelClone);
-                console.log(`Added model ${index + 1} (${model.userData.type || model.name}) to export group`);
+                
+                console.log(`✅ Model ${index + 1} (${model.name}) scaled to actual size: ${EXPORT_SCALE}x`);
             });
             
-            console.log(`Exporting ${allModels.length} FIXED COLUMN SPACING model(s) for ${state.configuration}`);
+            // Calculate expected dimensions for verification
+            const expectedLengthMM = state.dimensions.length * 25.4; // Convert inches to mm
+            const expectedWidthMM = state.dimensions.width * 25.4;
+            const expectedHeightMM = state.dimensions.height * 25.4;
+            
+            console.log(`📏 EXPECTED STL DIMENSIONS (actual size):`);
+            console.log(`  Length: ${expectedLengthMM.toFixed(1)}mm (${state.dimensions.length.toFixed(2)}")`);
+            console.log(`  Width: ${expectedWidthMM.toFixed(1)}mm (${state.dimensions.width.toFixed(2)}")`);
+            console.log(`  Height: ${expectedHeightMM.toFixed(1)}mm (${state.dimensions.height.toFixed(2)}")`);
+            console.log(`  Thickness: 1.0mm (fixed across all components)`);
+            
+            console.log(`🎯 Exporting ${allModels.length} FULL-SIZE models for ${state.configuration} configuration`);
             
             const stlString = exporter.parse(exportGroup);
             
@@ -2238,8 +2265,10 @@ function createUShapedGeometry(uWidth, uLength, height) {
             
             URL.revokeObjectURL(url);
             
-            console.log(`✅ FIXED COLUMN SPACING STL exported successfully: ${filename}`);
-            console.log('=== STL EXPORT COMPLETED ===\n');
+            console.log(`✅ FULL-SIZE STL exported successfully: ${filename}`);
+            console.log(`📐 Your STL should now show correct dimensions in your slicer software!`);
+            console.log(`🎯 Expected size: ~${expectedLengthMM.toFixed(0)}mm × ${expectedWidthMM.toFixed(0)}mm × ${expectedHeightMM.toFixed(0)}mm`);
+            console.log('=== STL EXPORT COMPLETED (ACTUAL SIZE) ===\n');
             
         } catch (error) {
             console.error('Error exporting STL:', error);
@@ -2460,14 +2489,15 @@ function createUShapedGeometry(uWidth, uLength, height) {
             console.log('Usage description:', this.value);
         });
         
-        // Add to cart button
+        // 🎯 UPDATED: Add to cart button now downloads STL
         const addToCartBtn = document.querySelector('.add-to-cart-btn');
         addToCartBtn.addEventListener('click', function() {
-            console.log('🚀 Add to cart clicked with FIXED COLUMN SPACING');
+            console.log('🚀 Download STL clicked (Add to Cart functionality)');
             console.log('Current state with FIXED COLUMN SPACING:', state);
+            exportSTL(); // Call the STL export function
         });
         
-        // Export STL button
+        // Export STL button (backup option)
         const exportBtn = document.querySelector('.export-stl-btn');
         exportBtn.addEventListener('click', function() {
             console.log('🚀 Export STL clicked with FIXED COLUMN SPACING');
@@ -2500,6 +2530,7 @@ function createUShapedGeometry(uWidth, uLength, height) {
     console.log('✨ MAIN FIX: All four geometries (center, left, right, U-shape) now have IDENTICAL length using 25.4 multiplier + scale 1.0');
     console.log('🎯 COLUMN SPACING FIX: Grid vertical spacing = length dimension (perfect 1:1 ratio for natural spacing)');
     console.log('📏 SECONDARY FIT: 1% width reduction when all 3 inputs provided for improved adapter fit');
+    console.log('💾 ADD TO CART: Now downloads STL file directly!');
 });
 </script>
 
