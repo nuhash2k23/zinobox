@@ -971,7 +971,7 @@ const VerandaConfigurator = () => {
           <Canvas 
             shadows={!mobile} // Disable shadows on mobile for performance
             camera={{ 
-              position: [-1,1,11], 
+              position: [-2,1,6], 
               fov: mobile ? 50 : 45 
             }}
             dpr={pixelRatio}
@@ -1015,7 +1015,7 @@ const VerandaConfigurator = () => {
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI / 2.2}
                 target={[6, 0.5 ,3]} // Match the model position
-             
+             maxDistance={14}
                 enableDamping={true}
                 dampingFactor={0.05}
                 touches={THREE ? {
