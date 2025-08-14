@@ -1035,12 +1035,12 @@ const VerandaConfigurator = () => {
             }}
             dpr={pixelRatio}
             performance={{
-              min: mobile ? 0.2 : 0.5,
-              max: mobile ? 0.8 : 1,
-              debounce: mobile ? 200 : 100
+              min: mobile ? 0.5 : 0.5,
+              max: mobile ? 1 : 1,
+              debounce: mobile ? 100 : 100
             }}
             gl={{
-              powerPreference: mobile ? 'low-power' : 'high-performance',
+              powerPreference: mobile ? 'default' : 'high-performance',
               antialias: true,
               alpha: false,
               stencil: false,
