@@ -249,7 +249,19 @@ const ARModal = ({ isOpen, onClose }) => {
           textAlign: 'center'
         }}
       >
-  
+        <div style={{
+          width: '60px',
+          height: '60px',
+          backgroundColor: '#4285f4',
+          borderRadius: '50%',
+          margin: '0 auto 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px'
+        }}>
+          📱
+        </div>
         
         <h3 style={{
           margin: '0 0 16px 0',
@@ -299,7 +311,7 @@ const ConfiguratorContent = ({
   materialColor, setMaterialColor, mobile,
   dimensionInput, setDimensionInput, isListening, toggleVoiceInput, 
   speechSupported, parseDimensions, parseStatus,
-  showARModal, setShowARModal
+  showARModal, setShowARModal, timeOfDay, setTimeOfDay
 }) => {
   return (
     <div style={{ maxWidth: mobile ? '100%' : '300px' }}>
@@ -449,6 +461,52 @@ const ConfiguratorContent = ({
             {parseStatus.message}
           </div>
         )}
+      </div>
+
+      {/* Time of Day Options */}
+      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+        <h3 style={{ 
+          margin: '0 0 12px 0', 
+          fontSize: mobile ? '14px' : '16px', 
+          fontWeight: '500',
+          color: '#333',
+          letterSpacing: '-0.01em'
+        }}>
+          Time of Day
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: mobile ? '8px' : '12px' }}>
+          {[
+            { type: 'day', icon: '☀️', label: 'Day' },
+            { type: 'night', icon: '🌙', label: 'Night' }
+          ].map(({ type, icon, label }) => (
+            <button
+              key={type}
+              onClick={() => setTimeOfDay(type)}
+              style={{
+                padding: mobile ? '12px 8px' : '16px 12px',
+                border: timeOfDay === type ? '3px solid #000' : '1px solid #d0d0d0',
+                borderRadius: '8px',
+                backgroundColor: timeOfDay === type ? '#f8f8f8' : 'white',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: mobile ? '6px' : '8px',
+                touchAction: 'manipulation'
+              }}
+            >
+              <span style={{ fontSize: mobile ? '16px' : '20px' }}>{icon}</span>
+              <span style={{
+                fontSize: mobile ? '12px' : '14px',
+                fontWeight: '500',
+                color: timeOfDay === type ? '#000' : '#666'
+              }}>
+                {label}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Light Type Options */}
@@ -607,19 +665,19 @@ const ConfiguratorContent = ({
             touchAction: 'manipulation'
           }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#000000ff';
+            e.target.style.backgroundColor = '#4285f4';
             e.target.style.color = 'white';
           }}
           onMouseLeave={(e) => {
             e.target.style.backgroundColor = 'white';
-            e.target.style.color = '#000000ff';
+            e.target.style.color = '#4285f4';
           }}
         >
-      
+          <span style={{ fontSize: mobile ? '20px' : '24px' }}>📱</span>
           <span style={{
             fontSize: mobile ? '14px' : '16px',
             fontWeight: '600',
-            color: '#000000ff'
+            color: '#4285f4'
           }}>
             AR View
           </span>
@@ -744,6 +802,7 @@ const VerandaConfigurator = () => {
   const [configOpen, setConfigOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [showARModal, setShowARModal] = useState(false);
+  const [timeOfDay, setTimeOfDay] = useState('day'); // 'day' or 'night'
 
   // New states for AI dimension parsing and recording
   const [dimensionInput, setDimensionInput] = useState('3m by 3m');
@@ -969,9 +1028,9 @@ const VerandaConfigurator = () => {
       }}>
         <Suspense fallback={<SimpleFallback />}>
           <Canvas 
-            shadows={!mobile} // Disable shadows on mobile for performance
+            shadows={true} // Enable shadows on both desktop and mobile
             camera={{ 
-              position: [-2,1,6], 
+              position: [-1,1,11], 
               fov: mobile ? 50 : 45 
             }}
             dpr={pixelRatio}
@@ -1000,13 +1059,13 @@ const VerandaConfigurator = () => {
                 roofType={roofType}
                 materialColor={materialColor}
                 mobile={mobile}
+                timeOfDay={timeOfDay}
               />
-              {/* Simple HDR Environment with background */}
+              {/* HDR Environment with background - changes based on time of day */}
               <Environment 
-              // preset='sunset'
-                files="/blouberg_sunrise_2_1k.hdr" 
+                files={timeOfDay === 'night' ? "/sandsloot.hdr" : "/blouberg_sunrise_2_1k.hdr"}
                 background
-                backgroundIntensity={1.4}
+                backgroundIntensity={timeOfDay === 'night' ? 0.8 : 1.4}
               />
               <OrbitControls 
                 enablePan={!mobile}
@@ -1014,8 +1073,8 @@ const VerandaConfigurator = () => {
                 enableRotate={true}
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI / 2.2}
+                maxDistance={12}
                 target={[6, 0.5 ,3]} // Match the model position
-             maxDistance={14}
                 enableDamping={true}
                 dampingFactor={0.05}
                 touches={THREE ? {
@@ -1072,7 +1131,7 @@ const VerandaConfigurator = () => {
               materialColor, setMaterialColor, mobile,
               dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
               speechSupported, parseDimensions, parseStatus,
-              showARModal, setShowARModal
+              showARModal, setShowARModal, timeOfDay, setTimeOfDay
             }}
           />
         </div>
@@ -1161,7 +1220,7 @@ const VerandaConfigurator = () => {
                   materialColor, setMaterialColor, mobile,
                   dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
                   speechSupported, parseDimensions, parseStatus,
-                  showARModal, setShowARModal
+                  showARModal, setShowARModal, timeOfDay, setTimeOfDay
                 }}
               />
             </div>
@@ -1172,56 +1231,23 @@ const VerandaConfigurator = () => {
   );
 };
 
-const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materialColor, mobile }) => {
+const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materialColor, mobile, timeOfDay }) => {
   const { scene } = useGLTF('/veranda.glb');
   const { scene: sceneAddition } = useGLTF('/sceneaddition.glb');
   const groupRef = useRef();
-
-  // Optimize lighting with useMemo to prevent recreating lights on every render - NO SHADOWS
-  const optimizedLights = useMemo(() => {
-    if (!lightsOn || !scene) return [];
-
-    // Collect all light positions for the current light type
-    const lightPositions = [];
-
-    scene.traverse((child) => {
-      const isCurrentLightType = 
-        (child.name.match(/^Circle(\.?\d+)?$/) && lightType === 'circle') ||
-        (child.name.match(/^Rect(\.?\d+)?$/) && lightType === 'rect') ||
-        (child.name.match(/^Square(\.?\d+)?$/) && lightType === 'square');
-
-      if (isCurrentLightType) {
-        const worldPosition = new THREE.Vector3();
-        child.getWorldPosition(worldPosition);
-        lightPositions.push(worldPosition);
-      }
-    });
-
-    // Create lights WITHOUT shadows for better performance (like second component)
-    return lightPositions.map((position, index) => (
-      <pointLight
-        key={`light-${lightType}-${index}-${size.width}x${size.height}-${lightColor}`}
-        position={[position.x, position.y - 0.1, position.z]}
-        intensity={mobile ? 0.5 : 0.6}
-        color={lightColor}
-        distance={mobile ? 12 : 15}
-        decay={2}
-        castShadow={false} // No shadows for performance
-      />
-    ));
-  }, [lightsOn, lightType, lightColor, scene, mobile, size.width, size.height]);
+  const directionalLightRef = useRef();
 
   // Memoize the cloned scene and materials to prevent recreation
-  const { clonedScene, frameMaterial, glassMaterial } = useMemo(() => {
-    if (!scene) return { clonedScene: null, frameMaterial: null, glassMaterial: null };
+  const { clonedScene, frameMaterial, glassMaterial, lightMaterial } = useMemo(() => {
+    if (!scene) return { clonedScene: null, frameMaterial: null, glassMaterial: null, lightMaterial: null };
 
     const clonedScene = scene.clone();
 
     // Create frame material with proper color for structural elements
     const frameMaterial = new THREE.MeshStandardMaterial({
       color: materialColor === 'anthracite' ? '#28282d' : '#f5f5f5',
-      metalness: mobile ? 0.993 : 0.995,
-      roughness: mobile ? 0.17 : 0.2
+      metalness: 0.995,
+      roughness: 0.2
     });
 
     // Create glass material for all glass objects
@@ -1238,15 +1264,25 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       clearcoatRoughness: 0.1
     });
 
+    // Create glowing light material - more prominent at night
+    const lightMaterial = new THREE.MeshStandardMaterial({
+      color: lightsOn ? lightColor : '#333333',
+      emissive: lightsOn ? lightColor : '#000000',
+      emissiveIntensity: lightsOn ? (timeOfDay === 'night' ? 1.5 : 1.0) : 0, // Brighter glow at night
+      transparent: true,
+      opacity: lightsOn ? 1 : 0.3
+    });
+
     return {
       clonedScene,
       frameMaterial,
-      glassMaterial
+      glassMaterial,
+      lightMaterial
     };
-  }, [scene, mobile, materialColor]);
+  }, [scene, mobile, materialColor, lightsOn, lightColor, timeOfDay]);
 
   useEffect(() => {
-    if (!clonedScene || !frameMaterial) return;
+    if (!clonedScene || !frameMaterial || !lightMaterial) return;
 
     // Update scene properties
     clonedScene.traverse((child) => {
@@ -1258,15 +1294,28 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
         child.visible = roofType === 'roof1';
       }
 
-      // Handle light visibility based on type
-      if (child.name.match(/^Circle(\.?\d+)?$/)) {
+      // Handle light visibility and apply glowing material
+      const isCircleLight = child.name.match(/^Circle(\.?\d+)?$/);
+      const isRectLight = child.name.match(/^Rect(\.?\d+)?$/);
+      const isSquareLight = child.name.match(/^Square(\.?\d+)?$/);
+
+      if (isCircleLight) {
         child.visible = lightType === 'circle';
+        if (child.material && lightType === 'circle') {
+          child.material = lightMaterial.clone();
+        }
       }
-      if (child.name.match(/^Rect(\.?\d+)?$/)) {
+      if (isRectLight) {
         child.visible = lightType === 'rect';
+        if (child.material && lightType === 'rect') {
+          child.material = lightMaterial.clone();
+        }
       }
-      if (child.name.match(/^Square(\.?\d+)?$/)) {
+      if (isSquareLight) {
         child.visible = lightType === 'square';
+        if (child.material && lightType === 'square') {
+          child.material = lightMaterial.clone();
+        }
       }
 
       // Update frame materials
@@ -1274,36 +1323,72 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
         child.material = frameMaterial;
       }
 
-      // Disable shadows for better performance (like second component)
+      // Configure shadows for meshes
       if (child.isMesh) {
-        child.castShadow = false;
-        child.receiveShadow = false;
+        child.castShadow = true; // Veranda casts shadows on both desktop and mobile
+        child.receiveShadow = false; // Veranda doesn't receive shadows
       }
     });
 
-    // Handle scaling for size with same logic as second component
- // Handle scaling for size with REDUCED multiplier effect
-if (groupRef.current) {
-  // Calculate scale with smaller multiplier (0.13 for subtle scaling)
-  const baseSize = 3;
-  const scaleMultiplier = 0.11; // Reduce scale effect
-  
-  const scaleX = 1 + ((size.width - baseSize) / baseSize) * scaleMultiplier;
-  const scaleZ = 1 + ((size.height - baseSize) / baseSize) * scaleMultiplier;
-  // Scale Y based on average of X and Z for proportional height
-  const scaleY = 1 + (((scaleX - 1) + (scaleZ - 1)) / 2);
-  
-  groupRef.current.scale.set(scaleX, scaleY, scaleZ);
-}
+    // Configure sceneAddition objects to receive shadows
+    if (sceneAddition) {
+      sceneAddition.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = false; // House doesn't cast shadows
+          child.receiveShadow = true; // House receives shadows on both desktop and mobile
+        }
+      });
+    }
 
-  }, [clonedScene, frameMaterial, size.width, size.height, lightType, roofType, mobile]);
+    // Handle scaling for size with REDUCED multiplier effect
+    if (groupRef.current) {
+      // Calculate scale with smaller multiplier (0.11 for subtle scaling)
+      const baseSize = 3;
+      const scaleMultiplier = 0.11; // Reduce scale effect
+      
+      const scaleX = 1 + ((size.width - baseSize) / baseSize) * scaleMultiplier;
+      const scaleZ = 1 + ((size.height - baseSize) / baseSize) * scaleMultiplier;
+      // Scale Y based on average of X and Z for proportional height
+      const scaleY = 1 + (((scaleX - 1) + (scaleZ - 1)) / 2);
+      
+      groupRef.current.scale.set(scaleX, scaleY, scaleZ);
+    }
 
-  if (!clonedScene || !frameMaterial || !glassMaterial) {
+  }, [clonedScene, frameMaterial, lightMaterial, size.width, size.height, lightType, roofType, mobile, sceneAddition, lightsOn, lightColor, timeOfDay]);
+
+  if (!clonedScene || !frameMaterial || !glassMaterial || !lightMaterial) {
     return null;
   }
 
   return (
     <>
+      {/* Ambient light for general illumination - dimmer at night */}
+      <ambientLight intensity={timeOfDay === 'night' ? 0.15 : (mobile ? 0.4 : 0.3)} />
+      
+      {/* Directional light that looks at the veranda and casts shadows - dimmer at night */}
+      <directionalLight
+        ref={directionalLightRef}
+        position={[10, 15, 8]} // Position above and to the side
+        target-position={[6, 0, 3]} // Look at the veranda position
+        intensity={timeOfDay === 'night' ? (mobile ? 0.43 : 0.54) : (mobile ? 0.86 : 0.98)}
+        color={timeOfDay === 'night' ? '#b8c5d1' : '#ffffff'} // Slightly blue moonlight at night
+        castShadow={true} // Enable shadows on both desktop and mobile
+        shadow-mapSize={[1024, 1024]} // 1024 shadow map size for both desktop and mobile
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={15}
+        shadow-camera-bottom={-15}
+        shadow-camera-near={0.1}
+        shadow-camera-far={50}
+        shadow-radius={6}
+        shadow-bias={-0.0005}
+      />
+
+      {/* Additional ambient lighting when lights are on for better visibility - more important at night */}
+      {lightsOn && (
+        <ambientLight intensity={timeOfDay === 'night' ? 0.4 : 0.25} color={lightColor} />
+      )}
+
       {/* Scene addition - NOT affected by scaling (static scene elements) */}
       {sceneAddition && (
         <primitive 
@@ -1316,7 +1401,6 @@ if (groupRef.current) {
       {/* Main veranda - AFFECTED by scaling (configurable dimensions) */}
       <group ref={groupRef} position={[6, -0.5, 3]} rotation={[0, -Math.PI/2, 0]}>
         <primitive object={clonedScene} />
-        {optimizedLights}
       </group>
     </>
   );
