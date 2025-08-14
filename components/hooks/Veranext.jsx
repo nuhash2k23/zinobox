@@ -1041,7 +1041,7 @@ const VerandaConfigurator = () => {
             }}
             gl={{
               powerPreference: mobile ? 'low-power' : 'high-performance',
-              antialias: !mobile,
+              antialias: true,
               alpha: false,
               stencil: false,
               depth: true
