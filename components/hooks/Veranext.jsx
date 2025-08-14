@@ -1368,9 +1368,9 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       {/* Directional light that looks at the veranda and casts shadows - dimmer at night */}
       <directionalLight
         ref={directionalLightRef}
-        position={[10, 15, 8]} // Position above and to the side
+        position={[13, 10, 3.8]} // Position above and to the side
         target-position={[6, 0, 3]} // Look at the veranda position
-        intensity={timeOfDay === 'night' ? (mobile ? 0.43 : 0.54) : (mobile ? 0.86 : 0.98)}
+        intensity={timeOfDay === 'night' ? (mobile ? 0.43 : 0.54) : (mobile ? 1.86 : 1.98)}
         color={timeOfDay === 'night' ? '#b8c5d1' : '#ffffff'} // Slightly blue moonlight at night
         castShadow={true} // Enable shadows on both desktop and mobile
         shadow-mapSize={[1024, 1024]} // 1024 shadow map size for both desktop and mobile
