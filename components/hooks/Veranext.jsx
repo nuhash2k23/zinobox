@@ -1085,8 +1085,8 @@ const VerandaConfigurator = () => {
           <Canvas 
             shadows={true} // Enable shadows on both desktop and mobile
             camera={{ 
-              position: [-1,1.7,7], 
-              fov: mobile ? 70 : 65 
+              position: [-1,.5,7], 
+              fov: mobile ? 70 : 70 
             }}
             dpr={pixelRatio}
             performance={{
@@ -1124,15 +1124,15 @@ const VerandaConfigurator = () => {
                 backgroundIntensity={timeOfDay === 'night' ? 0.8 : 1.4}
               />
               <OrbitControls 
-                enablePan={!mobile}
+                enablePan={true}
                 enableZoom={true}
                 enableRotate={true}
                 minPolarAngle={0}
-                maxPolarAngle={Math.PI / 1.655}
-                maxDistance={12}
-                target={[6, 1.7 ,3]} // Match the model position
+                maxPolarAngle={Math.PI / 1.83}
+                maxDistance={7}
+                target={[6, .7 ,3]} // Match the model position
                 enableDamping={true}
-                dampingFactor={0.065}
+                dampingFactor={0.05}
                 touches={THREE ? {
                   ONE: THREE.TOUCH.ROTATE,
                   TWO: THREE.TOUCH.DOLLY_PAN
