@@ -496,7 +496,7 @@ const ConfiguratorContent = ({
           fontSize: mobile ? '10px' : '11px',
           color: '#0369a1'
         }}>
-          💡 2x adds gym area, 3x adds gym + jacuzzi areas
+         
         </div>
       </div>
 
@@ -1085,7 +1085,7 @@ const VerandaConfigurator = () => {
           <Canvas 
             shadows={true} // Enable shadows on both desktop and mobile
             camera={{ 
-              position: [-1,1,7], 
+              position: [-1,1.7,7], 
               fov: mobile ? 70 : 65 
             }}
             dpr={pixelRatio}
@@ -1128,9 +1128,9 @@ const VerandaConfigurator = () => {
                 enableZoom={true}
                 enableRotate={true}
                 minPolarAngle={0}
-                maxPolarAngle={Math.PI / 1.875}
+                maxPolarAngle={Math.PI / 1.675}
                 maxDistance={12}
-                target={[6, 0.5 ,3]} // Match the model position
+                target={[6, 1.7 ,3]} // Match the model position
                 enableDamping={true}
                 dampingFactor={0.065}
                 touches={THREE ? {
@@ -1612,8 +1612,8 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       {multiplier >= 2 && gymScene && (
         <primitive 
           object={gymScene.clone()} 
-          position={[6 + totalSpacing, -0.5, 3]} // Centered in second veranda
-          rotation={[0, -Math.PI/2, 0]}
+          position={[6.25 + totalSpacing, -0.5, 3]} // Centered in second veranda
+          rotation={[0, Math.PI, 0]}
           scale={[1, 1, 1]} // Keep original scale
         />
       )}
