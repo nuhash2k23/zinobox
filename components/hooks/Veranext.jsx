@@ -1085,19 +1085,19 @@ const VerandaConfigurator = () => {
           <Canvas 
             shadows={true} // Enable shadows on both desktop and mobile
             camera={{ 
-              position: [-1,.5,7], 
-              fov: mobile ? 70 : 70 
+              position: [1,.5,8], 
+              fov: mobile ? 90 : 70 
             }}
             dpr={pixelRatio}
             performance={{
               min: mobile ? 0.5 : 0.5,
               max: mobile ? 1 : 1,
-              debounce: mobile ? 50 : 100
+              debounce: mobile ? 50 : 50
             }}
             gl={{
               powerPreference: mobile ? 'default' : 'high-performance',
               antialias: true,
-              alpha: false,
+              alpha: true,
               stencil: false,
               depth: true
             }}
@@ -1129,7 +1129,7 @@ const VerandaConfigurator = () => {
                 enableRotate={true}
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI / 1.83}
-                maxDistance={7}
+                maxDistance={7.7}
                 target={[6, .7 ,3]} // Match the model position
                 enableDamping={true}
                 dampingFactor={0.05}
