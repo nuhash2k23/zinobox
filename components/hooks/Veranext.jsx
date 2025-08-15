@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, Suspense, useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, useProgress, Html, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -179,7 +179,7 @@ const RecordingModal = ({ isOpen, onClose, status }) => {
           color: '#666',
           lineHeight: '1.5'
         }}>
-          {status || 'Speak your veranda dimensions clearly. For example: "8 meters by 8 meters"'}
+          {status || 'Speak your veranda dimensions or color preference. For example: "8 meters by 8 meters" or "white color"'}
         </p>
         
         <button
@@ -311,7 +311,7 @@ const ConfiguratorContent = ({
   materialColor, setMaterialColor, mobile,
   dimensionInput, setDimensionInput, isListening, toggleVoiceInput, 
   speechSupported, parseDimensions, parseStatus,
-  showARModal, setShowARModal, timeOfDay, setTimeOfDay
+  showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier
 }) => {
   return (
     <div style={{ maxWidth: mobile ? '100%' : '300px' }}>
@@ -357,11 +357,17 @@ const ConfiguratorContent = ({
         <div style={{ marginBottom: '12px' }}>
           <input
             type="text"
-            placeholder="e.g., 5 by 6 meters, 4x3m, 5 meter by 6 meter"
+            placeholder="e.g., 5 by 6 meters, 4x3m, white color, anthracite frame"
             value={dimensionInput}
             onChange={(e) => {
               setDimensionInput(e.target.value);
               parseDimensions(e.target.value);
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#000';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#d0d0d0';
             }}
             style={{
               width: '100%',
@@ -373,8 +379,6 @@ const ConfiguratorContent = ({
               outline: 'none',
               boxSizing: 'border-box'
             }}
-            onFocus={(e) => e.target.style.borderColor = '#000'}
-            onBlur={(e) => e.target.style.borderColor = '#d0d0d0'}
           />
         </div>
 
@@ -384,7 +388,7 @@ const ConfiguratorContent = ({
             onClick={toggleVoiceInput}
             disabled={!speechSupported}
             style={{
-              flex: mobile ? '1 1 100%' : '1 1 auto',
+              flex: '1',
               padding: mobile ? '10px 12px' : '12px 16px',
               border: isListening ? '2px solid #ff4444' : '1px solid #d0d0d0',
               borderRadius: '8px',
@@ -398,37 +402,11 @@ const ConfiguratorContent = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px',
-              marginBottom: mobile ? '8px' : '0'
+              gap: '6px'
             }}
           >
             <span>{isListening ? '🛑' : '🎤'}</span>
             {isListening ? 'Recording... (Click to Stop)' : (speechSupported ? 'Voice Input' : 'Voice Disabled')}
-          </button>
-          
-          {/* Manual speech input as fallback */}
-          <button
-            onClick={() => {
-              const speechText = prompt("Enter what you would say (e.g., '8 meter by 8 meter'):");
-              if (speechText) {
-                setDimensionInput(speechText);
-                parseDimensions(speechText);
-              }
-            }}
-            style={{
-              padding: mobile ? '8px 12px' : '10px 14px',
-              border: '1px solid #d0d0d0',
-              borderRadius: '6px',
-              backgroundColor: 'white',
-              cursor: 'pointer',
-              fontSize: mobile ? '10px' : '12px',
-              fontWeight: '500',
-              color: '#666',
-              transition: 'all 0.2s ease',
-              touchAction: 'manipulation'
-            }}
-          >
-            📝 Manual
           </button>
         </div>
         
@@ -461,6 +439,65 @@ const ConfiguratorContent = ({
             {parseStatus.message}
           </div>
         )}
+      </div>
+
+      {/* Multiplier Options */}
+      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+        <h3 style={{ 
+          margin: '0 0 12px 0', 
+          fontSize: mobile ? '14px' : '16px', 
+          fontWeight: '500',
+          color: '#333',
+          letterSpacing: '-0.01em'
+        }}>
+          Layout
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: mobile ? '8px' : '12px' }}>
+          {[
+            { type: 1, icon: '1️⃣', label: 'Single' },
+            { type: 2, icon: '2️⃣', label: '2x Side' },
+            { type: 3, icon: '3️⃣', label: '3x Side' }
+          ].map(({ type, icon, label }) => (
+            <button
+              key={type}
+              onClick={() => setMultiplier(type)}
+              style={{
+                padding: mobile ? '12px 8px' : '16px 12px',
+                border: multiplier === type ? '3px solid #000' : '1px solid #d0d0d0',
+                borderRadius: '8px',
+                backgroundColor: multiplier === type ? '#f8f8f8' : 'white',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: mobile ? '6px' : '8px',
+                touchAction: 'manipulation',
+                flexDirection: 'column'
+              }}
+            >
+              <span style={{ fontSize: mobile ? '16px' : '20px' }}>{icon}</span>
+              <span style={{
+                fontSize: mobile ? '10px' : '12px',
+                fontWeight: '500',
+                color: multiplier === type ? '#000' : '#666'
+              }}>
+                {label}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div style={{
+          marginTop: '8px',
+          padding: '8px 12px',
+          backgroundColor: '#f0f9ff',
+          border: '1px solid #bae6fd',
+          borderRadius: '6px',
+          fontSize: mobile ? '10px' : '11px',
+          color: '#0369a1'
+        }}>
+          💡 2x adds gym area, 3x adds gym + jacuzzi areas
+        </div>
       </div>
 
       {/* Time of Day Options */}
@@ -803,6 +840,7 @@ const VerandaConfigurator = () => {
   const [mobile, setMobile] = useState(false);
   const [showARModal, setShowARModal] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState('day'); // 'day' or 'night'
+  const [multiplier, setMultiplier] = useState(1); // 1x, 2x, 3x
 
   // New states for AI dimension parsing and recording
   const [dimensionInput, setDimensionInput] = useState('3m by 3m');
@@ -812,7 +850,7 @@ const VerandaConfigurator = () => {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
 
-  // Dimension parsing function with enhanced patterns
+  // Dimension and color parsing function with enhanced patterns
   const parseDimensions = (text) => {
     if (!text.trim()) {
       setParseStatus(null);
@@ -840,7 +878,24 @@ const VerandaConfigurator = () => {
     // Clear any existing status after a delay
     setTimeout(() => setParseStatus(null), 4000);
 
-    // Enhanced regex patterns to catch different formats
+    // Check for color commands first
+    const colorPatterns = [
+      { pattern: /\b(white|wite)\b/i, color: 'white', label: 'White' },
+      { pattern: /\b(anthracite|anthrasit|gray|grey|dark|black)\b/i, color: 'anthracite', label: 'Anthracite' }
+    ];
+
+    for (const { pattern, color, label } of colorPatterns) {
+      if (pattern.test(normalizedText)) {
+        setMaterialColor(color);
+        setParseStatus({
+          type: 'success',
+          message: `✓ Changed frame color to ${label}`
+        });
+        return;
+      }
+    }
+
+    // Enhanced regex patterns to catch different formats for dimensions
     const patterns = [
       // "8 meter by 8 meter", "8 meters by 8 meters"
       /(\d+(?:\.\d+)?)\s*(?:m|meter|meters)\s*(?:by|x|×|and)\s*(\d+(?:\.\d+)?)\s*(?:m|meter|meters)/i,
@@ -885,10 +940,10 @@ const VerandaConfigurator = () => {
       }
     }
 
-    // No valid dimensions found
+    // No valid dimensions or color found
     setParseStatus({
       type: 'error',
-      message: `❌ Could not parse "${text}". Try "8 by 8 meters" or "8x8m"`
+      message: `❌ Could not parse "${text}". Try "8 by 8 meters" or "white color"`
     });
   };
 
@@ -1030,14 +1085,14 @@ const VerandaConfigurator = () => {
           <Canvas 
             shadows={true} // Enable shadows on both desktop and mobile
             camera={{ 
-              position: [-1,1,11], 
-              fov: mobile ? 50 : 45 
+              position: [-1,1,7], 
+              fov: mobile ? 70 : 65 
             }}
             dpr={pixelRatio}
             performance={{
               min: mobile ? 0.5 : 0.5,
               max: mobile ? 1 : 1,
-              debounce: mobile ? 100 : 100
+              debounce: mobile ? 50 : 100
             }}
             gl={{
               powerPreference: mobile ? 'default' : 'high-performance',
@@ -1060,6 +1115,7 @@ const VerandaConfigurator = () => {
                 materialColor={materialColor}
                 mobile={mobile}
                 timeOfDay={timeOfDay}
+                multiplier={multiplier}
               />
               {/* HDR Environment with background - changes based on time of day */}
               <Environment 
@@ -1072,11 +1128,11 @@ const VerandaConfigurator = () => {
                 enableZoom={true}
                 enableRotate={true}
                 minPolarAngle={0}
-                maxPolarAngle={Math.PI / 2.2}
+                maxPolarAngle={Math.PI / 1.875}
                 maxDistance={12}
                 target={[6, 0.5 ,3]} // Match the model position
                 enableDamping={true}
-                dampingFactor={0.05}
+                dampingFactor={0.065}
                 touches={THREE ? {
                   ONE: THREE.TOUCH.ROTATE,
                   TWO: THREE.TOUCH.DOLLY_PAN
@@ -1131,7 +1187,7 @@ const VerandaConfigurator = () => {
               materialColor, setMaterialColor, mobile,
               dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
               speechSupported, parseDimensions, parseStatus,
-              showARModal, setShowARModal, timeOfDay, setTimeOfDay
+              showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier
             }}
           />
         </div>
@@ -1220,7 +1276,7 @@ const VerandaConfigurator = () => {
                   materialColor, setMaterialColor, mobile,
                   dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
                   speechSupported, parseDimensions, parseStatus,
-                  showARModal, setShowARModal, timeOfDay, setTimeOfDay
+                  showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier
                 }}
               />
             </div>
@@ -1231,11 +1287,23 @@ const VerandaConfigurator = () => {
   );
 };
 
-const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materialColor, mobile, timeOfDay }) => {
+const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materialColor, mobile, timeOfDay, multiplier }) => {
   const { scene } = useGLTF('/veranda.glb');
   const { scene: sceneAddition } = useGLTF('/sceneaddition.glb');
+  const { scene: pooltableScene } = useGLTF('/pooltable.glb');
+  const { scene: gymScene } = useGLTF('/gym.glb');
+  const { scene: jacuzziScene } = useGLTF('/jacuzzi.glb');
   const groupRef = useRef();
   const directionalLightRef = useRef();
+  const pointLightRef = useRef();
+
+  // Force initial render to ensure shadows appear immediately
+  useFrame((state) => {
+    if (directionalLightRef.current && directionalLightRef.current.shadow && directionalLightRef.current.shadow.map) {
+      // Force shadow map update on initial frames
+      directionalLightRef.current.shadow.map.needsUpdate = true;
+    }
+  });
 
   // Memoize the cloned scene and materials to prevent recreation
   const { clonedScene, frameMaterial, glassMaterial, lightMaterial } = useMemo(() => {
@@ -1298,6 +1366,7 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       const isCircleLight = child.name.match(/^Circle(\.?\d+)?$/);
       const isRectLight = child.name.match(/^Rect(\.?\d+)?$/);
       const isSquareLight = child.name.match(/^Square(\.?\d+)?$/);
+      const isRodLight = child.name === 'rodlight' || child.name === 'rodlighttwo';
 
       if (isCircleLight) {
         child.visible = lightType === 'circle';
@@ -1317,6 +1386,12 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
           child.material = lightMaterial.clone();
         }
       }
+      if (isRodLight) {
+        child.visible = lightsOn; // Rod lights are always visible when lights are on
+        if (child.material) {
+          child.material = lightMaterial.clone();
+        }
+      }
 
       // Update frame materials
       if (child.material && child.material.name === 'Material.001') {
@@ -1327,6 +1402,11 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       if (child.isMesh) {
         child.castShadow = true; // Veranda casts shadows on both desktop and mobile
         child.receiveShadow = false; // Veranda doesn't receive shadows
+      }
+
+      // Remove any existing pooltable from veranda model
+      if (child.name === 'pooltable') {
+        child.visible = false;
       }
     });
 
@@ -1356,9 +1436,107 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
 
   }, [clonedScene, frameMaterial, lightMaterial, size.width, size.height, lightType, roofType, mobile, sceneAddition, lightsOn, lightColor, timeOfDay]);
 
+  // Force shadow update on mobile after mounting
+  useEffect(() => {
+    if (mobile && directionalLightRef.current) {
+      const timer = setTimeout(() => {
+        if (directionalLightRef.current.shadow && directionalLightRef.current.shadow.map) {
+          directionalLightRef.current.shadow.map.needsUpdate = true;
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [mobile]);
+
   if (!clonedScene || !frameMaterial || !glassMaterial || !lightMaterial) {
     return null;
   }
+
+  // Calculate proper scaling and positioning for clones
+  const baseSize = 3;
+  const scaleMultiplier = 0.11;
+  const scaleX = 1 + ((size.width - baseSize) / baseSize) * scaleMultiplier;
+  const scaleZ = 1 + ((size.height - baseSize) / baseSize) * scaleMultiplier;
+  const scaleY = 1 + (((scaleX - 1) + (scaleZ - 1)) / 2);
+  
+  // Calculate actual veranda width including scaling for proper spacing
+  const actualVerandaWidth = baseSize * scaleX;
+  const spacingBuffer = 0.05; // Add small buffer between verandas
+  const totalSpacing = actualVerandaWidth + spacingBuffer;
+
+  // Create cloned verandas for 2x and 3x with proper scaling and roof consistency
+  const createClonedVeranda = (offsetX) => {
+    const clonedVeranda = clonedScene.clone();
+    
+    // Apply same roof settings and materials as main veranda
+    clonedVeranda.traverse((child) => {
+      // Handle roof visibility - same as main veranda
+      if (child.name === 'triangleroof') {
+        child.visible = roofType === 'roof2';
+      }
+      if (child.name === 'planeroof') {
+        child.visible = roofType === 'roof1';
+      }
+
+      // Apply same light settings as main veranda
+      const isCircleLight = child.name.match(/^Circle(\.?\d+)?$/);
+      const isRectLight = child.name.match(/^Rect(\.?\d+)?$/);
+      const isSquareLight = child.name.match(/^Square(\.?\d+)?$/);
+      const isRodLight = child.name === 'rodlight' || child.name === 'rodlightwo';
+
+      if (isCircleLight) {
+        child.visible = lightType === 'circle';
+        if (child.material && lightType === 'circle') {
+          child.material = lightMaterial.clone();
+        }
+      }
+      if (isRectLight) {
+        child.visible = lightType === 'rect';
+        if (child.material && lightType === 'rect') {
+          child.material = lightMaterial.clone();
+        }
+      }
+      if (isSquareLight) {
+        child.visible = lightType === 'square';
+        if (child.material && lightType === 'square') {
+          child.material = lightMaterial.clone();
+        }
+      }
+      if (isRodLight) {
+        child.visible = lightsOn;
+        if (child.material) {
+          child.material = lightMaterial.clone();
+        }
+      }
+
+      // Apply same frame material
+      if (child.material && child.material.name === 'Material.001') {
+        child.material = frameMaterial;
+      }
+
+      // Remove any objects from clone (clean veranda structure only)
+      if (child.name === 'pooltable') {
+        child.visible = false;
+      }
+
+      // Configure shadows
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = false;
+      }
+    });
+
+    return (
+      <group 
+        key={offsetX} 
+        position={[6 + offsetX, -0.5, 3]} 
+        rotation={[0, -Math.PI/2, 0]} 
+        scale={[scaleX, scaleY, scaleZ]}
+      >
+        <primitive object={clonedVeranda} />
+      </group>
+    );
+  };
 
   return (
     <>
@@ -1368,7 +1546,7 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       {/* Directional light that looks at the veranda and casts shadows - dimmer at night */}
       <directionalLight
         ref={directionalLightRef}
-        position={[13, 10, 3.8]} // Position above and to the side
+        position={[5, 7, -3.8]} // Position above and to the side
         target-position={[6, 0, 3]} // Look at the veranda position
         intensity={timeOfDay === 'night' ? (mobile ? 0.43 : 0.54) : (mobile ? 1.86 : 1.98)}
         color={timeOfDay === 'night' ? '#b8c5d1' : '#ffffff'} // Slightly blue moonlight at night
@@ -1384,6 +1562,19 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
         shadow-bias={-0.0005}
       />
 
+      {/* Point light at center of veranda when lights are on */}
+      {lightsOn && (
+        <pointLight
+          ref={pointLightRef}
+          position={[6, 2, 3]} // Center of main veranda, elevated
+          intensity={timeOfDay === 'night' ? .65 : 0.8}
+          color={lightColor}
+          distance={20}
+          decay={2}
+          castShadow={false} // Don't cast shadows to avoid performance issues
+        />
+      )}
+
       {/* Additional ambient lighting when lights are on for better visibility - more important at night */}
       {lightsOn && (
         <ambientLight intensity={timeOfDay === 'night' ? 0.4 : 0.25} color={lightColor} />
@@ -1393,7 +1584,7 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       {sceneAddition && (
         <primitive 
           object={sceneAddition.clone()} 
-          position={[0, -0.5, 0]} 
+          position={[0, -0.45, 0]} 
           rotation={[0, 0, 0]}
         />
       )}
@@ -1402,6 +1593,40 @@ const VerandaModel = ({ size, lightType, lightsOn, lightColor, roofType, materia
       <group ref={groupRef} position={[6, -0.5, 3]} rotation={[0, -Math.PI/2, 0]}>
         <primitive object={clonedScene} />
       </group>
+
+      {/* Pooltable for main veranda - positioned in center, NOT scaled */}
+      {pooltableScene && (
+        <primitive 
+          object={pooltableScene.clone()} 
+          position={[6, -0.45, 3]} // Center of main veranda
+          rotation={[0, -Math.PI/2, 0]}
+          scale={[1, 1, 1]} // Keep original scale
+        />
+      )}
+
+      {/* Cloned verandas for 2x and 3x with proper spacing */}
+      {multiplier >= 2 && createClonedVeranda(totalSpacing)}
+      {multiplier === 3 && createClonedVeranda(-totalSpacing)}
+
+      {/* Gym object for 2x layout - centered in second veranda */}
+      {multiplier >= 2 && gymScene && (
+        <primitive 
+          object={gymScene.clone()} 
+          position={[6 + totalSpacing, -0.5, 3]} // Centered in second veranda
+          rotation={[0, -Math.PI/2, 0]}
+          scale={[1, 1, 1]} // Keep original scale
+        />
+      )}
+
+      {/* Jacuzzi object for 3x layout - centered in third veranda */}
+      {multiplier === 3 && jacuzziScene && (
+        <primitive 
+          object={jacuzziScene.clone()} 
+          position={[6 - totalSpacing, -0.5, 3]} // Centered in third veranda  
+          rotation={[0, -Math.PI/2, 0]}
+          scale={[1, 1, 1]} // Keep original scale
+        />
+      )}
     </>
   );
 };
@@ -1411,6 +1636,9 @@ if (typeof window !== 'undefined') {
   try {
     useGLTF.preload('/veranda.glb');
     useGLTF.preload('/sceneaddition.glb');
+    useGLTF.preload('/pooltable.glb');
+    useGLTF.preload('/gym.glb');
+    useGLTF.preload('/jacuzzi.glb');
   } catch (error) {
     console.warn('Failed to preload GLTF:', error);
   }
