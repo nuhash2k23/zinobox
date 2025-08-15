@@ -1128,7 +1128,7 @@ const VerandaConfigurator = () => {
                 enableZoom={true}
                 enableRotate={true}
                 minPolarAngle={0}
-                maxPolarAngle={Math.PI / 1.675}
+                maxPolarAngle={Math.PI / 1.655}
                 maxDistance={12}
                 target={[6, 1.7 ,3]} // Match the model position
                 enableDamping={true}
