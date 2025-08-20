@@ -524,31 +524,36 @@ const ConfiguratorContent = ({
 }) => {
   
   const contentOptions = [
-    { id: 'gym', name: 'Gym', icon: '🏋️', description: 'Fitness equipment' },
-    { id: 'spa', name: 'Spa', icon: '🛁', description: 'Jacuzzi & relaxation' },
-    { id: 'games', name: 'Games', icon: '🎱', description: 'Pool table & games' }
+    { id: 'fitness', name: 'Fitness Studio', icon: '⚪', description: 'Professional workout equipment' },
+    { id: 'wellness', name: 'Wellness Spa', icon: '⚫', description: 'Jacuzzi & relaxation area' },
+    { id: 'recreation', name: 'Game Room', icon: '⚪', description: 'Billiards & entertainment' }
   ];
 
   return (
-    <div style={{ maxWidth: mobile ? '100%' : '300px' }}>
-      <h2 style={{ 
-        margin: '0 0 24px 0', 
-        fontSize: mobile ? '20px' : '24px', 
-        fontWeight: '600',
-        color: '#1a1a1a',
-        letterSpacing: '-0.02em'
-      }}>
-        Configure
-      </h2>
+    <div style={{ 
+      maxWidth: mobile ? '100%' : '300px',
+      fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {!mobile && (
+        <h2 style={{ 
+          margin: '0 0 32px 0', 
+          fontSize: '28px', 
+          fontWeight: '700',
+          color: '#1a1a1a',
+          letterSpacing: '-0.03em'
+        }}>
+          Configure
+        </h2>
+      )}
       
       {/* Size Options - Now with AI parsing */}
-      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
         <h3 style={{ 
-          margin: '0 0 12px 0', 
-          fontSize: mobile ? '14px' : '16px', 
-          fontWeight: '500',
-          color: '#333',
-          letterSpacing: '-0.01em'
+          margin: '0 0 16px 0', 
+          fontSize: mobile ? '16px' : '18px', 
+          fontWeight: '600',
+          color: '#1a1a1a',
+          letterSpacing: '-0.02em'
         }}>
           Dimensions
         </h3>
@@ -658,13 +663,13 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Multiplier Options */}
-      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
         <h3 style={{ 
-          margin: '0 0 12px 0', 
-          fontSize: mobile ? '14px' : '16px', 
-          fontWeight: '500',
-          color: '#333',
-          letterSpacing: '-0.01em'
+          margin: '0 0 16px 0', 
+          fontSize: mobile ? '16px' : '18px', 
+          fontWeight: '600',
+          color: '#1a1a1a',
+          letterSpacing: '-0.02em'
         }}>
           Layout
         </h3>
@@ -706,15 +711,15 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Content Assignment Section */}
-      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
         <h3 style={{ 
-          margin: '0 0 12px 0', 
-          fontSize: mobile ? '14px' : '16px', 
-          fontWeight: '500',
-          color: '#333',
-          letterSpacing: '-0.01em'
+          margin: '0 0 16px 0', 
+          fontSize: mobile ? '16px' : '18px', 
+          fontWeight: '600',
+          color: '#1a1a1a',
+          letterSpacing: '-0.02em'
         }}>
-          Content Assignment
+          Space Content
         </h3>
         
         {/* Veranda content assignment */}
@@ -725,125 +730,125 @@ const ConfiguratorContent = ({
           
           return (
             <div key={verandaIndex} style={{
-              marginBottom: mobile ? '8px' : '12px',
-              padding: mobile ? '12px' : '16px',
-              border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              backgroundColor: 'white'
+              marginBottom: mobile ? '12px' : '16px',
+              padding: mobile ? '16px' : '20px',
+              border: '2px solid #f0f0f0',
+              borderRadius: '12px',
+              backgroundColor: 'white',
+              transition: 'all 0.2s ease'
             }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: mobile ? '8px' : '12px'
+                marginBottom: mobile ? '12px' : '16px'
               }}>
                 <span style={{
-                  fontSize: mobile ? '12px' : '14px',
-                  fontWeight: '500',
-                  color: '#333'
+                  fontSize: mobile ? '14px' : '16px',
+                  fontWeight: '600',
+                  color: '#1a1a1a',
+                  letterSpacing: '-0.01em'
                 }}>
-                  Veranda {verandaIndex}
+                  Space {verandaIndex}
                 </span>
                 
-                {/* Desktop content selection dropdown */}
-                {!mobile && (
-                  <select
-                    value={currentContent || ''}
-                    onChange={(e) => setVerandaContent && setVerandaContent(verandaIndex, e.target.value || null)}
-                    style={{
-                      padding: '6px 12px',
-                      border: '1px solid #d0d0d0',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      color: 'white',
-                      backgroundColor: 'black',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="">Empty</option>
-                    {contentOptions.map(option => (
-                      <option key={option.id} value={option.id}>
-                        {option.icon} {option.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                {/* Content selection dropdown for all devices */}
+                <select
+                  value={currentContent || ''}
+                  onChange={(e) => setVerandaContent && setVerandaContent(verandaIndex, e.target.value || null)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: mobile ? '12px' : '14px',
+                    backgroundColor: 'white',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontWeight: '500',
+                    color: '#1a1a1a'
+                  }}
+                >
+                  <option value="">Empty</option>
+                  {contentOptions.map(option => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               {/* Current content display */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: mobile ? '8px' : '12px',
-                padding: mobile ? '8px' : '12px',
-                backgroundColor: currentContent ? '#f0f9ff' : '#f8f8f8',
-                borderRadius: '6px',
-                border: `1px solid ${currentContent ? '#bae6fd' : '#e0e0e0'}`
+                gap: mobile ? '12px' : '16px',
+                padding: mobile ? '12px' : '16px',
+                backgroundColor: currentContent ? '#fafafa' : '#f8f8f8',
+                borderRadius: '8px',
+                border: `2px solid ${currentContent ? '#e0e0e0' : '#f0f0f0'}`
               }}>
-                <span style={{ fontSize: mobile ? '20px' : '24px' }}>
-                  {contentOption ? contentOption.icon : '🏢'}
-                </span>
+                <div style={{
+                  width: mobile ? '32px' : '40px',
+                  height: mobile ? '32px' : '40px',
+                  backgroundColor: contentOption?.icon === '⚫' ? '#000' : '#fff',
+                  border: contentOption?.icon === '⚫' ? 'none' : '2px solid #000',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: mobile ? '14px' : '16px',
+                  flexShrink: 0
+                }}>
+                  {contentOption 
+                    ? (contentOption.icon === '⚫' ? '○' : '●')
+                    : '○'
+                  }
+                </div>
                 <div style={{ flex: 1 }}>
                   <div style={{
-                    fontSize: mobile ? '12px' : '14px',
-                    fontWeight: '500',
-                    color: currentContent ? '#0369a1' : '#666'
+                    fontSize: mobile ? '14px' : '16px',
+                    fontWeight: '600',
+                    color: '#1a1a1a',
+                    marginBottom: '4px',
+                    letterSpacing: '-0.01em'
                   }}>
-                    {contentOption ? contentOption.name : 'Empty Veranda'}
+                    {contentOption ? contentOption.name : 'Empty Space'}
                   </div>
                   <div style={{
-                    fontSize: mobile ? '10px' : '11px',
-                    color: currentContent ? '#0369a1' : '#999'
+                    fontSize: mobile ? '11px' : '12px',
+                    color: '#666',
+                    lineHeight: '1.4'
                   }}>
-                    {contentOption ? contentOption.description : 'Click to add content'}
+                    {contentOption ? contentOption.description : 'Click dropdown to add content'}
                   </div>
                 </div>
-                
-                {/* Mobile content selection button */}
-                {mobile && (
-                  <button
-                    onClick={() => setShowContentSelection && setShowContentSelection(verandaIndex)}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#000',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontSize: '10px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    Change
-                  </button>
-                )}
               </div>
             </div>
           );
         })}
         
         <div style={{
-          marginTop: '8px',
-          padding: '8px 12px',
+          marginTop: '12px',
+          padding: '12px 16px',
           backgroundColor: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '6px',
-          fontSize: mobile ? '10px' : '11px',
-          color: '#0369a1'
+          border: '2px solid #bae6fd',
+          borderRadius: '8px',
+          fontSize: mobile ? '11px' : '12px',
+          color: '#0369a1',
+          fontWeight: '500'
         }}>
-          💡 {mobile ? 'Tap' : 'Click'} on verandas in the 3D view to quickly assign content
+          💡 Click on spaces in the 3D view or use dropdowns above to assign content
         </div>
       </div>
 
       {/* Time of Day Options */}
-      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
         <h3 style={{ 
-          margin: '0 0 12px 0', 
-          fontSize: mobile ? '14px' : '16px', 
-          fontWeight: '500',
-          color: '#333',
-          letterSpacing: '-0.01em'
+          margin: '0 0 16px 0', 
+          fontSize: mobile ? '16px' : '18px', 
+          fontWeight: '600',
+          color: '#1a1a1a',
+          letterSpacing: '-0.02em'
         }}>
           Time of Day
         </h3>
@@ -883,12 +888,13 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Light Type Options */}
-      <div style={{ marginBottom: mobile ? '16px' : '24px' }}>
+      <div style={{ marginBottom: mobile ? '20px' : '24px' }}>
         <h3 style={{ 
-          margin: '0 0 12px 0', 
-          fontSize: mobile ? '14px' : '16px', 
-          fontWeight: '500',
-          color: '#333'
+          margin: '0 0 16px 0', 
+          fontSize: mobile ? '16px' : '18px', 
+          fontWeight: '600',
+          color: '#1a1a1a',
+          letterSpacing: '-0.02em'
         }}>
           Light Style
         </h3>
@@ -970,12 +976,13 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Roof Options */}
-      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
         <h3 style={{ 
-          margin: '0 0 12px 0', 
-          fontSize: mobile ? '14px' : '16px', 
-          fontWeight: '500',
-          color: '#333'
+          margin: '0 0 16px 0', 
+          fontSize: mobile ? '16px' : '18px', 
+          fontWeight: '600',
+          color: '#1a1a1a',
+          letterSpacing: '-0.02em'
         }}>
           Roof Style
         </h3>
@@ -1058,12 +1065,13 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Frame Color Options */}
-      <div style={{ marginBottom: mobile ? '16px' : '32px' }}>
+      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
         <h3 style={{ 
-          margin: '0 0 12px 0', 
-          fontSize: mobile ? '14px' : '16px', 
-          fontWeight: '500',
-          color: '#333'
+          margin: '0 0 16px 0', 
+          fontSize: mobile ? '16px' : '18px', 
+          fontWeight: '600',
+          color: '#1a1a1a',
+          letterSpacing: '-0.02em'
         }}>
           Frame Color
         </h3>
@@ -1182,6 +1190,9 @@ const VerandaConfigurator = () => {
   const [verandaContents, setVerandaContents] = useState({}); // { 1: 'gym', 2: 'spa', 3: 'games' }
   const [showContentSelection, setShowContentSelection] = useState(null); // veranda number to show selection for
   const [selectedVeranda, setSelectedVeranda] = useState(null);
+  
+  // Mobile configuration panel state
+  const [showMobileConfig, setShowMobileConfig] = useState(false);
 
   // New states for AI dimension parsing and recording
   const [dimensionInput, setDimensionInput] = useState('3m by 3m');
@@ -1384,9 +1395,10 @@ const VerandaConfigurator = () => {
 
   const pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2) : 1;
 
-  // Mobile-responsive layout
-  const canvasWidth = mobile ? '100%' : '75%';
-  const configWidth = mobile ? '100%' : '25%';
+  // Mobile-responsive layout - Mobile: full canvas with overlay config, Desktop: side by side
+  const canvasWidth = mobile ? '100%' : '65%';
+  const configWidth = mobile ? '100%' : '35%';
+  const canvasHeight = mobile ? '100vh' : '100vh';
   const flexDirection = mobile ? 'column' : 'row';
 
   return (
@@ -1412,7 +1424,7 @@ const VerandaConfigurator = () => {
         onClose={() => setShowARModal(false)}
       />
 
-      {/* Content Selection Modal for Mobile */}
+      {/* Content Selection Modal for All Devices */}
       <ContentSelectionModal
         isOpen={showContentSelection !== null}
         onClose={() => setShowContentSelection(null)}
@@ -1423,15 +1435,15 @@ const VerandaConfigurator = () => {
       {/* Canvas Section */}
       <div style={{ 
         width: canvasWidth, 
-        height: mobile ? '100vh' : '100vh',
+        height: canvasHeight,
         position: 'relative'
       }}>
         <Suspense fallback={<SimpleFallback />}>
           <Canvas 
             shadows={true}
             camera={{ 
-              position: [1, 1.5, 8], // Zoomed out further from [1,.5,8]
-              fov: mobile ? 85 : 75  // Slightly wider FOV
+              position: [2, 1.5, 12], // Zoomed out further from [1,.5,8]
+              fov: mobile ? 85 : 65  // Slightly wider FOV
             }}
             dpr={pixelRatio}
             performance={{
@@ -1463,11 +1475,7 @@ const VerandaConfigurator = () => {
                 multiplier={multiplier}
                 verandaContents={verandaContents}
                 onVerandaClick={(verandaNumber) => {
-                  if (mobile) {
-                    setShowContentSelection(verandaNumber);
-                  } else {
-                    setSelectedVeranda(verandaNumber);
-                  }
+                  setShowContentSelection(verandaNumber);
                 }}
               />
               
@@ -1482,7 +1490,8 @@ const VerandaConfigurator = () => {
                 enableRotate={true}
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI / 1.83}
-           
+                maxDistance={24} // Increased from 7.7
+              
                 target={[6, 0.7, 3]}
                 enableDamping={true}
                 dampingFactor={0.05}
@@ -1495,59 +1504,43 @@ const VerandaConfigurator = () => {
           </Canvas>
         </Suspense>
 
-        {/* Mobile Configure Button */}
+        {/* Mobile Configure Button - Floating bottom */}
         {mobile && (
           <button
-            onClick={() => setConfigOpen(true)}
+            onClick={() => setShowMobileConfig(true)}
             style={{
-              position: 'absolute',
-              bottom: '24px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              padding: '16px 32px',
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              width: '60px',
+              height: '60px',
               backgroundColor: '#000',
               color: 'white',
               border: 'none',
-              borderRadius: '25px',
-              fontSize: '16px',
-              fontWeight: '600',
+              borderRadius: '50%',
+              fontSize: '24px',
               cursor: 'pointer',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
               zIndex: 1000,
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.3s ease',
               touchAction: 'manipulation'
             }}
+            onTouchStart={(e) => {
+              e.target.style.transform = 'scale(0.95)';
+            }}
+            onTouchEnd={(e) => {
+              e.target.style.transform = 'scale(1)';
+            }}
           >
-            ⚙️ Configure
+            ⚙️
           </button>
         )}
       </div>
 
-      {/* Desktop Configurator Section */}
-      {!mobile && (
-        <div style={{
-          width: configWidth,
-          height: '100vh',
-          backgroundColor: '#fafafa',
-          borderLeft: '1px solid #e0e0e0',
-          overflowY: 'auto',
-          padding: '32px 24px'
-        }}>
-          <ConfiguratorContent 
-            {...{
-              size, setSize, lightType, setLightType, lightsOn, setLightsOn,
-              lightColor, setLightColor, roofType, setRoofType, 
-              materialColor, setMaterialColor, mobile,
-              dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
-              speechSupported, parseDimensions, parseStatus,
-              showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
-              verandaContents, setVerandaContent, showContentSelection, setShowContentSelection
-            }}
-          />
-        </div>
-      )}
-
-      {/* Mobile Dropdown Configurator */}
+      {/* Mobile Configuration Panel Overlay */}
       {mobile && (
         <>
           {/* Backdrop */}
@@ -1559,16 +1552,16 @@ const VerandaConfigurator = () => {
               right: 0,
               bottom: 0,
               backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              opacity: configOpen ? 1 : 0,
-              visibility: configOpen ? 'visible' : 'hidden',
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              zIndex: 1001,
-              backdropFilter: configOpen ? 'blur(4px)' : 'blur(0px)'
+              zIndex: 9999,
+              backdropFilter: 'blur(4px)',
+              opacity: showMobileConfig ? 1 : 0,
+              visibility: showMobileConfig ? 'visible' : 'hidden',
+              transition: 'all 0.3s ease'
             }}
-            onClick={() => setConfigOpen(false)}
+            onClick={() => setShowMobileConfig(false)}
           />
           
-          {/* Dropdown Panel */}
+          {/* Sliding Configuration Panel */}
           <div
             style={{
               position: 'fixed',
@@ -1576,53 +1569,71 @@ const VerandaConfigurator = () => {
               left: 0,
               right: 0,
               backgroundColor: '#fafafa',
-              borderRadius: '20px 20px 0 0',
-              maxHeight: '80vh',
-              transform: configOpen ? 'translateY(0)' : 'translateY(100%)',
-              transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-              zIndex: 1002,
+              borderTopLeftRadius: '20px',
+              borderTopRightRadius: '20px',
+              maxHeight: '85vh',
               overflowY: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.2)'
+              zIndex: 10000,
+              transform: showMobileConfig ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              boxShadow: '0 -8px 40px rgba(0, 0, 0, 0.2)'
             }}
           >
             {/* Handle Bar */}
-            <div style={{
-              width: '40px',
-              height: '4px',
-              backgroundColor: '#ccc',
-              borderRadius: '2px',
-              margin: '12px auto 0',
-              opacity: 0.6
-            }} />
+            <div
+              style={{
+                width: '48px',
+                height: '4px',
+                backgroundColor: '#d0d0d0',
+                borderRadius: '2px',
+                margin: '12px auto 0',
+                cursor: 'pointer'
+              }}
+              onClick={() => setShowMobileConfig(false)}
+            />
             
             {/* Close Button */}
-            <button
-              onClick={() => setConfigOpen(false)}
+            <div
               style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                width: '32px',
-                height: '32px',
-                backgroundColor: 'white',
-                border: '1px solid #e0e0e0',
-                borderRadius: '50%',
-                cursor: 'pointer',
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '18px',
-                color: '#666',
-                transition: 'all 0.2s ease',
-                touchAction: 'manipulation',
-                zIndex: 1003
+                padding: '16px 20px 0'
               }}
             >
-              ✕
-            </button>
-
-            <div style={{ padding: '20px 20px 40px' }}>
+              <h2 style={{
+                margin: 0,
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#1a1a1a',
+                letterSpacing: '-0.03em'
+              }}>
+                Configure
+              </h2>
+              <button
+                onClick={() => setShowMobileConfig(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '50%',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onTouchStart={(e) => {
+                  e.target.style.backgroundColor = '#f0f0f0';
+                }}
+                onTouchEnd={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Configuration Content */}
+            <div style={{ padding: '0 20px 40px' }}>
               <ConfiguratorContent 
                 {...{
                   size, setSize, lightType, setLightType, lightsOn, setLightsOn,
@@ -1637,6 +1648,31 @@ const VerandaConfigurator = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Desktop Configurator Section - Only visible on desktop */}
+      {!mobile && (
+        <div style={{
+          width: configWidth,
+          height: '100vh',
+          backgroundColor: '#fafafa',
+          borderLeft: '1px solid #e0e0e0',
+          overflowY: 'auto',
+          padding: '32px 24px',
+          fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        }}>
+          <ConfiguratorContent 
+            {...{
+              size, setSize, lightType, setLightType, lightsOn, setLightsOn,
+              lightColor, setLightColor, roofType, setRoofType, 
+              materialColor, setMaterialColor, mobile,
+              dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
+              speechSupported, parseDimensions, parseStatus,
+              showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
+              verandaContents, setVerandaContent, showContentSelection, setShowContentSelection
+            }}
+          />
+        </div>
       )}
     </div>
   );
@@ -1690,10 +1726,11 @@ const VerandaModel = ({
       clearcoatRoughness: 0.1
     });
 
-    // Create glowing light material with enhanced bloom effect
+    // Create glowing light material with enhanced bloom effect - opposite to frame color
+    const lightObjectColor = materialColor === 'anthracite' ? '#f5f5f5' : '#28282d'; // Opposite of frame color
     const lightMaterial = new THREE.MeshStandardMaterial({
-      color: lightsOn ? lightColor : '#333333',
-      emissive: lightsOn ? lightColor : '#000000',
+      color: lightsOn ? lightObjectColor : '#333333',
+      emissive: lightsOn ? lightColor : '#000000', // Use lightColor for emissive glow
       emissiveIntensity: lightsOn ? (timeOfDay === 'night' ? 2.5 : 2.0) : 0, // Increased intensity for bloom effect
       transparent: true,
       opacity: lightsOn ? 1 : 0.3
@@ -1780,7 +1817,7 @@ const VerandaModel = ({
       
       const scaleX = 1 + ((size.width - baseSize) / baseSize) * scaleMultiplier;
       const scaleZ = 1 + ((size.height - baseSize) / baseSize) * scaleMultiplier;
-      const scaleY = 1 + (((scaleX - 1) + (scaleZ - 1)) / 2);
+      const scaleY = 1 + (((scaleX - 1) + (scaleZ - 1)) / 40);
       
       groupRef.current.scale.set(scaleX, scaleY, scaleZ);
     }
@@ -1900,7 +1937,7 @@ const VerandaModel = ({
   // Get content objects based on veranda contents
   const getContentObject = (contentType, position, rotation = [0, -Math.PI/2, 0]) => {
     switch (contentType) {
-      case 'gym':
+      case 'fitness':
         return gymScene && (
           <primitive 
             object={gymScene.clone()} 
@@ -1909,7 +1946,7 @@ const VerandaModel = ({
             scale={[1, 1, 1]}
           />
         );
-      case 'spa':
+      case 'wellness':
         return jacuzziScene && (
           <primitive 
             object={jacuzziScene.clone()} 
@@ -1918,7 +1955,7 @@ const VerandaModel = ({
             scale={[1, 1, 1]}
           />
         );
-      case 'games':
+      case 'recreation':
         return pooltableScene && (
           <primitive 
             object={pooltableScene.clone()} 
