@@ -1396,8 +1396,8 @@ const VerandaConfigurator = () => {
   const pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2) : 1;
 
   // Mobile-responsive layout - Mobile: full canvas with overlay config, Desktop: side by side
-  const canvasWidth = mobile ? '100%' : '65%';
-  const configWidth = mobile ? '100%' : '35%';
+  const canvasWidth = mobile ? '100%' : '100%';
+  const configWidth = mobile ? '100%' : '30%';
   const canvasHeight = mobile ? '100vh' : '100vh';
   const flexDirection = mobile ? 'column' : 'row';
 
