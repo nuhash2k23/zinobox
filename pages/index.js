@@ -46,6 +46,7 @@ export default function Home() {
      {/* <Scene/> */}
      {/* <Trial/> */}
      {/* <AJ/> */}
+     {/* <Blob/> */}
      <VerandaConfigurator/>
      {/* <TShirtConfigurator/> */}
      {/* <BridgeScene/> */}
