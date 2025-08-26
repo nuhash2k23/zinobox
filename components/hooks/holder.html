@@ -1031,11 +1031,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getScaledWidth(inputWidthInches) {
-        return inputWidthInches * 1.16; // 116% scaling
+        const scaled = inputWidthInches * 1.16;
+    return Math.round(scaled * 25.4) / 25.4; 
     }
 
     function getScaledHeight(inputHeightInches) {
-        return inputHeightInches * 1.2667; // 126.67% scaling
+         const scaled = inputHeightInches * 1.2667;
+    return Math.round(scaled * 25.4) / 25.4; // 126.67% scaling
     }
 
     // Unit conversion functions
@@ -1819,7 +1821,7 @@ document.addEventListener('DOMContentLoaded', function() {
             roundedModel.name = `RoundedModel_${index + 1}`;
             const roundedY = (state.configuration === 'grid2x2') ? pos.y + dynamicY : dynamicY;
             roundedModel.position.set(pos.x, roundedY, roundedZ_dynamic);
-              roundedModel.scale.set(0.99,1,1);
+              roundedModel.scale.set(0.99,0.99,1);
             roundedModel.rotation.x = Math.PI / 2;
             roundedModel.rotation.z = Math.PI / 2;
             
@@ -1837,7 +1839,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             centerModel.name = `CenterModel_${index + 1}`;
             centerModel.position.set(pos.x, pos.y, pos.z - 0.09852);
-            centerModel.scale.set(1, 1, 0.75);
+            centerModel.scale.set(1, 0.99, 0.75);
             centerModel.rotation.z = Math.PI / 2;
             
             scene.add(centerModel);
@@ -1919,7 +1921,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             ushapeModel.name = `UShapeModel_${index + 1}`;
             ushapeModel.position.set(pos.x, pos.y, ushapeZ);
-            ushapeModel.scale.set(1.008, 1, 1.75);
+            ushapeModel.scale.set(0.99, 1, 1.75);
             
             scene.add(ushapeModel);
             currentUShapeModels.push(ushapeModel);

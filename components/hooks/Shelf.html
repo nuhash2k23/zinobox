@@ -189,6 +189,21 @@
             background: #f8f9ff;
         }
         
+        .color-section-disabled .color-option {
+            cursor: not-allowed;
+            background: #f5f5f5;
+            opacity: 0.6;
+        }
+        
+        .color-section-disabled .color-option.active {
+            border-color: #cccccc;
+            background: #f0f0f0;
+        }
+        
+        .color-section-disabled .color-name {
+            color: #999;
+        }
+        
         .color-swatch {
             width: 30px;
             height: 30px;
@@ -254,42 +269,6 @@
             color: #4285f4;
         }
         
-        .color-options {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        
-        .color-option {
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px;
-            cursor: not-allowed;
-            transition: all 0.2s ease;
-            text-align: center;
-            background: #f5f5f5;
-            opacity: 0.6;
-        }
-        
-        .color-option.active {
-            border-color: #cccccc;
-            background: #f0f0f0;
-        }
-        
-        .color-swatch {
-            width: 30px;
-            height: 30px;
-            border-radius: 4px;
-            margin: 0 auto 8px;
-            border: 1px solid #ddd;
-        }
-        
-        .color-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: #999;
-        }
-        
         .disabled-section {
             opacity: 0.6;
             pointer-events: none;
@@ -304,13 +283,106 @@
             font-size: 18px;
             font-weight: 500;
         }
+        
+        .viewer-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .control-button {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .control-button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .dimensions-display {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .dimensions-display h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #4285f4;
+        }
+        
+        .dimension-row {
+            margin: 5px 0;
+        }
+        
+        .plus-indicator {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #4285f4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #4285f4;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        
+        .plus-indicator:hover {
+            background: #4285f4;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .plus-indicator.horizontal::before {
+            content: "+";
+        }
+        
+        .plus-indicator.vertical::before {
+            content: "+";
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="viewer">
+            <div class="viewer-controls">
+                <button class="control-button" id="toggle-dimensions">Show Dimensions</button>
+                <button class="control-button" id="reset-camera">Reset Camera</button>
+            </div>
             <div id="canvas-container"></div>
             <div class="loading" id="loading">Loading 3D Model...</div>
+            <div class="dimensions-display" id="dimensions-display">
+                <h4>Shelf Dimensions (mm)</h4>
+                <div class="dimension-row">Width: <span id="dim-width">270</span></div>
+                <div class="dimension-row">Height: <span id="dim-height">270</span></div>
+                <div class="dimension-row">Depth: <span id="dim-depth">270</span></div>
+            </div>
         </div>
         
         <div class="configurator">
@@ -339,7 +411,8 @@
             
             <div class="section">
                 <h3 class="section-title">Structure Elements</h3>
-                <div class="options-grid">
+                <div class="options-grid" id="structure-options">
+                    <!-- Acrylic options (default) -->
                     <div class="option-card active" data-structure="with-panels">
                         <div class="option-icon">
                             <img src="with-panels-icon.png" alt="With top and bottom only" />
@@ -357,7 +430,8 @@
             
             <div class="section">
                 <h3 class="section-title">Width (mm)</h3>
-                <div class="size-options">
+                <div class="size-options" id="width-options">
+                    <!-- Acrylic options (default) -->
                     <div class="size-button active" data-width="270">270</div>
                     <div class="size-button" data-width="370">370</div>
                 </div>
@@ -365,7 +439,8 @@
             
             <div class="section">
                 <h3 class="section-title">Depth (mm)</h3>
-                <div class="size-options">
+                <div class="size-options" id="depth-options">
+                    <!-- Acrylic options (default) -->
                     <div class="size-button active" data-depth="270">270</div>
                     <div class="size-button" data-depth="370">370</div>
                 </div>
@@ -373,7 +448,8 @@
             
             <div class="section">
                 <h3 class="section-title">Height (mm)</h3>
-                <div class="height-options">
+                <div class="height-options" id="height-options">
+                    <!-- Acrylic options (default) -->
                     <div class="height-button" data-height="121">121</div>
                     <div class="height-button" data-height="180">180</div>
                     <div class="height-button" data-height="200">200</div>
@@ -385,7 +461,7 @@
                 </div>
             </div>
             
-            <div class="section disabled-section">
+            <div class="section" id="color-section">
                 <h3 class="section-title">
                     Colour
                     <span class="info-icon">i</span>
@@ -424,6 +500,17 @@
         import { RGBELoader } from 'three/loaders/RGBELoader';
 
         let scene, camera, renderer, controls, shelf, floorPlane, wallPlane;
+        let raycaster, mouse, hoveredObject = null, selectedPanel = null, selectedPipes = null;
+        let panelObjects = [], pipesObjects = [], allPanelObjects = [];
+        let originalMaterials = new Map();
+        let initialCameraPosition, initialCameraTarget;
+        let dimensionsVisible = false;
+        let colorSectionEnabled = false;
+        let plusIndicators = [];
+        
+        // Hover materials
+        let yellowEdgeMaterial, lightBlueMaterial;
+        
         let currentConfig = {
             type: 'acrylic',
             structure: 'with-panels',
@@ -441,6 +528,10 @@
             // Camera
             camera = new THREE.PerspectiveCamera(75, (window.innerWidth * 0.7) / window.innerHeight, 0.1, 1000);
             camera.position.set(5, 5, 5);
+            
+            // Store initial camera position
+            initialCameraPosition = camera.position.clone();
+            initialCameraTarget = new THREE.Vector3(0, 0, 0);
 
             // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -456,10 +547,22 @@
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
+            controls.target.copy(initialCameraTarget);
             
-            // Restrict camera from going under the model
+            // Restrict camera movement
             controls.minPolarAngle = 0; // Prevent looking from below
             controls.maxPolarAngle = Math.PI / 2; // Limit to horizontal view
+            
+            // Limit horizontal rotation to half circle (180 degrees)
+            controls.minAzimuthAngle = -Math.PI / 2; // -90 degrees
+            controls.maxAzimuthAngle = Math.PI / 2;   // +90 degrees
+
+            // Raycaster setup
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Create hover materials
+            createHoverMaterials();
 
             // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -487,29 +590,54 @@
 
             // Event listeners
             setupEventListeners();
+            
+            // Initially disable color section
+            disableColorSection();
+        }
+
+        function createHoverMaterials() {
+            // Yellow material for panel hover
+            yellowEdgeMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffff00,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            // More vivid yellow for panel click
+            const vividYellowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffd700,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            // Light blue material for pipes hover
+            lightBlueMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x87ceeb,
+                transparent: true,
+                opacity: 0.7
+            });
         }
 
         function createEnvironmentPlanes() {
-            // Off-white beige color
-            const planeColor = 0xffffff; // beige
+            const planeColor = 0xffffff;
             const planeMaterial = new THREE.MeshLambertMaterial({ 
                 color: planeColor,
                 side: THREE.DoubleSide
             });
 
-            // Floor plane (horizontal)
+            // Floor plane
             const floorGeometry = new THREE.PlaneGeometry(200, 200);
             floorPlane = new THREE.Mesh(floorGeometry, planeMaterial);
-            floorPlane.rotation.x = -Math.PI / 2; // Rotate to be horizontal
-            floorPlane.position.y = 0; // Position below the shelf
-            floorPlane.receiveShadow = true; // Can receive shadows but doesn't cast
+            floorPlane.rotation.x = -Math.PI / 2;
+            floorPlane.position.y = 0;
+            floorPlane.receiveShadow = false; // No shadows on floor
             scene.add(floorPlane);
 
-            // Wall plane (vertical, behind the model)
+            // Wall plane
             const wallGeometry = new THREE.PlaneGeometry(200, 200);
             wallPlane = new THREE.Mesh(wallGeometry, planeMaterial);
-            wallPlane.position.z = -1.2; // Position behind the shelf
-            wallPlane.receiveShadow = true; // Can receive shadows but doesn't cast
+            wallPlane.position.z = -1.2;
+            wallPlane.receiveShadow = false; // No shadows on wall
             scene.add(wallPlane);
         }
 
@@ -518,16 +646,49 @@
             loader.load('/shelf.glb', 
                 function(gltf) {
                     shelf = gltf.scene;
+                    
+                    // Process the model and find interactive objects
                     shelf.traverse((child) => {
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
+                            
+                            // Store original material
+                            originalMaterials.set(child, child.material.clone());
+                            
+                            // Identify interactive objects by name
+                            const name = child.name.toLowerCase();
+                            if (name.includes('panel') || name === 'panel' || name === 'panel2') {
+                                panelObjects.push(child);
+                                allPanelObjects.push(child);
+                                child.userData.interactive = 'panel';
+                            } else if (name.includes('panelback') || name === 'panelback') {
+                                allPanelObjects.push(child);
+                                child.userData.interactive = 'panel';
+                                child.userData.panelType = 'back';
+                            } else if (name.includes('panelleft') || name === 'panelleft') {
+                                allPanelObjects.push(child);
+                                child.userData.interactive = 'panel';
+                                child.userData.panelType = 'left';
+                            } else if (name.includes('panelright') || name === 'panelright') {
+                                allPanelObjects.push(child);
+                                child.userData.interactive = 'panel';
+                                child.userData.panelType = 'right';
+                            } else if (name.includes('pipes') || name === 'pipes') {
+                                pipesObjects.push(child);
+                                child.userData.interactive = 'pipes';
+                            }
                         }
                     });
+                    
                     scene.add(shelf);
-                    // Apply initial scaling
                     updateShelfScale();
+                    updatePanelVisibility();
                     document.getElementById('loading').style.display = 'none';
+                    
+                    console.log('Found panels:', panelObjects.length);
+                    console.log('Found pipes:', pipesObjects.length);
+                    console.log('Found all panels:', allPanelObjects.length);
                 },
                 function(progress) {
                     console.log('Loading progress:', progress);
@@ -539,25 +700,556 @@
             );
         }
 
+        function updatePanelVisibility() {
+            if (!shelf) return;
+            
+            // Hide all panels first
+            allPanelObjects.forEach(panel => {
+                panel.visible = false;
+            });
+            
+            const { type, structure } = currentConfig;
+            
+            if (type === 'acrylic') {
+                if (structure === 'with-panels') {
+                    // Show only panel and panel2
+                    allPanelObjects.forEach(panel => {
+                        const name = panel.name.toLowerCase();
+                        if (name === 'panel' || name === 'panel2') {
+                            panel.visible = true;
+                        }
+                    });
+                } else if (structure === 'without-shelves') {
+                    // Show no panels
+                    // All remain hidden
+                }
+            } else if (type === 'stainless') {
+                if (structure === 'all-no-front') {
+                    // Show panelback, panelleft, panelright, panel, panel2
+                    allPanelObjects.forEach(panel => {
+                        const name = panel.name.toLowerCase();
+                        if (name === 'panelback' || name === 'panelleft' || name === 'panelright' || 
+                            name === 'panel' || name === 'panel2') {
+                            panel.visible = true;
+                        }
+                    });
+                } else if (structure === 'without-back') {
+                    // Show panelleft, panelright, panel, panel2
+                    allPanelObjects.forEach(panel => {
+                        const name = panel.name.toLowerCase();
+                        if (name === 'panelleft' || name === 'panelright' || 
+                            name === 'panel' || name === 'panel2') {
+                            panel.visible = true;
+                        }
+                    });
+                } else if (structure === 'with-panels') {
+                    // Show only panel and panel2
+                    allPanelObjects.forEach(panel => {
+                        const name = panel.name.toLowerCase();
+                        if (name === 'panel' || name === 'panel2') {
+                            panel.visible = true;
+                        }
+                    });
+                }
+            }
+        }
+
+        function updateShelfTypeOptions() {
+            const structureOptions = document.getElementById('structure-options');
+            const widthOptions = document.getElementById('width-options');
+            const depthOptions = document.getElementById('depth-options');
+            const heightOptions = document.getElementById('height-options');
+            const colorSection = document.getElementById('color-section');
+            
+            if (currentConfig.type === 'acrylic') {
+                // Acrylic structure options
+                structureOptions.innerHTML = `
+                    <div class="option-card active" data-structure="with-panels">
+                        <div class="option-icon">
+                            <img src="with-panels-icon.png" alt="With top and bottom only" />
+                        </div>
+                        <div class="option-title">With top and bottom only</div>
+                    </div>
+                    <div class="option-card" data-structure="without-shelves">
+                        <div class="option-icon">
+                            <img src="without-shelves-icon.png" alt="Without Shelves" />
+                        </div>
+                        <div class="option-title">Without Shelves</div>
+                    </div>
+                `;
+                
+                // Acrylic width/depth options
+                widthOptions.innerHTML = `
+                    <div class="size-button active" data-width="270">270</div>
+                    <div class="size-button" data-width="370">370</div>
+                `;
+                depthOptions.innerHTML = `
+                    <div class="size-button active" data-depth="270">270</div>
+                    <div class="size-button" data-depth="370">370</div>
+                `;
+                
+                // Acrylic height options
+                heightOptions.innerHTML = `
+                    <div class="height-button" data-height="121">121</div>
+                    <div class="height-button" data-height="180">180</div>
+                    <div class="height-button" data-height="200">200</div>
+                    <div class="height-button active" data-height="270">270</div>
+                    <div class="height-button" data-height="313">313</div>
+                    <div class="height-button" data-height="370">370</div>
+                    <div class="height-button" data-height="483">483</div>
+                    <div class="height-button" data-height="603">603</div>
+                `;
+                
+                // Acrylic colors (transparent)
+                colorSection.querySelector('.color-options').innerHTML = `
+                    <div class="color-option active" data-color="transparent-orange">
+                        <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,140,0,0.5));"></div>
+                        <div class="color-name">Transparent Orange</div>
+                    </div>
+                    <div class="color-option" data-color="transparent-black">
+                        <div class="color-swatch" style="background: linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5));"></div>
+                        <div class="color-name">Transparent Black</div>
+                    </div>
+                    <div class="color-option" data-color="solid-white">
+                        <div class="color-swatch" style="background: #ffffff; border: 2px solid #ddd;"></div>
+                        <div class="color-name">Solid White</div>
+                    </div>
+                    <div class="color-option" data-color="clear">
+                        <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3)); border: 2px solid #ddd;"></div>
+                        <div class="color-name">Clear</div>
+                    </div>
+                `;
+                
+                currentConfig.width = 270;
+                currentConfig.depth = 270;
+                currentConfig.height = 270;
+                currentConfig.structure = 'with-panels';
+                
+            } else if (currentConfig.type === 'stainless') {
+                // Stainless structure options
+                structureOptions.innerHTML = `
+                    <div class="option-card" data-structure="all-no-front">
+                        <div class="option-icon">
+                            <img src="all-no-front-icon.png" alt="All (no front)" />
+                        </div>
+                        <div class="option-title">All (no front)</div>
+                    </div>
+                    <div class="option-card" data-structure="without-back">
+                        <div class="option-icon">
+                            <img src="without-back-icon.png" alt="Without Back" />
+                        </div>
+                        <div class="option-title">Without Back</div>
+                    </div>
+                    <div class="option-card active" data-structure="with-panels">
+                        <div class="option-icon">
+                            <img src="with-panels-icon.png" alt="With top and bottom only" />
+                        </div>
+                        <div class="option-title">With top and bottom only</div>
+                    </div>
+                `;
+                
+                // Stainless width/depth options
+                widthOptions.innerHTML = `
+                    <div class="size-button" data-width="121">121</div>
+                    <div class="size-button active" data-width="313">313</div>
+                    <div class="size-button" data-width="483">483</div>
+                    <div class="size-button" data-width="603">603</div>
+                `;
+                depthOptions.innerHTML = `
+                    <div class="size-button" data-depth="121">121</div>
+                    <div class="size-button active" data-depth="313">313</div>
+                    <div class="size-button" data-depth="483">483</div>
+                    <div class="size-button" data-depth="603">603</div>
+                `;
+                
+                // Stainless height options (constant 313 unless without-back)
+                heightOptions.innerHTML = `
+                    <div class="height-button active" data-height="313">313</div>
+                `;
+                
+                // Stainless colors (shiny non-transparent)
+                colorSection.querySelector('.color-options').innerHTML = `
+                    <div class="color-option active" data-color="orange">
+                        <div class="color-swatch" style="background: #ff8c00;"></div>
+                        <div class="color-name">Orange</div>
+                    </div>
+                    <div class="color-option" data-color="yellow">
+                        <div class="color-swatch" style="background: #ffff00;"></div>
+                        <div class="color-name">Yellow</div>
+                    </div>
+                    <div class="color-option" data-color="white">
+                        <div class="color-swatch" style="background: #ffffff; border: 2px solid #ddd;"></div>
+                        <div class="color-name">White</div>
+                    </div>
+                    <div class="color-option" data-color="black">
+                        <div class="color-swatch" style="background: #000000;"></div>
+                        <div class="color-name">Black</div>
+                    </div>
+                    <div class="color-option" data-color="pink">
+                        <div class="color-swatch" style="background: #ff69b4;"></div>
+                        <div class="color-name">Pink</div>
+                    </div>
+                    <div class="color-option" data-color="sky">
+                        <div class="color-swatch" style="background: #87ceeb;"></div>
+                        <div class="color-name">Sky</div>
+                    </div>
+                    <div class="color-option" data-color="matt-olive">
+                        <div class="color-swatch" style="background: #808000;"></div>
+                        <div class="color-name">Matt Olive</div>
+                    </div>
+                `;
+                
+                currentConfig.width = 313;
+                currentConfig.depth = 313;
+                currentConfig.height = 313;
+                currentConfig.structure = 'with-panels';
+            }
+            
+            updatePanelVisibility();
+            updateShelfScale();
+            setupEventListeners(); // Re-setup event listeners for new elements
+        }
+
+        function updateStructureOptions() {
+            const heightOptions = document.getElementById('height-options');
+            
+            if (currentConfig.type === 'stainless' && currentConfig.structure === 'without-back') {
+                // Without back has height options: 121, 313, 483, 603
+                heightOptions.innerHTML = `
+                    <div class="height-button" data-height="121">121</div>
+                    <div class="height-button active" data-height="313">313</div>
+                    <div class="height-button" data-height="483">483</div>
+                    <div class="height-button" data-height="603">603</div>
+                `;
+            } else if (currentConfig.type === 'stainless') {
+                // Other stainless options have constant height 313
+                heightOptions.innerHTML = `
+                    <div class="height-button active" data-height="313">313</div>
+                `;
+                currentConfig.height = 313;
+            }
+            
+            updatePanelVisibility();
+            setupEventListeners(); // Re-setup event listeners
+        }
+
         function updateShelfScale() {
             if (!shelf) return;
 
-            // Scale based on dimensions (relative to base size)
             const scaleX = currentConfig.width / 270;
             const scaleY = currentConfig.height / 270;
             const scaleZ = currentConfig.depth / 270;
             
             shelf.scale.set(scaleX, scaleY, scaleZ);
+            
+            // Update dimensions display
+            updateDimensionsDisplay();
+        }
+
+        function updateDimensionsDisplay() {
+            document.getElementById('dim-width').textContent = currentConfig.width;
+            document.getElementById('dim-height').textContent = currentConfig.height;
+            document.getElementById('dim-depth').textContent = currentConfig.depth;
+        }
+
+        function createPlusIndicators(object) {
+            // Remove existing indicators
+            removePlusIndicators();
+            
+            const bbox = new THREE.Box3().setFromObject(object);
+            const center = bbox.getCenter(new THREE.Vector3());
+            const size = bbox.getSize(new THREE.Vector3());
+            
+            // Create horizontal plus indicator (right side)
+            const horizontalPlus = document.createElement('div');
+            horizontalPlus.className = 'plus-indicator horizontal';
+            horizontalPlus.style.position = 'absolute';
+            document.body.appendChild(horizontalPlus);
+            
+            // Create vertical plus indicator (top)
+            const verticalPlus = document.createElement('div');
+            verticalPlus.className = 'plus-indicator vertical';
+            verticalPlus.style.position = 'absolute';
+            document.body.appendChild(verticalPlus);
+            
+            plusIndicators.push(horizontalPlus, verticalPlus);
+            
+            // Position indicators (will be updated in render loop)
+            updatePlusIndicatorPositions(object);
+        }
+
+        function updatePlusIndicatorPositions(object) {
+            if (plusIndicators.length === 0) return;
+            
+            const bbox = new THREE.Box3().setFromObject(object);
+            const center = bbox.getCenter(new THREE.Vector3());
+            const size = bbox.getSize(new THREE.Vector3());
+            
+            // Project 3D positions to 2D screen coordinates
+            const horizontalPos = new THREE.Vector3(center.x + size.x / 2 + 0.2, center.y, center.z);
+            const verticalPos = new THREE.Vector3(center.x, center.y + size.y / 2 + 0.2, center.z);
+            
+            horizontalPos.project(camera);
+            verticalPos.project(camera);
+            
+            const canvasRect = renderer.domElement.getBoundingClientRect();
+            
+            // Position horizontal indicator
+            if (plusIndicators[0]) {
+                const x = (horizontalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
+                const y = (-horizontalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
+                plusIndicators[0].style.left = (x - 15) + 'px';
+                plusIndicators[0].style.top = (y - 15) + 'px';
+            }
+            
+            // Position vertical indicator
+            if (plusIndicators[1]) {
+                const x = (verticalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
+                const y = (-verticalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
+                plusIndicators[1].style.left = (x - 15) + 'px';
+                plusIndicators[1].style.top = (y - 15) + 'px';
+            }
+        }
+
+        function removePlusIndicators() {
+            plusIndicators.forEach(indicator => {
+                if (indicator.parentNode) {
+                    indicator.parentNode.removeChild(indicator);
+                }
+            });
+            plusIndicators = [];
+        }
+
+        function onMouseMove(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            
+            if (!shelf) return;
+            
+            const intersects = raycaster.intersectObject(shelf, true);
+            
+            // Reset previous hover
+            if (hoveredObject && hoveredObject !== selectedPanel) {
+                restoreOriginalMaterial(hoveredObject);
+            }
+            
+            hoveredObject = null;
+            
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                
+                if (object.userData.interactive === 'panel') {
+                    hoveredObject = object;
+                    applyHoverEffect(object, 'panel');
+                    renderer.domElement.style.cursor = 'pointer';
+                } else if (object.userData.interactive === 'pipes') {
+                    hoveredObject = object;
+                    applyHoverEffect(object, 'pipes');
+                    renderer.domElement.style.cursor = 'pointer';
+                } else {
+                    renderer.domElement.style.cursor = 'default';
+                }
+            } else {
+                renderer.domElement.style.cursor = 'default';
+            }
+        }
+
+        function onMouseClick(event) {
+            if (!hoveredObject) return;
+            
+            if (hoveredObject.userData.interactive === 'panel') {
+                selectedPanel = hoveredObject;
+                selectedPipes = null;
+                removePlusIndicators();
+                
+                // Apply more vivid yellow color to clicked panel
+                const vividYellowMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xffd700,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                hoveredObject.material = vividYellowMaterial;
+                
+                enableColorSection();
+            } else if (hoveredObject.userData.interactive === 'pipes') {
+                selectedPipes = hoveredObject;
+                selectedPanel = null;
+                // Apply more vivid color
+                hoveredObject.material = new THREE.MeshBasicMaterial({ 
+                    color: 0x0099ff,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                createPlusIndicators(hoveredObject);
+                enableColorSection();
+            }
+        }
+
+        function applyHoverEffect(object, type) {
+            if (type === 'panel') {
+                // Color the entire panel geometry with yellow
+                object.material = yellowEdgeMaterial;
+            } else if (type === 'pipes') {
+                object.material = lightBlueMaterial;
+            }
+        }
+
+        function restoreOriginalMaterial(object) {
+            if (object.userData.interactive === 'panel' && object !== selectedPanel) {
+                object.material = originalMaterials.get(object);
+            } else if (object.userData.interactive === 'pipes' && object !== selectedPipes) {
+                object.material = originalMaterials.get(object);
+            }
+        }
+
+        function applyColorToPanel(color) {
+            if (!selectedPanel) return;
+            
+            let material;
+            
+            if (currentConfig.type === 'acrylic') {
+                // Transparent materials for acrylic
+                switch (color) {
+                    case 'transparent-orange':
+                        material = new THREE.MeshPhysicalMaterial({
+                            color: 0xff8c00,
+                            transparent: true,
+                            opacity: 0.6,
+                            roughness: 0.1,
+                            metalness: 0.0
+                        });
+                        break;
+                    case 'transparent-black':
+                        material = new THREE.MeshPhysicalMaterial({
+                            color: 0x333333,
+                            transparent: true,
+                            opacity: 0.7,
+                            roughness: 0.1,
+                            metalness: 0.0
+                        });
+                        break;
+                    case 'solid-white':
+                        material = new THREE.MeshPhysicalMaterial({
+                            color: 0xffffff,
+                            transparent: false,
+                            roughness: 0.2,
+                            metalness: 0.0
+                        });
+                        break;
+                    case 'clear':
+                        material = new THREE.MeshPhysicalMaterial({
+                            color: 0xffffff,
+                            transparent: true,
+                            opacity: 0.2,
+                            roughness: 0.0,
+                            metalness: 0.0,
+                            transmission: 0.9,
+                            thickness: 0.1
+                        });
+                        break;
+                }
+            } else if (currentConfig.type === 'stainless') {
+                // Shiny non-transparent materials for stainless
+                const colorMap = {
+                    'orange': 0xff8c00,
+                    'yellow': 0xffff00,
+                    'white': 0xffffff,
+                    'black': 0x000000,
+                    'pink': 0xff69b4,
+                    'sky': 0x87ceeb,
+                    'matt-olive': 0x808000
+                };
+                
+                const materialColor = colorMap[color] || 0xffffff;
+                const isMatte = color === 'matt-olive';
+                
+                material = new THREE.MeshPhysicalMaterial({
+                    color: materialColor,
+                    transparent: false,
+                    roughness: isMatte ? 0.8 : 0.1,
+                    metalness: isMatte ? 0.0 : 0.7,
+                    clearcoat: isMatte ? 0.0 : 1.0,
+                    clearcoatRoughness: 0.1
+                });
+            }
+            
+            if (material) {
+                selectedPanel.material = material;
+                currentConfig.color = color;
+            }
+        }
+
+        function enableColorSection() {
+            colorSectionEnabled = true;
+            const colorSection = document.getElementById('color-section');
+            colorSection.classList.remove('color-section-disabled');
+        }
+
+        function disableColorSection() {
+            colorSectionEnabled = false;
+            const colorSection = document.getElementById('color-section');
+            colorSection.classList.add('color-section-disabled');
+        }
+
+        function resetCamera() {
+            camera.position.copy(initialCameraPosition);
+            controls.target.copy(initialCameraTarget);
+            controls.update();
+        }
+
+        function toggleDimensions() {
+            dimensionsVisible = !dimensionsVisible;
+            const dimensionsDisplay = document.getElementById('dimensions-display');
+            const button = document.getElementById('toggle-dimensions');
+            
+            if (dimensionsVisible) {
+                dimensionsDisplay.style.display = 'block';
+                button.textContent = 'Hide Dimensions';
+            } else {
+                dimensionsDisplay.style.display = 'none';
+                button.textContent = 'Show Dimensions';
+            }
         }
 
         function setupEventListeners() {
+            // Clear existing listeners to avoid duplicates
+            const newElements = ['structure-options', 'width-options', 'depth-options', 'height-options'];
+            newElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.replaceWith(element.cloneNode(true));
+                }
+            });
+
+            // Mouse events for 3D interaction (only set once)
+            if (!renderer.domElement.hasMouseListeners) {
+                renderer.domElement.addEventListener('mousemove', onMouseMove);
+                renderer.domElement.addEventListener('click', onMouseClick);
+                renderer.domElement.hasMouseListeners = true;
+            }
+
+            // UI Controls (only set once)
+            const toggleBtn = document.getElementById('toggle-dimensions');
+            const resetBtn = document.getElementById('reset-camera');
+            if (toggleBtn && !toggleBtn.hasClickListener) {
+                toggleBtn.addEventListener('click', toggleDimensions);
+                toggleBtn.hasClickListener = true;
+            }
+            if (resetBtn && !resetBtn.hasClickListener) {
+                resetBtn.addEventListener('click', resetCamera);
+                resetBtn.hasClickListener = true;
+            }
+
             // Shelf type selection
             document.querySelectorAll('[data-type]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-type]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.type = el.dataset.type;
-                    updateShelfScale();
+                    updateShelfTypeOptions();
                 });
             });
 
@@ -567,7 +1259,7 @@
                     document.querySelectorAll('[data-structure]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.structure = el.dataset.structure;
-                    updateShelfScale();
+                    updateStructureOptions();
                 });
             });
 
@@ -601,13 +1293,31 @@
                 });
             });
 
-            // Submit button
-            document.querySelector('.submit-button').addEventListener('click', () => {
-                alert('Configuration submitted:\n' + JSON.stringify(currentConfig, null, 2));
+            // Color selection
+            document.querySelectorAll('[data-color]').forEach(el => {
+                el.addEventListener('click', () => {
+                    if (!colorSectionEnabled) return;
+                    
+                    document.querySelectorAll('[data-color]').forEach(item => item.classList.remove('active'));
+                    el.classList.add('active');
+                    applyColorToPanel(el.dataset.color);
+                });
             });
 
-            // Window resize
-            window.addEventListener('resize', onWindowResize);
+            // Submit button (only set once)
+            const submitBtn = document.querySelector('.submit-button');
+            if (submitBtn && !submitBtn.hasClickListener) {
+                submitBtn.addEventListener('click', () => {
+                    alert('Configuration submitted:\n' + JSON.stringify(currentConfig, null, 2));
+                });
+                submitBtn.hasClickListener = true;
+            }
+
+            // Window resize (only set once)
+            if (!window.hasResizeListener) {
+                window.addEventListener('resize', onWindowResize);
+                window.hasResizeListener = true;
+            }
         }
 
         function onWindowResize() {
@@ -622,6 +1332,12 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
+            
+            // Update plus indicator positions if they exist
+            if (selectedPipes && plusIndicators.length > 0) {
+                updatePlusIndicatorPositions(selectedPipes);
+            }
+            
             renderer.render(scene, camera);
         }
 
