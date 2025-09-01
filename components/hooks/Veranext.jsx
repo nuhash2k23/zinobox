@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, Suspense, useMemo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
 import { OrbitControls, useGLTF, useProgress, Html, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -19,7 +19,7 @@ const SimpleFallback = () => (
   }}>
     <div style={{ textAlign: 'center' }}>
       <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 20px 0' }}>
-    Cubesse
+        Cubesse
       </h1>
       <div style={{ fontSize: '16px', color: '#666' }}>Loading 3D...</div>
     </div>
@@ -46,7 +46,7 @@ const ClientOnly = ({ children }) => {
       }}>
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 20px 0' }}>
- Cubesse
+            Cubesse
           </h1>
           <div style={{ fontSize: '16px', color: '#666' }}>Loading...</div>
         </div>
@@ -86,7 +86,7 @@ class ErrorBoundary extends React.Component {
         }}>
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ fontSize: '32px', fontWeight: '700', margin: '0 0 20px 0' }}>
-      Cubesse
+              Cubesse
             </h1>
             <div style={{ fontSize: '16px', color: '#666' }}>
               Loading 3D content...
@@ -109,6 +109,155 @@ const isMobile = () => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
          window.innerWidth < 768;
+};
+
+// Object Selection Modal Component
+const ObjectSelectionModal = ({ isOpen, onClose, onSelect, verandaNumber }) => {
+  if (!isOpen) return null;
+
+  const contentOptions = [
+    { id: 'fitness', name: 'Gym Box', icon: '🏋️', description: 'Professional workout equipment' },
+    { id: 'wellness', name: 'Spa Box', icon: '🛁', description: 'Jacuzzi & relaxation area' },
+    { id: 'recreation', name: 'Game Box', icon: '🎱', description: 'Billiards & entertainment' },
+    { id: null, name: 'Veranda Only', icon: '🏗️', description: 'Clear this space' }
+  ];
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 10000,
+          backdropFilter: 'blur(4px)'
+        }}
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          borderRadius: '16px',
+          padding: '32px',
+          minWidth: '320px',
+          maxWidth: '90vw',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
+          zIndex: 10001,
+          textAlign: 'center'
+        }}
+      >
+        <h3 style={{
+          margin: '0 0 16px 0',
+          fontSize: '20px',
+          fontWeight: '600',
+          color: '#1a1a1a'
+        }}>
+          Add Content to Space {verandaNumber}
+        </h3>
+        
+        <p style={{
+          margin: '0 0 24px 0',
+          fontSize: '14px',
+          color: '#666',
+          lineHeight: '1.5'
+        }}>
+          Choose what to place in this veranda space
+        </p>
+        
+        <div style={{
+          display: 'grid',
+          gap: '12px',
+          marginBottom: '24px'
+        }}>
+          {contentOptions.map(option => (
+            <button
+              key={option.id || 'remove'}
+              onClick={() => {
+                onSelect(option.id);
+                onClose();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                padding: '16px',
+                border: '2px solid #e0e0e0',
+                borderRadius: '12px',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                textAlign: 'left'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.borderColor = '#000';
+                e.target.style.backgroundColor = '#f8f8f8';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.borderColor = '#e0e0e0';
+                e.target.style.backgroundColor = 'white';
+              }}
+            >
+              <div style={{
+                fontSize: '32px',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f8f8f8',
+                borderRadius: '8px'
+              }}>
+                {option.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#1a1a1a',
+                  marginBottom: '4px'
+                }}>
+                  {option.name}
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#666'
+                }}>
+                  {option.description}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+        
+        <button
+          onClick={onClose}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#f0f0f0',
+            color: '#666',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </>
+  );
 };
 
 // Recording Modal Component
@@ -211,8 +360,140 @@ const RecordingModal = ({ isOpen, onClose, status }) => {
   );
 };
 
-// AR Development Modal Component
-const ARModal = ({ isOpen, onClose }) => {
+// WebXR AR Modal Component
+const ARModal = ({ isOpen, onClose, size, materialColor, multiplier }) => {
+  const [arSupported, setArSupported] = useState(false);
+  const [arSession, setArSession] = useState(null);
+  const [arStatus, setArStatus] = useState('Checking AR support...');
+  const [isPlacing, setIsPlacing] = useState(false);
+  const [placedBoxes, setPlacedBoxes] = useState([]);
+
+  // Check AR support on mount
+  useEffect(() => {
+    if (isOpen && typeof window !== 'undefined' && 'xr' in navigator) {
+      navigator.xr.isSessionSupported('immersive-ar')
+        .then(supported => {
+          setArSupported(supported);
+          setArStatus(supported ? 'AR Ready! Tap "Start AR" to begin.' : 'AR not supported on this device');
+        })
+        .catch(() => {
+          setArSupported(false);
+          setArStatus('AR not available. Try on a mobile device with AR support.');
+        });
+    } else if (isOpen) {
+      setArSupported(false);
+      setArStatus('AR requires HTTPS and WebXR support');
+    }
+  }, [isOpen]);
+
+  const startARSession = async () => {
+    try {
+      setArStatus('Starting AR session...');
+      
+      const session = await navigator.xr.requestSession('immersive-ar', {
+        requiredFeatures: ['hit-test'],
+        optionalFeatures: ['dom-overlay'],
+        domOverlay: { root: document.body }
+      });
+
+      setArSession(session);
+      setArStatus('AR session active. Point camera at flat surface and tap to place.');
+      setIsPlacing(true);
+
+      // Initialize WebXR rendering
+      initializeARRendering(session);
+
+      session.addEventListener('end', () => {
+        setArSession(null);
+        setIsPlacing(false);
+        setArStatus('AR session ended');
+        setPlacedBoxes([]);
+      });
+
+    } catch (error) {
+      console.error('Failed to start AR:', error);
+      setArStatus('Failed to start AR. Make sure you\'re on a supported device.');
+    }
+  };
+
+  const initializeARRendering = (session) => {
+    // Create WebGL context for AR
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2', { xrCompatible: true });
+    
+    if (!gl) {
+      setArStatus('WebGL not supported');
+      return;
+    }
+
+    // Initialize WebXR layers
+    session.updateRenderState({
+      baseLayer: new XRWebGLLayer(session, gl)
+    });
+
+    // Get reference space
+    session.requestReferenceSpace('local-floor').then(referenceSpace => {
+      // Create hit test source for ground plane detection
+      session.requestHitTestSource({ space: referenceSpace }).then(hitTestSource => {
+        
+        // Animation loop
+        const onXRFrame = (time, frame) => {
+          session.requestAnimationFrame(onXRFrame);
+
+          const pose = frame.getViewerPose(referenceSpace);
+          if (!pose) return;
+
+          // Get hit test results
+          const hitTestResults = frame.getHitTestResults(hitTestSource);
+          if (hitTestResults.length > 0 && isPlacing) {
+            const hit = hitTestResults[0];
+            const hitPose = hit.getPose(referenceSpace);
+            
+            // Here you would render the AR content
+            // For now, we'll just track hit positions
+            renderARContent(gl, pose, hitPose);
+          }
+        };
+
+        session.requestAnimationFrame(onXRFrame);
+
+        // Handle tap to place
+        canvas.addEventListener('touchstart', (event) => {
+          if (isPlacing && hitTestResults && hitTestResults.length > 0) {
+            const hit = hitTestResults[0];
+            const hitPose = hit.getPose(referenceSpace);
+            
+            // Add box at hit position
+            setPlacedBoxes(prev => [...prev, {
+              id: Date.now(),
+              position: [hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z],
+              size: size,
+              color: materialColor,
+              multiplier: multiplier
+            }]);
+          }
+        });
+      });
+    });
+  };
+
+  const renderARContent = (gl, viewerPose, hitPose) => {
+    // Basic WebGL rendering for AR box
+    // This is a simplified version - in production you'd use a full 3D engine
+    
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+    // Render placed boxes and hit indicator
+    // Implementation would depend on your WebGL setup
+  };
+
+  const endARSession = () => {
+    if (arSession) {
+      arSession.end();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -229,7 +510,7 @@ const ARModal = ({ isOpen, onClose }) => {
           zIndex: 10000,
           backdropFilter: 'blur(4px)'
         }}
-        onClick={onClose}
+        onClick={!arSession ? onClose : undefined}
       />
       
       {/* Modal */}
@@ -252,7 +533,7 @@ const ARModal = ({ isOpen, onClose }) => {
         <div style={{
           width: '60px',
           height: '60px',
-          backgroundColor: '#4285f4',
+          backgroundColor: arSession ? '#4CAF50' : '#4285f4',
           borderRadius: '50%',
           margin: '0 auto 20px',
           display: 'flex',
@@ -260,7 +541,7 @@ const ARModal = ({ isOpen, onClose }) => {
           justifyContent: 'center',
           fontSize: '24px'
         }}>
-          📱
+          {arSession ? '👁️' : '📱'}
         </div>
         
         <h3 style={{
@@ -269,7 +550,7 @@ const ARModal = ({ isOpen, onClose }) => {
           fontWeight: '600',
           color: '#1a1a1a'
         }}>
-          AR View
+          {arSession ? 'AR Active' : 'AR View'}
         </h3>
         
         <p style={{
@@ -278,29 +559,190 @@ const ARModal = ({ isOpen, onClose }) => {
           color: '#666',
           lineHeight: '1.5'
         }}>
-          🚧 Under Development<br />
-          Work in Progress<br /><br />
-          AR functionality is coming soon! This will allow you to visualize your veranda in your actual space.
+          {arStatus}
         </p>
-        
-        <button
-          onClick={onClose}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#000',
-            color: 'white',
-            border: 'none',
+
+        {arSession && placedBoxes.length > 0 && (
+          <div style={{
+            marginBottom: '24px',
+            padding: '12px',
+            backgroundColor: '#f0f9ff',
             borderRadius: '8px',
             fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Got it
-        </button>
+            color: '#0369a1'
+          }}>
+            {placedBoxes.length} veranda{placedBoxes.length !== 1 ? 's' : ''} placed
+          </div>
+        )}
+        
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          {arSupported && !arSession && (
+            <button
+              onClick={startARSession}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#4285f4',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Start AR
+            </button>
+          )}
+          
+          {arSession && (
+            <button
+              onClick={endARSession}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              End AR
+            </button>
+          )}
+          
+          <button
+            onClick={onClose}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: arSession ? '#666' : '#000',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {arSession ? 'Close' : 'Got it'}
+          </button>
+        </div>
+
+        {/* AR Instructions */}
+        {arSession && (
+          <div style={{
+            marginTop: '16px',
+            padding: '12px',
+            backgroundColor: '#fff3cd',
+            borderRadius: '8px',
+            fontSize: '12px',
+            color: '#856404',
+            textAlign: 'left'
+          }}>
+            <strong>How to use AR:</strong><br />
+            1. Point your camera at a flat surface<br />
+            2. Wait for the surface to be detected<br />
+            3. Tap the screen to place a veranda box<br />
+            4. Move around to see it from different angles
+          </div>
+        )}
       </div>
     </>
+  );
+};
+
+// Clickable Veranda Component with simple double-click detection
+const ClickableVeranda = ({ 
+  children, 
+  verandaNumber, 
+  onDoubleClick, 
+  position, 
+  rotation, 
+  scale, 
+  hasContent 
+}) => {
+  const meshRef = useRef();
+  const [hovered, setHovered] = useState(false);
+  const lastClickTimeRef = useRef(0);
+
+  // Simple double-click detection using timestamps
+  const handleClick = (event) => {
+    event.stopPropagation();
+    
+    const currentTime = Date.now();
+    const timeSinceLastClick = currentTime - lastClickTimeRef.current;
+    
+    // If less than 400ms since last click, it's a double-click
+    if (timeSinceLastClick < 400 && timeSinceLastClick > 50) {
+      console.log(`Double-click detected on veranda ${verandaNumber}`);
+      onDoubleClick(verandaNumber);
+      lastClickTimeRef.current = 0; // Reset to prevent triple-clicks
+    } else {
+      lastClickTimeRef.current = currentTime;
+    }
+  };
+
+  // Update cursor on hover
+  useEffect(() => {
+    document.body.style.cursor = hovered ? 'pointer' : 'auto';
+    return () => {
+      document.body.style.cursor = 'auto';
+    };
+  }, [hovered]);
+
+  return (
+    <group
+      ref={meshRef}
+      position={position}
+      rotation={rotation}
+      scale={scale}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setHovered(false);
+      }}
+      onClick={handleClick}
+    >
+      {children}
+      
+      {/* Visual indicator for interactive veranda */}
+      {hovered && (
+        <mesh position={[0, 2, 0]}>
+          <ringGeometry args={[1.8, 2.2, 8]} />
+          <meshBasicMaterial 
+            color={hasContent ? "#4CAF50" : "#2196F3"} 
+            transparent 
+            opacity={0.6}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
+      
+      {/* Hover indicator text */}
+      {hovered && (
+        <Html center position={[0, 2.8, 0]}>
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: '500',
+            whiteSpace: 'nowrap',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          }}>
+            Double-click to {hasContent ? 'change' : 'add'} content
+          </div>
+        </Html>
+      )}
+    </group>
   );
 };
 
@@ -316,9 +758,9 @@ const ConfiguratorContent = ({
 }) => {
   
   const contentOptions = [
-    { id: 'fitness', name: 'Fitness Studio', icon: '⚪', description: 'Professional workout equipment' },
-    { id: 'wellness', name: 'Wellness Spa', icon: '⚫', description: 'Jacuzzi & relaxation area' },
-    { id: 'recreation', name: 'Game Room', icon: '⚪', description: 'Billiards & entertainment' }
+    { id: 'fitness', name: 'Gym Box', icon: '⚪', description: 'Professional workout equipment' },
+    { id: 'wellness', name: 'Spa Box', icon: '⚫', description: 'Jacuzzi & relaxation area' },
+    { id: 'recreation', name: 'Game Box', icon: '⚪', description: 'Billiards & entertainment' }
   ];
 
   return (
@@ -514,6 +956,20 @@ const ConfiguratorContent = ({
           Space Content
         </h3>
         
+        {/* Interactive instruction */}
+        <div style={{
+          marginBottom: '16px',
+          padding: '12px 16px',
+          backgroundColor: '#e3f2fd',
+          border: '2px solid #90caf9',
+          borderRadius: '8px',
+          fontSize: mobile ? '11px' : '12px',
+          color: '#0d47a1',
+          fontWeight: '500'
+        }}>
+          💡 Double-click on veranda spaces in the 3D view to add content interactively!
+        </div>
+        
         {/* Veranda content assignment */}
         {Array.from({ length: multiplier }, (_, i) => {
           const verandaIndex = i + 1;
@@ -560,7 +1016,7 @@ const ConfiguratorContent = ({
                     color: '#1a1a1a'
                   }}
                 >
-                  <option value="">Empty</option>
+                  <option value="">Veranda Only</option>
                   {contentOptions.map(option => (
                     <option key={option.id} value={option.id}>
                       {option.name}
@@ -604,33 +1060,20 @@ const ConfiguratorContent = ({
                     marginBottom: '4px',
                     letterSpacing: '-0.01em'
                   }}>
-                    {contentOption ? contentOption.name : 'Empty Space'}
+                    {contentOption ? contentOption.name : 'Veranda Only'}
                   </div>
                   <div style={{
                     fontSize: mobile ? '11px' : '12px',
                     color: '#666',
                     lineHeight: '1.4'
                   }}>
-                    {contentOption ? contentOption.description : 'Click dropdown to add content'}
+                    {contentOption ? contentOption.description : 'Double-click in 3D view or use dropdown'}
                   </div>
                 </div>
               </div>
             </div>
           );
         })}
-        
-        <div style={{
-          marginTop: '12px',
-          padding: '12px 16px',
-          backgroundColor: '#f0f9ff',
-          border: '2px solid #bae6fd',
-          borderRadius: '8px',
-          fontSize: mobile ? '11px' : '12px',
-          color: '#0369a1',
-          fontWeight: '500'
-        }}>
-          💡 Use the dropdowns above to assign content to each veranda space
-        </div>
       </div>
 
       {/* Time of Day Options */}
@@ -934,7 +1377,7 @@ const Loader = () => {
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
         }}>
-   Cubesse
+          Cubesse
         </h1>
         <div style={{
           width: '200px',
@@ -1049,7 +1492,6 @@ const CameraController = ({ multiplier, mobile }) => {
       enableZoom={true}
       enableRotate={true}
       minPolarAngle={0}
-  
       maxDistance={24} // Will be updated by useEffect
       target={[6, 0.7, 3]}
       enableDamping={true}
@@ -1078,6 +1520,10 @@ const VerandaConfigurator = () => {
   // Content management states
   const [verandaContents, setVerandaContents] = useState({}); // { 1: 'gym', 2: 'spa', 3: 'games' }
   
+  // Interactive object insertion states
+  const [showObjectModal, setShowObjectModal] = useState(false);
+  const [selectedVeranda, setSelectedVeranda] = useState(null);
+  
   // Mobile configuration panel state
   const [showMobileConfig, setShowMobileConfig] = useState(false);
 
@@ -1095,6 +1541,19 @@ const VerandaConfigurator = () => {
       ...prev,
       [verandaNumber]: contentType
     }));
+  };
+
+  // Handler for veranda double-click
+  const handleVerandaDoubleClick = (verandaNumber) => {
+    setSelectedVeranda(verandaNumber);
+    setShowObjectModal(true);
+  };
+
+  // Handler for object selection
+  const handleObjectSelection = (contentType) => {
+    if (selectedVeranda) {
+      setVerandaContent(selectedVeranda, contentType);
+    }
   };
 
   // Dimension and color parsing function with enhanced patterns
@@ -1298,6 +1757,17 @@ const VerandaConfigurator = () => {
       overflow: 'hidden',
       position: 'relative'
     }}>
+      {/* Object Selection Modal */}
+      <ObjectSelectionModal 
+        isOpen={showObjectModal}
+        onClose={() => {
+          setShowObjectModal(false);
+          setSelectedVeranda(null);
+        }}
+        onSelect={handleObjectSelection}
+        verandaNumber={selectedVeranda}
+      />
+
       {/* Recording Modal */}
       <RecordingModal 
         isOpen={isListening} 
@@ -1309,6 +1779,9 @@ const VerandaConfigurator = () => {
       <ARModal 
         isOpen={showARModal} 
         onClose={() => setShowARModal(false)}
+        size={size}
+        materialColor={materialColor}
+        multiplier={multiplier}
       />
 
       {/* Canvas Section */}
@@ -1353,6 +1826,7 @@ const VerandaConfigurator = () => {
                 timeOfDay={timeOfDay}
                 multiplier={multiplier}
                 verandaContents={verandaContents}
+                onVerandaDoubleClick={handleVerandaDoubleClick}
               />
               
               <Environment 
@@ -1541,7 +2015,7 @@ const VerandaConfigurator = () => {
 
 const VerandaModel = ({ 
   size, lightType, lightsOn, lightColor, roofType, materialColor, mobile, 
-  timeOfDay, multiplier, verandaContents = {} 
+  timeOfDay, multiplier, verandaContents = {}, onVerandaDoubleClick
 }) => {
   const { scene } = useGLTF('/h/veranda.glb');
   const { scene: sceneAddition } = useGLTF('/sceneaddition.glb');
@@ -1732,7 +2206,7 @@ const VerandaModel = ({
   const spacingBuffer = 0.05;
   const totalSpacing = actualVerandaWidth + spacingBuffer;
 
-  // Create veranda without click handlers
+  // Create veranda with interactive capabilities
   const createVeranda = (verandaNumber, offsetX = 0) => {
     const clonedVeranda = clonedScene.clone();
     
@@ -1789,15 +2263,20 @@ const VerandaModel = ({
       }
     });
 
+    const hasContent = verandaContents && verandaContents[verandaNumber];
+
     return (
-      <group 
+      <ClickableVeranda
         key={`veranda-${verandaNumber}`}
-        position={[6 + offsetX, -0.5, 3]} 
-        rotation={[0, -Math.PI/2, 0]} 
+        verandaNumber={verandaNumber}
+        onDoubleClick={onVerandaDoubleClick}
+        position={[6 + offsetX, -0.5, 3]}
+        rotation={[0, -Math.PI/2, 0]}
         scale={[scaleX, scaleY, scaleZ]}
+        hasContent={!!hasContent}
       >
         <primitive object={clonedVeranda} />
-      </group>
+      </ClickableVeranda>
     );
   };
 

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Fluid Shader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: white;
+            font-family: 'Arial', sans-serif;
+            cursor: none;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .control-group {
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-title {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .style-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 5px;
+        }
+        
+        .style-button {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #333;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+        
+        .style-button:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .style-button.active {
+            background: linear-gradient(135deg, rgba(100, 200, 255, 0.4), rgba(50, 150, 255, 0.2));
+            border-color: rgba(100, 200, 255, 0.6);
+            color: #222;
+        }
+        
+        .slider-container {
+            margin-top: 10px;
+        }
+        
+        .slider {
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .slider-label {
+            color: #333;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            height: 6px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #66ccff, #4488cc);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        #cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(100, 200, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transition: all 0.1s ease;
+            mix-blend-mode: difference;
+        }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    <div id="container">
+        <div id="controls">
+            <div class="control-group">
+                <div class="control-title">Shader Styles</div>
+                <div class="style-grid">
+                    <button class="style-button active" data-style="0">Hologram</button>
+                    <button class="style-button" data-style="1">Iridescent</button>
+                    <button class="style-button" data-style="2">Light Palette</button>
+                    <button class="style-button" data-style="3">Radiant</button>
+                    <button class="style-button" data-style="4">Dark Glow</button>
+                    <button class="style-button" data-style="5">Plasma</button>
+                    <button class="style-button" data-style="6">Cosmic</button>
+                    <button class="style-button" data-style="7">Fire Lava</button>
+                    <button class="style-button" data-style="8">Ocean</button>
+                    <button class="style-button" data-style="9">Matrix</button>
+                    <button class="style-button" data-style="10">Forest</button>
+                    <button class="style-button" data-style="11">Galaxy</button>
+                    <button class="style-button" data-style="12">Heaven</button>
+                    <button class="style-button" data-style="13">Inferno</button>
+                    <button class="style-button" data-style="14">Stellar</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-title">Settings</div>
+                <div class="slider-container">
+                    <div class="slider-label">Circle Size</div>
+                    <input type="range" id="radiusSlider" min="80" max="500" value="200" class="slider">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">Animation Speed</div>
+                    <input type="range" id="speedSlider" min="0.3" max="4.0" step="0.1" value="1.0" class="slider">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        
+        const container = document.getElementById('container');
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // Mouse tracking
+        const mouse = new THREE.Vector2();
+        const targetMouse = new THREE.Vector2();
+        
+        // Shader uniforms
+        const uniforms = {
+            u_time: { value: 0 },
+            u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
+            u_radius: { value: 0.2 },
+            u_style: { value: 0 },
+            u_speed: { value: 1.0 }
+        };
+
+        // Vertex shader
+        const vertexShader = `
+            void main() {
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        // Enhanced fragment shader with blob shapes and new styles
+        const fragmentShader = `
+            uniform float u_time;
+            uniform vec2 u_resolution;
+            uniform vec2 u_mouse;
+            uniform float u_radius;
+            uniform int u_style;
+            uniform float u_speed;
+            
+            // Hash function for noise
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            }
+            
+            // 2D noise
+            float noise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
+                vec2 u = f * f * (3.0 - 2.0 * f);
+                
+                return mix(
+                    mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                    u.y
+                );
+            }
+            
+            // Fractional Brownian Motion
+            float fbm(vec2 p) {
+                float value = 0.0;
+                float amplitude = 0.5;
+                
+                for(int i = 0; i < 6; i++) {
+                    value += amplitude * noise(p);
+                    p *= 2.0;
+                    amplitude *= 0.5;
+                }
+                return value;
+            }
+            
+            // Flow field for fluid motion
+            vec2 flowField(vec2 p, float time) {
+                float angle = fbm(p * 0.5 + time * 0.1) * 6.28318;
+                return vec2(cos(angle), sin(angle));
+            }
+            
+            // Smooth noise for blob distortion
+            float smoothNoise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
+                
+                // Smoother interpolation
+                vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+                
+                return mix(
+                    mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                    u.y
+                );
+            }
+            
+            // Smooth FBM for liquid-like distortion
+            float smoothFbm(vec2 p) {
+                float value = 0.0;
+                float amplitude = 0.5;
+                
+                for(int i = 0; i < 4; i++) {
+                    value += amplitude * smoothNoise(p);
+                    p *= 1.8;
+                    amplitude *= 0.6;
+                }
+                return value;
+            }
+            
+            // Create simple circle with radial fade
+            float blobShape(vec2 uv, vec2 center, float time) {
+                vec2 offset = uv - center;
+                float radius = length(offset);
+                
+                // Simple circle with smooth radial fade
+                float circleRadius = u_radius;
+                
+                // Radial gradient: full opaque at center, transparent at edges
+                float radialMask = 1.0 - smoothstep(0.0, circleRadius, radius);
+                
+                // Smooth the falloff for better blending
+                radialMask = smoothstep(0.0, 1.0, radialMask);
+                
+                return radialMask;
+            }
+            
+            // Original styles
+            vec3 hologramStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 3.0, time);
+                float pattern = fbm(uv * 4.0 + flow * 0.3 + time * 0.2);
+                
+                float lines = sin(uv.y * 200.0 + time * 2.0) * 0.5 + 0.5;
+                lines *= sin(uv.x * 150.0 + pattern * 10.0) * 0.5 + 0.5;
+                
+                vec3 cyan = vec3(0.0, 1.0, 1.0);
+                vec3 blue = vec3(0.0, 0.5, 1.0);
+                
+                return mix(cyan, blue, pattern) * lines * (0.7 + pattern * 0.3);
+            }
+            
+            vec3 iridescentStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 2.0, time);
+                float pattern = fbm(uv * 3.0 + flow * 0.5 + time * 0.15);
+                
+                float hue = pattern + time * 0.1;
+                vec3 color = 0.5 + 0.5 * cos(6.28318 * (hue + vec3(0.0, 0.33, 0.67)));
+                
+                float intensity = fbm(uv * 8.0 + time * 0.3);
+                return color * (0.6 + intensity * 0.4);
+            }
+            
+            vec3 lightPaletteStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 2.5, time);
+                float pattern = fbm(uv * 5.0 + flow * 0.4 + time * 0.25);
+                
+                vec3 pink = vec3(1.0, 0.7, 0.9);
+                vec3 lavender = vec3(0.8, 0.6, 1.0);
+                vec3 mint = vec3(0.7, 1.0, 0.8);
+                vec3 peach = vec3(1.0, 0.9, 0.7);
+                
+                float selector = pattern * 3.0;
+                vec3 color;
+                
+                if(selector < 1.0) {
+                    color = mix(pink, lavender, selector);
+                } else if(selector < 2.0) {
+                    color = mix(lavender, mint, selector - 1.0);
+                } else {
+                    color = mix(mint, peach, selector - 2.0);
+                }
+                
+                return color * (0.8 + pattern * 0.2);
+            }
+            
+            vec3 radiantStyle(vec2 uv, float time) {
+                vec2 center = vec2(0.5);
+                float dist = length(uv - center);
+                
+                vec2 flow = flowField(uv * 3.0, time);
+                float pattern = fbm(uv * 4.0 + flow * 0.6 + time * 0.3);
+                
+                float radial = 1.0 - smoothstep(0.0, 0.8, dist);
+                float rays = sin(atan(uv.y - 0.5, uv.x - 0.5) * 12.0 + time) * 0.5 + 0.5;
+                
+                vec3 gold = vec3(1.0, 0.8, 0.2);
+                vec3 orange = vec3(1.0, 0.4, 0.0);
+                vec3 red = vec3(1.0, 0.2, 0.2);
+                
+                vec3 color = mix(gold, orange, pattern);
+                color = mix(color, red, radial * rays);
+                
+                return color * (radial + pattern * 0.3);
+            }
+            
+            vec3 darkGlowStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 4.0, time);
+                float pattern = fbm(uv * 6.0 + flow * 0.7 + time * 0.4);
+                
+                vec3 purple = vec3(0.6, 0.2, 1.0);
+                vec3 magenta = vec3(1.0, 0.0, 0.8);
+                vec3 electric = vec3(0.0, 1.0, 1.0);
+                vec3 dark = vec3(0.1, 0.0, 0.2);
+                
+                float glow = pow(pattern, 2.0);
+                vec3 color = mix(dark, purple, glow);
+                color = mix(color, magenta, pow(pattern, 3.0));
+                
+                if(pattern > 0.7) {
+                    color = mix(color, electric, (pattern - 0.7) / 0.3);
+                }
+                
+                return color * (0.3 + glow * 0.7);
+            }
+            
+            // NEW STYLES
+            
+            // Plasma electric style
+            vec3 plasmaStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 5.0, time);
+                float noise1 = fbm(uv * 8.0 + flow * 0.8 + time * 0.6);
+                float noise2 = fbm(uv * 12.0 - flow * 0.4 + time * 0.4);
+                
+                float plasma = sin(noise1 * 10.0 + time * 3.0) * sin(noise2 * 15.0 + time * 2.0);
+                plasma = abs(plasma);
+                
+                vec3 electric1 = vec3(0.0, 1.0, 1.0);
+                vec3 electric2 = vec3(1.0, 0.0, 1.0);
+                vec3 white = vec3(1.0, 1.0, 1.0);
+                
+                vec3 color = mix(electric1, electric2, plasma);
+                if(plasma > 0.8) {
+                    color = mix(color, white, (plasma - 0.8) / 0.2);
+                }
+                
+                return color * (0.5 + plasma * 0.5);
+            }
+            
+            // Cosmic nebula style
+            vec3 cosmicStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 2.0, time);
+                float nebula = fbm(uv * 3.0 + flow * 0.5 + time * 0.1);
+                float stars = fbm(uv * 20.0 + time * 0.05);
+                
+                vec3 deep_purple = vec3(0.1, 0.0, 0.3);
+                vec3 cosmic_blue = vec3(0.0, 0.2, 0.8);
+                vec3 nebula_pink = vec3(0.8, 0.2, 0.6);
+                vec3 star_white = vec3(1.0, 0.9, 0.8);
+                
+                vec3 color = mix(deep_purple, cosmic_blue, nebula);
+                color = mix(color, nebula_pink, pow(nebula, 2.0));
+                
+                // Add stars
+                if(stars > 0.85) {
+                    color = mix(color, star_white, (stars - 0.85) / 0.15);
+                }
+                
+                return color;
+            }
+            
+            // Fire lava style
+            vec3 fireStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 3.0, time);
+                float flames = fbm(uv * 6.0 + flow * 1.0 + vec2(0.0, time * 0.8));
+                float heat = fbm(uv * 10.0 + time * 0.5);
+                
+                vec3 dark_red = vec3(0.2, 0.0, 0.0);
+                vec3 red = vec3(1.0, 0.2, 0.0);
+                vec3 orange = vec3(1.0, 0.6, 0.0);
+                vec3 yellow = vec3(1.0, 1.0, 0.3);
+                
+                vec3 color = mix(dark_red, red, flames);
+                color = mix(color, orange, pow(flames, 1.5));
+                color = mix(color, yellow, pow(flames * heat, 3.0));
+                
+                return color * (0.4 + flames * 0.6);
+            }
+            
+            // Ocean waves style
+            vec3 oceanStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 2.0, time);
+                float waves = fbm(uv * 4.0 + flow * 0.6 + vec2(time * 0.3, 0.0));
+                float foam = fbm(uv * 15.0 + time * 0.7);
+                
+                vec3 deep_blue = vec3(0.0, 0.1, 0.3);
+                vec3 ocean_blue = vec3(0.0, 0.4, 0.8);
+                vec3 turquoise = vec3(0.0, 0.8, 0.9);
+                vec3 foam_white = vec3(0.9, 1.0, 1.0);
+                
+                vec3 color = mix(deep_blue, ocean_blue, waves);
+                color = mix(color, turquoise, pow(waves, 2.0));
+                
+                if(foam > 0.8 && waves > 0.6) {
+                    color = mix(color, foam_white, (foam - 0.8) / 0.2);
+                }
+                
+                return color;
+            }
+            
+            // Matrix digital rain style
+            vec3 matrixStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 1.0, time);
+                float digital = fbm(uv * 20.0 + flow * 0.2 + vec2(0.0, time * 2.0));
+                float grid = sin(uv.x * 100.0) * sin(uv.y * 100.0);
+                
+                float rain = sin(uv.y * 50.0 - time * 10.0) * 0.5 + 0.5;
+                rain *= noise(vec2(uv.x * 10.0, time * 3.0));
+                
+                vec3 dark_green = vec3(0.0, 0.1, 0.0);
+                vec3 matrix_green = vec3(0.0, 1.0, 0.3);
+                vec3 bright_green = vec3(0.5, 1.0, 0.5);
+                
+                vec3 color = mix(dark_green, matrix_green, digital * rain);
+                
+                if(digital > 0.7 && rain > 0.6) {
+                    color = mix(color, bright_green, (digital - 0.7) / 0.3);
+                }
+                
+                return color * (0.3 + digital * 0.7);
+            }
+            
+            // NEW NATURE/SPACE/HEAVEN/HELL INSPIRED STYLES
+            
+            // Forest Canopy - Nature inspired
+            vec3 forestStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 2.0, time);
+                float leaves = fbm(uv * 8.0 + flow * 0.3 + time * 0.1);
+                float sunlight = fbm(uv * 4.0 + flow * 0.5 + time * 0.15);
+                
+                // Create dappled light effect
+                float lightRays = sin(uv.x * 30.0 + leaves * 5.0 + time * 0.5) * 0.5 + 0.5;
+                lightRays *= sin(uv.y * 20.0 + sunlight * 3.0 + time * 0.3) * 0.5 + 0.5;
+                
+                vec3 deep_green = vec3(0.1, 0.3, 0.1);
+                vec3 forest_green = vec3(0.2, 0.6, 0.2);
+                vec3 bright_green = vec3(0.4, 0.8, 0.3);
+                vec3 golden_light = vec3(0.9, 0.8, 0.4);
+                vec3 pure_light = vec3(1.0, 0.95, 0.7);
+                
+                vec3 color = mix(deep_green, forest_green, leaves);
+                color = mix(color, bright_green, sunlight);
+                
+                // Add sunbeams filtering through
+                if(lightRays > 0.7) {
+                    color = mix(color, golden_light, (lightRays - 0.7) / 0.3);
+                }
+                if(lightRays > 0.9 && sunlight > 0.6) {
+                    color = mix(color, pure_light, (lightRays - 0.9) / 0.1);
+                }
+                
+                return color * (0.4 + leaves * 0.6);
+            }
+            
+            // Galaxy Spiral - Space inspired
+            vec3 galaxyStyle(vec2 uv, float time) {
+                vec2 center = vec2(0.5);
+                vec2 offset = uv - center;
+                float radius = length(offset);
+                float angle = atan(offset.y, offset.x);
+                
+                // Create spiral arms
+                float spiralAngle = angle + log(radius * 5.0 + 0.1) * 2.0 + time * 0.1;
+                float spiralArm = sin(spiralAngle * 2.0) * 0.5 + 0.5;
+                
+                vec2 flow = flowField(uv * 3.0, time);
+                float stars = fbm(uv * 15.0 + flow * 0.2 + time * 0.05);
+                float nebula = fbm(uv * 5.0 + flow * 0.8 + time * 0.08);
+                
+                vec3 space_black = vec3(0.02, 0.01, 0.05);
+                vec3 deep_purple = vec3(0.15, 0.05, 0.3);
+                vec3 spiral_blue = vec3(0.2, 0.4, 0.9);
+                vec3 star_white = vec3(1.0, 0.9, 0.8);
+                vec3 nebula_pink = vec3(0.8, 0.3, 0.6);
+                
+                // Create spiral structure
+                float spiralIntensity = spiralArm * (1.0 - smoothstep(0.0, 0.4, radius));
+                
+                vec3 color = mix(space_black, deep_purple, nebula);
+                color = mix(color, spiral_blue, spiralIntensity);
+                color = mix(color, nebula_pink, nebula * spiralIntensity);
+                
+                // Add stellar clusters
+                if(stars > 0.8 && spiralIntensity > 0.3) {
+                    color = mix(color, star_white, (stars - 0.8) / 0.2);
+                }
+                
+                return color;
+            }
+            
+            // Divine Heaven - Heaven inspired
+            vec3 heavenStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 1.0, time);
+                float clouds = fbm(uv * 3.0 + flow * 0.5 + time * 0.05);
+                float divine = fbm(uv * 6.0 + flow * 0.3 + time * 0.08);
+                
+                // Create heavenly light rays
+                vec2 center = vec2(0.5, 0.7);
+                vec2 toCenter = uv - center;
+                float rayAngle = atan(toCenter.y, toCenter.x);
+                float rays = sin(rayAngle * 8.0 + time * 0.5) * 0.5 + 0.5;
+                rays *= 1.0 - smoothstep(0.0, 0.6, length(toCenter));
+                
+                vec3 pure_white = vec3(1.0, 1.0, 1.0);
+                vec3 golden_white = vec3(1.0, 0.95, 0.8);
+                vec3 soft_gold = vec3(0.9, 0.8, 0.6);
+                vec3 cloud_white = vec3(0.95, 0.95, 0.98);
+                vec3 sky_blue = vec3(0.8, 0.9, 1.0);
+                
+                vec3 color = mix(sky_blue, cloud_white, clouds);
+                color = mix(color, soft_gold, divine);
+                
+                // Add divine rays
+                if(rays > 0.5) {
+                    color = mix(color, golden_white, (rays - 0.5) / 0.5);
+                }
+                if(rays > 0.8 && divine > 0.6) {
+                    color = mix(color, pure_white, (rays - 0.8) / 0.2);
+                }
+                
+                return color * (0.7 + divine * 0.3);
+            }
+            
+            // Inferno Hell - Hell inspired
+            vec3 infernoStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 4.0, time);
+                float flames = fbm(uv * 8.0 + flow * 1.2 + vec2(0.0, time * 1.0));
+                float sulfur = fbm(uv * 12.0 + flow * 0.8 + time * 0.7);
+                float shadows = fbm(uv * 6.0 - flow * 0.5 + time * 0.3);
+                
+                vec3 abyss_black = vec3(0.05, 0.0, 0.0);
+                vec3 blood_red = vec3(0.4, 0.0, 0.0);
+                vec3 fire_red = vec3(0.8, 0.1, 0.0);
+                vec3 hell_orange = vec3(1.0, 0.3, 0.0);
+                vec3 sulfur_yellow = vec3(1.0, 0.8, 0.0);
+                vec3 white_hot = vec3(1.0, 0.9, 0.7);
+                
+                // Create hellish flames
+                vec3 color = mix(abyss_black, blood_red, shadows);
+                color = mix(color, fire_red, flames);
+                color = mix(color, hell_orange, pow(flames, 1.5));
+                
+                // Add sulfur veins
+                if(sulfur > 0.6) {
+                    color = mix(color, sulfur_yellow, (sulfur - 0.6) / 0.4);
+                }
+                
+                // Hottest flames
+                if(flames > 0.8 && sulfur > 0.7) {
+                    color = mix(color, white_hot, (flames - 0.8) / 0.2);
+                }
+                
+                return color * (0.3 + flames * 0.7);
+            }
+            
+            // Stellar Nursery - Space inspired
+            vec3 stellarStyle(vec2 uv, float time) {
+                vec2 flow = flowField(uv * 2.0, time);
+                float gas = fbm(uv * 4.0 + flow * 0.7 + time * 0.1);
+                float dust = fbm(uv * 8.0 + flow * 0.4 + time * 0.15);
+                float newStars = fbm(uv * 20.0 + time * 0.03);
+                
+                // Create stellar formation regions
+                vec3 space_void = vec3(0.01, 0.02, 0.05);
+                vec3 hydrogen_red = vec3(0.6, 0.1, 0.2);
+                vec3 helium_blue = vec3(0.1, 0.3, 0.8);
+                vec3 ionized_green = vec3(0.0, 0.7, 0.4);
+                vec3 hot_pink = vec3(1.0, 0.2, 0.6);
+                vec3 young_star = vec3(1.0, 0.8, 0.9);
+                
+                vec3 color = mix(space_void, hydrogen_red, gas);
+                color = mix(color, helium_blue, dust * gas);
+                color = mix(color, ionized_green, pow(gas * dust, 1.5));
+                
+                // Add emission nebula colors
+                if(gas > 0.6 && dust > 0.5) {
+                    color = mix(color, hot_pink, (gas - 0.6) / 0.4);
+                }
+                
+                // Add proto-stars
+                if(newStars > 0.85 && gas > 0.7) {
+                    color = mix(color, young_star, (newStars - 0.85) / 0.15);
+                }
+                
+                return color * (0.4 + gas * 0.6);
+            }
+            
+            void main() {
+                vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+                float time = u_time * u_speed;
+                
+                // Create blob mask with organic distortion
+                float mask = blobShape(uv, u_mouse, time);
+                
+                // Generate shader color based on style
+                vec3 shaderColor;
+                
+                if(u_style == 0) {
+                    shaderColor = hologramStyle(uv, time);
+                } else if(u_style == 1) {
+                    shaderColor = iridescentStyle(uv, time);
+                } else if(u_style == 2) {
+                    shaderColor = lightPaletteStyle(uv, time);
+                } else if(u_style == 3) {
+                    shaderColor = radiantStyle(uv, time);
+                } else if(u_style == 4) {
+                    shaderColor = darkGlowStyle(uv, time);
+                } else if(u_style == 5) {
+                    shaderColor = plasmaStyle(uv, time);
+                } else if(u_style == 6) {
+                    shaderColor = cosmicStyle(uv, time);
+                } else if(u_style == 7) {
+                    shaderColor = fireStyle(uv, time);
+                } else if(u_style == 8) {
+                    shaderColor = oceanStyle(uv, time);
+                } else if(u_style == 9) {
+                    shaderColor = matrixStyle(uv, time);
+                } else if(u_style == 10) {
+                    shaderColor = forestStyle(uv, time);
+                } else if(u_style == 11) {
+                    shaderColor = galaxyStyle(uv, time);
+                } else if(u_style == 12) {
+                    shaderColor = heavenStyle(uv, time);
+                } else if(u_style == 13) {
+                    shaderColor = infernoStyle(uv, time);
+                } else {
+                    shaderColor = stellarStyle(uv, time);
+                }
+                
+                // Mix with white background
+                vec3 backgroundColor = vec3(1.0);
+                vec3 finalColor = mix(backgroundColor, shaderColor, mask);
+                
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        // Create material and geometry
+        const material = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader
+        });
+
+        const geometry = new THREE.PlaneGeometry(2, 2);
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+
+        // Enhanced mouse tracking with smooth following
+        function onMouseMove(event) {
+            targetMouse.x = event.clientX / window.innerWidth;
+            targetMouse.y = 1.0 - (event.clientY / window.innerHeight);
+            
+            // Update custom cursor
+            cursor.style.left = event.clientX - 10 + 'px';
+            cursor.style.top = event.clientY - 10 + 'px';
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+
+        // Style controls
+        const styleButtons = document.querySelectorAll('.style-button');
+        const radiusSlider = document.getElementById('radiusSlider');
+        const speedSlider = document.getElementById('speedSlider');
+
+        styleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                styleButtons.forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                uniforms.u_style.value = parseInt(button.dataset.style);
+            });
+        });
+
+        radiusSlider.addEventListener('input', (e) => {
+            uniforms.u_radius.value = parseFloat(e.target.value) / 1000.0;
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            uniforms.u_speed.value = parseFloat(e.target.value);
+        });
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+        }
+
+        window.addEventListener('resize', onWindowResize);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update time
+            uniforms.u_time.value += 0.016;
+            
+            // Smooth mouse following
+            mouse.lerp(targetMouse, 0.08);
+            uniforms.u_mouse.value.copy(mouse);
+            
+            renderer.render(scene, camera);
+        }
+
+        // Initialize mouse to center of screen
+        mouse.set(0.5, 0.5);
+        targetMouse.set(0.5, 0.5);
+        onWindowResize();
+        animate();
+        
+        // Hide default cursor when over canvas
+        renderer.domElement.addEventListener('mouseenter', () => {
+            cursor.style.display = 'block';
+        });
+        
+        renderer.domElement.addEventListener('mouseleave', () => {
+            cursor.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

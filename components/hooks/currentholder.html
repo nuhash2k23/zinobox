@@ -545,16 +545,14 @@
     <!-- Total and Cart -->
     <div class="total-section">
         <div class="total-price">Total: $0.00</div>
-        <button class="add-to-cart-btn">Download STL File - $0.00</button>
-        <button class="export-stl-btn">Export STL File</button>
+<button class="add-to-cart-btn">Download STL File - $0.00</button>
+<button class="export-stl-btn">Export STL File</button>
         
         <div class="shipping-info">
             <div class="shipping-item">Ships in 5-10 business days</div>
             <div class="shipping-item">Custom manufactured with precision PETG plastic</div>
             <div class="shipping-item">Chemical resistant • Durable • Professional grade</div>
-            <div class="shipping-item">Features PRECISION BEVEL COMPENSATION for exact dimensions</div>
-            <div class="shipping-item">Fixed 1mm thickness for consistent quality</div>
-            <div class="shipping-item">Rounded beveled edges maintained in all configurations</div>
+         
         </div>
     </div>
 </div>
@@ -1247,7 +1245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const scaledDims = getScaledDimensions();
         const scaledLengthInches = scaledDims.length;
         const scaledBaseLength = getScaledLength(1.9685); // Scaled baseline
-        const baseSpacing = 1;
+        const baseSpacing = 0.79;
         
         const lengthIncreaseFactor = Math.max(0, (scaledLengthInches - scaledBaseLength) / scaledBaseLength);
         const reductionRate = -0.8;
@@ -1483,26 +1481,42 @@ document.addEventListener('DOMContentLoaded', function() {
         return geometry;
     }
     
-    // CREATE ROUNDED RECTANGLE - Scales with height input (NO bevel compensation)
+   // CREATE ROUNDED RECTANGLE - Dynamic thickness scaling from 1mm to 3mm based on length
     function createFlatRoundedRectWithHole(totalLength, totalWidth, height) {
-        const actualThickness = 0.01; // Always 1mm
-        console.log(`Creating ROUNDED RECTANGLE that scales with height input`);
+        console.log(`Creating ROUNDED RECTANGLE with dynamic thickness scaling`);
+        
+        // DYNAMIC THICKNESS CALCULATION
+        // Scale from 1mm (at default 1.9685") to 3mm (at 10")
+        const baselineLengthInches = 1.9685; // Default length
+        const targetLengthInches = 10.0;     // Target length for max thickness
+        const baseThicknessMM = 1.0;         // Minimum thickness 
+        const maxThicknessMM = 7.0;          // Maximum thickness
+        
+        // Calculate current thickness based on length
+        const lengthRatio = Math.max(0, Math.min(1, (totalLength - baselineLengthInches) / (targetLengthInches - baselineLengthInches)));
+        const currentThicknessMM = baseThicknessMM + (lengthRatio * (maxThicknessMM - baseThicknessMM));
+        const actualThickness = currentThicknessMM / 25.4; // Convert to inches
+        
+        console.log(`DYNAMIC THICKNESS:`);
+        console.log(`  Input length: ${totalLength.toFixed(3)} inches`);
+        console.log(`  Length ratio: ${lengthRatio.toFixed(3)} (0=1mm, 1=3mm)`);
+        console.log(`  Calculated thickness: ${currentThicknessMM.toFixed(2)}mm (${actualThickness.toFixed(4)} inches)`);
         
         // CORRECT MAPPING SYSTEM:
         const rectLengthMM = calculateSecondaryHeightMM(height); // Height → Rectangle Length (scales with input)
         const rectWidthMM = totalWidth * 25.4; // Width from input (should be ~29mm for default)
-        const thicknessMM = actualThickness * 25.4; // Always 1mm
+        const thicknessMM = currentThicknessMM; // DYNAMIC thickness
         
         const displayScale = 2 / 100;
-        const scaledLength = rectLengthMM * displayScale;    // X dimension (fixed 19mm)
+        const scaledLength = rectLengthMM * displayScale;    // X dimension (scales with height)
         const scaledWidth = rectWidthMM * displayScale;     // Y dimension (from width input)
-        const scaledDepth = thicknessMM * displayScale;     // Z dimension (always 1mm)
+        const scaledDepth = thicknessMM * displayScale;     // Z dimension (DYNAMIC)
         
-        console.log(`ROUNDED RECTANGLE MAPPING (HEIGHT-RESPONSIVE):`);
+        console.log(`ROUNDED RECTANGLE MAPPING (HEIGHT-RESPONSIVE + DYNAMIC THICKNESS):`);
         console.log(`  Height input → Length: ${rectLengthMM.toFixed(1)}mm (scales with height)`);
         console.log(`  Width input → Width: ${rectWidthMM.toFixed(1)}mm`);
-        console.log(`  FIXED thickness: 1.0mm`);
-        console.log(`FINAL RECTANGLE: ${rectLengthMM.toFixed(1)}mm × ${rectWidthMM.toFixed(1)}mm × 1.0mm (length scales with height input)`);
+        console.log(`  DYNAMIC thickness: ${thicknessMM.toFixed(2)}mm`);
+        console.log(`FINAL RECTANGLE: ${rectLengthMM.toFixed(1)}mm × ${rectWidthMM.toFixed(1)}mm × ${thicknessMM.toFixed(2)}mm (thickness scales with length)`);
         
         // Outer rounded rectangle - laying flat in XY plane
         const outerShape = new THREE.Shape();
@@ -1521,8 +1535,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Inner hole - centered (proportional to rectangle size)
         const innerShape = new THREE.Shape();
-        const innerLength = scaledLength * 0.6; // Hole size
-        const innerWidth = scaledWidth * 0.6;   // Hole size
+        const baseHoleLength = scaledLength * 0.64; 
+        const lengthIncreaseFactor = (scaledLength - baseHoleLength) / baseHoleLength;
+        const innerLength = baseHoleLength * (1 - lengthIncreaseFactor * 0.4); 
+        const innerWidth = scaledWidth * 0.65;   // Hole size
         const innerRadius = Math.min(innerLength, innerWidth) * 0.1;
         
         // Create inner hole with rounded corners
@@ -1538,9 +1554,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         outerShape.holes.push(innerShape);
 
-        // Extrude settings - NO bevel compensation for rectangular component
+        // Extrude settings - FRONT-ONLY EXTRUSION
         const extrudeSettings = {
-            depth: scaledDepth, // FIXED 1MM thickness
+            depth: scaledDepth, // DYNAMIC thickness
             bevelEnabled: true,
             bevelSegments: 8,
             steps: 1,
@@ -1550,10 +1566,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const geometry = new THREE.ExtrudeGeometry(outerShape, extrudeSettings);
         
-        // Center the geometry vertically (Z direction is thickness)
-        geometry.translate(0, 0, -scaledDepth/2);
+        // BOTTOM-ONLY EXTRUSION: Keep top face at Z=0, extrude bottom downward only
+        const positions = geometry.attributes.position.array;
+        const tolerance = scaledDepth * 0.05; // Small tolerance for face detection
+        
+        // Flip the geometry so top face is at Z=0 and bottom extrudes downward
+        for (let i = 0; i < positions.length; i += 3) {
+            const z = positions[i + 2];
+            
+            // Flatten top face to exactly Z=0
+            if (z >= scaledDepth - tolerance) {
+                positions[i + 2] = 0; // Top face stays flat at Z=0
+            } else {
+                // Move other vertices down so bottom face is at -scaledDepth
+                positions[i + 2] = z - scaledDepth; // Shift downward
+            }
+        }
+        
+        geometry.attributes.position.needsUpdate = true;
+        geometry.computeVertexNormals();
 
-        console.log(`ROUNDED RECTANGLE created: ${rectLengthMM.toFixed(1)}mm × ${rectWidthMM.toFixed(1)}mm × 1mm (NO bevel compensation)`);
+        console.log(`ROUNDED RECTANGLE created with BOTTOM-ONLY EXTRUSION: ${rectLengthMM.toFixed(1)}mm × ${rectWidthMM.toFixed(1)}mm × ${thicknessMM.toFixed(2)}mm`);
+        console.log(`EXTRUSION: Top face at Z=0 (flat), bottom face at Z=${(-scaledDepth).toFixed(4)}, thickness scales with length input`);
         return geometry;
     }
 
@@ -1795,7 +1829,7 @@ document.addEventListener('DOMContentLoaded', function() {
         positions.forEach((pos, index) => {
             // Calculate width-based X offsets using scaled dimensions
             const scaledWidthIncrease = scaledDims.width - getScaledWidth(0.9843);
-            const widthXOffset = (scaledWidthIncrease * 25.4 * (2/100)) / 2.008;
+            const widthXOffset = (scaledWidthIncrease * 25.4 * (2/100)) / 2.00;
             
             // 1. ROUNDED RECTANGLE - with precision dimensions
             const roundedGeometry = createFlatRoundedRectWithHole(
@@ -1817,6 +1851,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentRoundedModels.push(roundedModel);
 
             // 2. CENTER MODEL
+  // 2. CENTER MODEL with SIMPLIFIED DYNAMIC Z-POSITIONING
             const centerGeometry = createPrecisionPart(
                 scaledDims.length,
                 scaledDims.width,
@@ -1826,8 +1861,40 @@ document.addEventListener('DOMContentLoaded', function() {
             const centerModel = new THREE.Mesh(centerGeometry, centerMaterial);
             
             centerModel.name = `CenterModel_${index + 1}`;
-            centerModel.position.set(pos.x, pos.y, pos.z);
-            centerModel.scale.set(1, 0.99, 0.72);
+            
+            // SIMPLIFIED DYNAMIC CENTER Z-POSITIONING
+            const initialCenterZ = -0.09852; // Perfect initial position for baseline dimensions
+            
+            // Use RAW input dimensions (not scaled) - this is what the user actually inputs
+            const baselineWidthMM = 25.0;  // Default width baseline  
+            const baselineHeightMM = 15.0; // Default height baseline
+            const thresholdLengthMM = 100.0; 
+            // Convert current RAW dimensions to mm
+            const currentWidthMM = state.dimensions.width * 25.4;
+            const currentHeightMM = state.dimensions.height * 25.4;
+            const currentLengthMM = state.dimensions.length * 25.4;
+            
+            // Calculate increases from baseline (using RAW inputs)
+            const deltaWidthMM = Math.max(0, currentWidthMM - baselineWidthMM);
+            const deltaHeightMM = Math.max(0, currentHeightMM - baselineHeightMM);
+            const deltaLengthMM = Math.max(0, currentLengthMM - thresholdLengthMM);
+const totalDeltaMM = deltaWidthMM + deltaHeightMM + deltaLengthMM;
+            
+            // Simple rate: For 40mm total increase (25mm width + 15mm height), move down 0.0026 3D units
+            // This gives us: 0.0026 / 40 = 0.000065 units per mm increase
+            const zAdjustmentRate = 0.00010; // 3D units per mm of total dimensional increase
+            const centerZAdjustment = totalDeltaMM * zAdjustmentRate;
+            
+            const dynamicCenterZ = initialCenterZ + centerZAdjustment;
+            
+            console.log(`CENTER Z-POSITIONING (SIMPLIFIED):`);
+            console.log(`  RAW Width: ${currentWidthMM.toFixed(1)}mm (Δ${deltaWidthMM.toFixed(1)}mm)`);
+            console.log(`  RAW Height: ${currentHeightMM.toFixed(1)}mm (Δ${deltaHeightMM.toFixed(1)}mm)`);
+            console.log(`  Total increase: ${totalDeltaMM.toFixed(1)}mm`);
+            console.log(`  Z adjustment: +${centerZAdjustment.toFixed(6)}, Final Z: ${dynamicCenterZ.toFixed(6)}`);
+            
+            centerModel.position.set(pos.x, pos.y, dynamicCenterZ);
+            centerModel.scale.set(1, 0.99, 0.75);
             centerModel.rotation.z = Math.PI / 2;
             
             scene.add(centerModel);
@@ -1951,85 +2018,133 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateDimensions() {
-        console.log('\n=== Dimensions Update with ROUNDED EDGES MAINTAINED ===');
-        console.log('Current dimensions (inches):', state.dimensions);
-        console.log('Current configuration:', state.configuration);
-        console.log(`User has changed dimensions: ${userHasChangedDimensions}`);
-        console.log('ROUNDED EDGES: All components maintain beautiful rounded edges');
+
         
         updateConfiguration();
         
         console.log('=== End Dimensions Update (ROUNDED EDGES) ===\n');
     }
     
-    function exportSTL() {
-        console.log('\n=== STL Export with ROUNDED EDGES MAINTAINED ===');
-        
-        const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
-        if (allModels.length === 0) {
-            alert('No models to export. Please wait for the model to load.');
-            return;
-        }
-        
-        try {
-            const exporter = new STLExporter();
-            const exportGroup = new THREE.Group();
-            
-            // Scale factor for export (models are displayed at 2% of real size)
-            const DISPLAY_SCALE = 2 / 100;
-            const EXPORT_SCALE = 1 / DISPLAY_SCALE;
-            
-            console.log(`Scaling models for export: ${EXPORT_SCALE}x`);
-            
-            allModels.forEach((model, index) => {
-                const modelClone = model.clone();
-                modelClone.scale.multiplyScalar(EXPORT_SCALE);
-                modelClone.position.multiplyScalar(EXPORT_SCALE);
-                exportGroup.add(modelClone);
-            });
-            
-            // Calculate expected dimensions (using scaled dimensions)
-            const scaledDims = getScaledDimensions();
-            const expectedLengthMM = scaledDims.length * 25.4;
-            const expectedWidthMM = scaledDims.width * 25.4;
-            const expectedHeightMM = scaledDims.height * 25.4;
-            
-            console.log(`Expected STL dimensions (scaled):`);
-            console.log(`Length: ${expectedLengthMM.toFixed(1)}mm (${(expectedLengthMM/25.4).toFixed(2)}")`);
-            console.log(`Width: ${expectedWidthMM.toFixed(1)}mm (${(expectedWidthMM/25.4).toFixed(2)}")`);
-            console.log(`Height: ${expectedHeightMM.toFixed(1)}mm (${(expectedHeightMM/25.4).toFixed(2)}")`);
-            console.log(`Applied scaling: L${(scaledDims.length/state.dimensions.length*100).toFixed(0)}%, W${(scaledDims.width/state.dimensions.width*100).toFixed(0)}%, H${(scaledDims.height/state.dimensions.height*100).toFixed(0)}%`);
-            console.log(`ROUNDED EDGES: All secondary parts maintain beautiful rounded beveled edges`);
-            
-            const stlString = exporter.parse(exportGroup);
-            
-            const timestamp = new Date().toISOString().slice(0, 10);
-            const filename = `power_supply_holder_ROUNDED_EDGES_${state.configuration}_${state.dimensions.length.toFixed(2)}x${state.dimensions.width.toFixed(2)}x${state.dimensions.height.toFixed(2)}in_${state.color}_${timestamp}.stl`;
-            
-            const blob = new Blob([stlString], { type: 'application/octet-stream' });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.style.display = 'none';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            URL.revokeObjectURL(url);
-            
-            console.log(`STL exported successfully: ${filename}`);
-            console.log(`ROUNDED EDGES: File contains beautiful rounded beveled edges on all secondary components`);
-            console.log('=== STL Export Complete (ROUNDED EDGES) ===\n');
-            
-        } catch (error) {
-            console.error('Error exporting STL:', error);
-            alert('Error exporting STL file. Please try again.');
-        }
-    }
+   // REPLACE THE EXISTING exportSTL() function with this corrected version
+// This is the ONLY change needed - no UI or other modifications
 
+function exportSTL() {
+    console.log('\n=== STL Export with CORRECTED Multi-Configuration Dimensions ===');
+    
+    const allModels = [...currentModels, ...currentSecondaryModels, ...currentLeftModels, ...currentRoundedModels, ...currentUShapeModels];
+    if (allModels.length === 0) {
+        alert('No models to export. Please wait for the model to load.');
+        return;
+    }
+    
+    try {
+        const exporter = new STLExporter();
+        const exportGroup = new THREE.Group();
+        
+        // Scale factor for export (models are displayed at 2% of real size)
+        const DISPLAY_SCALE = 2 / 100;
+        const EXPORT_SCALE = 1 / DISPLAY_SCALE;
+        
+        console.log(`Scaling models for export: ${EXPORT_SCALE}x`);
+        
+        allModels.forEach((model, index) => {
+            const modelClone = model.clone();
+            modelClone.scale.multiplyScalar(EXPORT_SCALE);
+            modelClone.position.multiplyScalar(EXPORT_SCALE);
+            exportGroup.add(modelClone);
+        });
+        
+        // FIXED: Calculate actual TOTAL dimensions based on configuration
+        const scaledDims = getScaledDimensions();
+        const singleLengthMM = scaledDims.length * 25.4;
+        const singleWidthMM = scaledDims.width * 25.4;
+        const singleHeightMM = scaledDims.height * 25.4;
+        
+        // Calculate spacing (convert from existing functions to mm)
+        const horizontalSpacingMM = calculateRowSpacing() * 25.4;
+        const verticalSpacingMM = calculateGridVerticalSpacing() * 25.4;
+        
+        let totalLengthMM, totalWidthMM, totalHeightMM, adapterCount;
+        
+        // CORRECTED: Calculate actual assembled dimensions per configuration
+        switch(state.configuration) {
+            case 'single':
+                totalLengthMM = singleLengthMM;
+                totalWidthMM = singleWidthMM;
+                totalHeightMM = singleHeightMM;
+                adapterCount = 1;
+                break;
+                
+            case 'row2':
+                totalLengthMM = singleLengthMM;
+                totalWidthMM = (singleWidthMM * 2) + horizontalSpacingMM;
+                totalHeightMM = singleHeightMM;
+                adapterCount = 2;
+                break;
+                
+            case 'row3':
+                totalLengthMM = singleLengthMM;
+                totalWidthMM = (singleWidthMM * 3) + (horizontalSpacingMM * 2);
+                totalHeightMM = singleHeightMM;
+                adapterCount = 3;
+                break;
+                
+            case 'row4':
+                totalLengthMM = singleLengthMM;
+                totalWidthMM = (singleWidthMM * 4) + (horizontalSpacingMM * 3);
+                totalHeightMM = singleHeightMM;
+                adapterCount = 4;
+                break;
+                
+            case 'grid2x2':
+                totalLengthMM = (singleLengthMM * 2) + verticalSpacingMM;
+                totalWidthMM = (singleWidthMM * 2) + horizontalSpacingMM;
+                totalHeightMM = singleHeightMM;
+                adapterCount = 4;
+                break;
+                
+            default:
+                totalLengthMM = singleLengthMM;
+                totalWidthMM = singleWidthMM;
+                totalHeightMM = singleHeightMM;
+                adapterCount = 1;
+        }
+        
+        // CORRECTED: Log the actual total assembled dimensions
+        console.log(`CORRECTED STL DIMENSIONS for ${state.configuration}:`);
+        console.log(`Single adapter: ${singleLengthMM.toFixed(1)}×${singleWidthMM.toFixed(1)}×${singleHeightMM.toFixed(1)}mm`);
+        console.log(`Total assembled: ${totalLengthMM.toFixed(1)}×${totalWidthMM.toFixed(1)}×${totalHeightMM.toFixed(1)}mm`);
+        console.log(`Configuration: ${adapterCount} adapters`);
+        console.log(`Applied scaling: L${(scaledDims.length/state.dimensions.length*100).toFixed(0)}%, W${(scaledDims.width/state.dimensions.width*100).toFixed(0)}%, H${(scaledDims.height/state.dimensions.height*100).toFixed(0)}%`);
+        console.log(`ROUNDED EDGES: All secondary parts maintain beautiful rounded beveled edges`);
+        
+        const stlString = exporter.parse(exportGroup);
+        
+        const timestamp = new Date().toISOString().slice(0, 10);
+        // CORRECTED: Use total dimensions in filename
+        const filename = `power_supply_holder_ROUNDED_EDGES_${state.configuration}_${totalLengthMM.toFixed(0)}x${totalWidthMM.toFixed(0)}x${totalHeightMM.toFixed(0)}mm_${adapterCount}adapters_${state.color}_${timestamp}.stl`;
+        
+        const blob = new Blob([stlString], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        URL.revokeObjectURL(url);
+        
+
+        
+    } catch (error) {
+        console.error('Error exporting STL:', error);
+        alert('Error exporting STL file. Please try again.');
+    }
+}
     // Animation loop with FPS counter
     function animate() {
         requestAnimationFrame(animate);
@@ -2245,12 +2360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateUIForUnit(state.currentUnit);
     }
     
-    console.log('Precision Dimensions Configurator Initialized - ROUNDED EDGES MAINTAINED');
-    console.log('ROUNDED EDGES: All secondary parts maintain beautiful rounded beveled edges in ALL configurations');
-    console.log('FIXED: Multi-adapter configurations (2 in row, 3 in row, 4 in row, 2x2 grid) now keep rounded edges');
-    console.log('QUALITY: Professional appearance with consistent rounded bevels throughout');
-    console.log('PRECISION: Exact dimensional accuracy with beautiful edge finishing');
-    console.log('MULTI-CONFIG: All configurations support rounded edges - no more flat joining surfaces');
+
 });
 </script>
 
