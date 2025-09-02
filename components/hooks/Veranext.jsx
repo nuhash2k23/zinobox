@@ -655,7 +655,50 @@ const ARModal = ({ isOpen, onClose, size, materialColor, multiplier }) => {
   );
 };
 
-// Clickable Veranda Component with simple double-click detection
+// Mobile Touch Disclaimer Component
+const TouchDisclaimer = ({ isVisible, message, onClose }) => {
+  if (!isVisible) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '100px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        color: 'white',
+        padding: '12px 20px',
+        borderRadius: '25px',
+        fontSize: '14px',
+        fontWeight: '500',
+        zIndex: 5000,
+        textAlign: 'center',
+        maxWidth: '90vw',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        animation: 'fadeInSlideUp 0.3s ease-out'
+      }}
+      onClick={onClose}
+    >
+      {message}
+      <style jsx>{`
+        @keyframes fadeInSlideUp {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+// Enhanced Clickable Veranda Component with mobile touch disclaimer
 const ClickableVeranda = ({ 
   children, 
   verandaNumber, 
@@ -663,73 +706,129 @@ const ClickableVeranda = ({
   position, 
   rotation, 
   scale, 
-  hasContent 
+  hasContent,
+  mobile 
 }) => {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
+  const [showTouchDisclaimer, setShowTouchDisclaimer] = useState(false);
   const lastClickTimeRef = useRef(0);
+  const touchDisclaimerTimeoutRef = useRef(null);
 
-  // Simple double-click detection using timestamps
+  // Handle click/touch events
   const handleClick = (event) => {
     event.stopPropagation();
     
     const currentTime = Date.now();
     const timeSinceLastClick = currentTime - lastClickTimeRef.current;
     
-    // If less than 400ms since last click, it's a double-click
+    // Double-click detection (same as before)
     if (timeSinceLastClick < 400 && timeSinceLastClick > 50) {
       console.log(`Double-click detected on veranda ${verandaNumber}`);
       onDoubleClick(verandaNumber);
-      lastClickTimeRef.current = 0; // Reset to prevent triple-clicks
+      lastClickTimeRef.current = 0;
+      setShowTouchDisclaimer(false);
+      if (touchDisclaimerTimeoutRef.current) {
+        clearTimeout(touchDisclaimerTimeoutRef.current);
+      }
     } else {
       lastClickTimeRef.current = currentTime;
+      
+      // Show touch disclaimer on mobile for single taps
+      if (mobile) {
+        setShowTouchDisclaimer(true);
+        
+        // Clear existing timeout
+        if (touchDisclaimerTimeoutRef.current) {
+          clearTimeout(touchDisclaimerTimeoutRef.current);
+        }
+        
+        // Hide disclaimer after 3 seconds
+        touchDisclaimerTimeoutRef.current = setTimeout(() => {
+          setShowTouchDisclaimer(false);
+        }, 3000);
+      }
     }
   };
 
-  // Update cursor on hover
+  // Handle touch disclaimer close
+  const handleDisclaimerClose = () => {
+    setShowTouchDisclaimer(false);
+    if (touchDisclaimerTimeoutRef.current) {
+      clearTimeout(touchDisclaimerTimeoutRef.current);
+    }
+  };
+
+  // Update cursor on hover (desktop only)
   useEffect(() => {
-    document.body.style.cursor = hovered ? 'pointer' : 'auto';
+    if (!mobile) {
+      document.body.style.cursor = hovered ? 'pointer' : 'auto';
+    }
     return () => {
       document.body.style.cursor = 'auto';
     };
-  }, [hovered]);
+  }, [hovered, mobile]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (touchDisclaimerTimeoutRef.current) {
+        clearTimeout(touchDisclaimerTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <group
-      ref={meshRef}
-      position={position}
-      rotation={rotation}
-      scale={scale}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHovered(false);
-      }}
-      onClick={handleClick}
-    >
-      {children}
-      
-      {/* Hover indicator text */}
-      {hovered && (
-        <Html center position={[0, 2.8, 0]}>
-          <div style={{
-            background: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: '500',
-            whiteSpace: 'nowrap',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-          }}>
-            Double-click to {hasContent ? 'change' : 'add'} content
-          </div>
-        </Html>
+    <>
+      <group
+        ref={meshRef}
+        position={position}
+        rotation={rotation}
+        scale={scale}
+        onPointerOver={(e) => {
+          if (!mobile) {
+            e.stopPropagation();
+            setHovered(true);
+          }
+        }}
+        onPointerOut={(e) => {
+          if (!mobile) {
+            e.stopPropagation();
+            setHovered(false);
+          }
+        }}
+        onClick={handleClick}
+      >
+        {children}
+        
+        {/* Desktop hover indicator */}
+        {!mobile && hovered && (
+          <Html center position={[0, 2.8, 0]}>
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.8)',
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '500',
+              whiteSpace: 'nowrap',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}>
+              Double-click to {hasContent ? 'change' : 'add'} content
+            </div>
+          </Html>
+        )}
+      </group>
+
+      {/* Mobile touch disclaimer */}
+      {mobile && (
+        <TouchDisclaimer
+          isVisible={showTouchDisclaimer}
+          message={`Tap again quickly to ${hasContent ? 'change' : 'add'} content in Space ${verandaNumber}`}
+          onClose={handleDisclaimerClose}
+        />
       )}
-    </group>
+    </>
   );
 };
 
@@ -752,26 +851,25 @@ const ConfiguratorContent = ({
 
   return (
     <div style={{ 
-      maxWidth: mobile ? '100%' : '300px',
-      fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      width: '100%',
+      fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      padding: mobile ? '20px' : '32px 24px'
     }}>
-      {!mobile && (
-        <h2 style={{ 
-          margin: '0 0 32px 0', 
-          fontSize: '28px', 
-          fontWeight: '700',
-          color: '#1a1a1a',
-          letterSpacing: '-0.03em'
-        }}>
-          Configure
-        </h2>
-      )}
+      <h2 style={{ 
+        margin: '0 0 24px 0', 
+        fontSize: mobile ? '24px' : '28px', 
+        fontWeight: '700',
+        color: '#1a1a1a',
+        letterSpacing: '-0.03em'
+      }}>
+        Configure
+      </h2>
       
       {/* Size Options - Now with AI parsing */}
-      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
+          margin: '0 0 12px 0', 
+          fontSize: '16px', 
           fontWeight: '600',
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
@@ -781,16 +879,16 @@ const ConfiguratorContent = ({
         
         {/* Current dimensions display */}
         <div style={{
-          padding: mobile ? '8px 12px' : '12px 16px',
+          padding: '12px 16px',
           backgroundColor: '#f8f8f8',
           borderRadius: '8px',
           marginBottom: '12px',
           border: '1px solid #e0e0e0'
         }}>
-          <div style={{ fontSize: mobile ? '14px' : '16px', fontWeight: '600', color: '#000' }}>
+          <div style={{ fontSize: '16px', fontWeight: '600', color: '#000' }}>
             {size.width}m × {size.height}m
           </div>
-          <div style={{ fontSize: mobile ? '10px' : '12px', color: '#666' }}>
+          <div style={{ fontSize: '12px', color: '#666' }}>
             Current dimensions
           </div>
         </div>
@@ -813,10 +911,10 @@ const ConfiguratorContent = ({
             }}
             style={{
               width: '100%',
-              padding: mobile ? '10px 12px' : '12px 16px',
+              padding: '12px 16px',
               border: '1px solid #d0d0d0',
               borderRadius: '8px',
-              fontSize: mobile ? '12px' : '14px',
+              fontSize: '14px',
               fontFamily: 'inherit',
               outline: 'none',
               boxSizing: 'border-box'
@@ -831,12 +929,12 @@ const ConfiguratorContent = ({
             disabled={!speechSupported}
             style={{
               flex: '1',
-              padding: mobile ? '10px 12px' : '12px 16px',
+              padding: '12px 16px',
               border: isListening ? '2px solid #ff4444' : '1px solid #d0d0d0',
               borderRadius: '8px',
               backgroundColor: isListening ? '#fff5f5' : (speechSupported ? 'white' : '#f5f5f5'),
               cursor: speechSupported ? 'pointer' : 'not-allowed',
-              fontSize: mobile ? '12px' : '14px',
+              fontSize: '14px',
               fontWeight: '500',
               color: isListening ? '#ff4444' : (speechSupported ? '#333' : '#999'),
               transition: 'all 0.2s ease',
@@ -860,7 +958,7 @@ const ConfiguratorContent = ({
             backgroundColor: '#fff3cd',
             border: '1px solid #ffeaa7',
             borderRadius: '4px',
-            fontSize: mobile ? '10px' : '11px',
+            fontSize: '11px',
             color: '#856404'
           }}>
             💡 Voice input requires microphone access - allow permissions when prompted
@@ -875,7 +973,7 @@ const ConfiguratorContent = ({
             backgroundColor: parseStatus.type === 'success' ? '#f0f9ff' : '#fef2f2',
             border: `1px solid ${parseStatus.type === 'success' ? '#bae6fd' : '#fecaca'}`,
             borderRadius: '4px',
-            fontSize: mobile ? '10px' : '11px',
+            fontSize: '11px',
             color: parseStatus.type === 'success' ? '#0369a1' : '#dc2626'
           }}>
             {parseStatus.message}
@@ -884,17 +982,17 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Multiplier Options */}
-      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
+          margin: '0 0 12px 0', 
+          fontSize: '16px', 
           fontWeight: '600',
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
         }}>
           Layout
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: mobile ? '8px' : '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           {[
             { type: 1, icon: '1️⃣', label: 'Single' },
             { type: 2, icon: '2️⃣', label: '2x Side' },
@@ -904,7 +1002,7 @@ const ConfiguratorContent = ({
               key={type}
               onClick={() => setMultiplier(type)}
               style={{
-                padding: mobile ? '12px 8px' : '16px 12px',
+                padding: '16px 12px',
                 border: multiplier === type ? '3px solid #000' : '1px solid #d0d0d0',
                 borderRadius: '8px',
                 backgroundColor: multiplier === type ? '#f8f8f8' : 'white',
@@ -913,14 +1011,14 @@ const ConfiguratorContent = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: mobile ? '6px' : '8px',
+                gap: '8px',
                 touchAction: 'manipulation',
                 flexDirection: 'column'
               }}
             >
-              <span style={{ fontSize: mobile ? '16px' : '20px' }}>{icon}</span>
+              <span style={{ fontSize: '20px' }}>{icon}</span>
               <span style={{
-                fontSize: mobile ? '10px' : '12px',
+                fontSize: '12px',
                 fontWeight: '500',
                 color: multiplier === type ? '#000' : '#666'
               }}>
@@ -932,18 +1030,16 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Content Assignment Section */}
-      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
+          margin: '0 0 12px 0', 
+          fontSize: '16px', 
           fontWeight: '600',
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
         }}>
           Space Content
         </h3>
-        
-  
         
         {/* Veranda content assignment */}
         {Array.from({ length: multiplier }, (_, i) => {
@@ -953,8 +1049,8 @@ const ConfiguratorContent = ({
           
           return (
             <div key={verandaIndex} style={{
-              marginBottom: mobile ? '12px' : '16px',
-              padding: mobile ? '16px' : '20px',
+              marginBottom: '16px',
+              padding: '16px',
               border: '2px solid #f0f0f0',
               borderRadius: '12px',
               backgroundColor: 'white',
@@ -964,10 +1060,10 @@ const ConfiguratorContent = ({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: mobile ? '12px' : '16px'
+                marginBottom: '12px'
               }}>
                 <span style={{
-                  fontSize: mobile ? '14px' : '16px',
+                  fontSize: '16px',
                   fontWeight: '600',
                   color: '#1a1a1a',
                   letterSpacing: '-0.01em'
@@ -975,7 +1071,7 @@ const ConfiguratorContent = ({
                   Space {verandaIndex}
                 </span>
                 
-                {/* Content selection dropdown for all devices */}
+                {/* Content selection dropdown */}
                 <select
                   value={currentContent || ''}
                   onChange={(e) => setVerandaContent && setVerandaContent(verandaIndex, e.target.value || null)}
@@ -983,7 +1079,7 @@ const ConfiguratorContent = ({
                     padding: '8px 12px',
                     border: '2px solid #e0e0e0',
                     borderRadius: '8px',
-                    fontSize: mobile ? '12px' : '14px',
+                    fontSize: '14px',
                     backgroundColor: 'white',
                     cursor: 'pointer',
                     fontFamily: 'inherit',
@@ -1004,22 +1100,22 @@ const ConfiguratorContent = ({
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: mobile ? '12px' : '16px',
-                padding: mobile ? '12px' : '16px',
+                gap: '16px',
+                padding: '16px',
                 backgroundColor: currentContent ? '#fafafa' : '#f8f8f8',
                 borderRadius: '8px',
                 border: `2px solid ${currentContent ? '#e0e0e0' : '#f0f0f0'}`
               }}>
                 <div style={{
-                  width: mobile ? '32px' : '40px',
-                  height: mobile ? '32px' : '40px',
+                  width: '32px',
+                  height: '32px',
                   backgroundColor: contentOption?.icon === '⚫' ? '#000' : '#fff',
                   border: contentOption?.icon === '⚫' ? 'none' : '2px solid #000',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: mobile ? '14px' : '16px',
+                  fontSize: '16px',
                   flexShrink: 0
                 }}>
                   {contentOption 
@@ -1029,7 +1125,7 @@ const ConfiguratorContent = ({
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{
-                    fontSize: mobile ? '14px' : '16px',
+                    fontSize: '14px',
                     fontWeight: '600',
                     color: '#1a1a1a',
                     marginBottom: '4px',
@@ -1038,11 +1134,11 @@ const ConfiguratorContent = ({
                     {contentOption ? contentOption.name : 'Veranda Only'}
                   </div>
                   <div style={{
-                    fontSize: mobile ? '11px' : '12px',
+                    fontSize: '12px',
                     color: '#666',
                     lineHeight: '1.4'
                   }}>
-                    {contentOption ? contentOption.description : 'Double-click in 3D view or use dropdown'}
+                    {contentOption ? contentOption.description : 'Tap veranda in 3D view or use dropdown'}
                   </div>
                 </div>
               </div>
@@ -1052,17 +1148,17 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Time of Day Options */}
-      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
+          margin: '0 0 12px 0', 
+          fontSize: '16px', 
           fontWeight: '600',
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
         }}>
           Time of Day
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: mobile ? '8px' : '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             { type: 'day', icon: '☀️', label: 'Day' },
             { type: 'night', icon: '🌙', label: 'Night' }
@@ -1071,7 +1167,7 @@ const ConfiguratorContent = ({
               key={type}
               onClick={() => setTimeOfDay(type)}
               style={{
-                padding: mobile ? '12px 8px' : '16px 12px',
+                padding: '16px 12px',
                 border: timeOfDay === type ? '3px solid #000' : '1px solid #d0d0d0',
                 borderRadius: '8px',
                 backgroundColor: timeOfDay === type ? '#f8f8f8' : 'white',
@@ -1080,13 +1176,13 @@ const ConfiguratorContent = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: mobile ? '6px' : '8px',
+                gap: '8px',
                 touchAction: 'manipulation'
               }}
             >
-              <span style={{ fontSize: mobile ? '16px' : '20px' }}>{icon}</span>
+              <span style={{ fontSize: '20px' }}>{icon}</span>
               <span style={{
-                fontSize: mobile ? '12px' : '14px',
+                fontSize: '14px',
                 fontWeight: '500',
                 color: timeOfDay === type ? '#000' : '#666'
               }}>
@@ -1098,10 +1194,10 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Light Type Options */}
-      <div style={{ marginBottom: mobile ? '20px' : '24px' }}>
+      <div style={{ marginBottom: '20px' }}>
         <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
+          margin: '0 0 12px 0', 
+          fontSize: '16px', 
           fontWeight: '600',
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
@@ -1118,12 +1214,12 @@ const ConfiguratorContent = ({
               key={type}
               onClick={() => setLightType(type)}
               style={{
-                padding: mobile ? '8px 4px' : '12px 8px',
+                padding: '12px 8px',
                 border: lightType === type ? '2px solid #000' : '1px solid #d0d0d0',
                 borderRadius: '8px',
                 backgroundColor: lightType === type ? '#f8f8f8' : 'white',
                 cursor: 'pointer',
-                fontSize: mobile ? '14px' : '18px',
+                fontSize: '18px',
                 color: lightType === type ? '#000' : '#666',
                 transition: 'all 0.2s ease',
                 display: 'flex',
@@ -1134,7 +1230,7 @@ const ConfiguratorContent = ({
               }}
             >
               <span>{icon}</span>
-              <span style={{ fontSize: mobile ? '9px' : '11px', fontWeight: '500' }}>{label}</span>
+              <span style={{ fontSize: '11px', fontWeight: '500' }}>{label}</span>
             </button>
           ))}
         </div>
@@ -1145,7 +1241,7 @@ const ConfiguratorContent = ({
           gap: '10px', 
           alignItems: 'center', 
           marginTop: '12px',
-          padding: mobile ? '12px' : '16px',
+          padding: '16px',
           backgroundColor: 'white',
           borderRadius: '8px',
           border: '1px solid #e0e0e0'
@@ -1153,13 +1249,13 @@ const ConfiguratorContent = ({
           <button
             onClick={() => setLightsOn(!lightsOn)}
             style={{
-              padding: mobile ? '6px 12px' : '8px 16px',
+              padding: '8px 16px',
               border: '1px solid #d0d0d0',
               borderRadius: '6px',
               backgroundColor: lightsOn ? '#000' : 'white',
               color: lightsOn ? 'white' : '#666',
               cursor: 'pointer',
-              fontSize: mobile ? '10px' : '12px',
+              fontSize: '12px',
               fontWeight: '500',
               transition: 'all 0.2s ease',
               touchAction: 'manipulation'
@@ -1168,14 +1264,14 @@ const ConfiguratorContent = ({
             {lightsOn ? 'ON' : 'OFF'}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
-            <span style={{ fontSize: mobile ? '10px' : '12px', color: '#666' }}>Color</span>
+            <span style={{ fontSize: '12px', color: '#666' }}>Color</span>
             <input
               type="color"
               value={lightColor}
               onChange={(e) => setLightColor(e.target.value)}
               style={{
-                width: mobile ? '24px' : '32px',
-                height: mobile ? '24px' : '32px',
+                width: '32px',
+                height: '32px',
                 border: '1px solid #d0d0d0',
                 borderRadius: '6px',
                 cursor: 'pointer'
@@ -1186,17 +1282,17 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Roof Options */}
-      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
+          margin: '0 0 12px 0', 
+          fontSize: '16px', 
           fontWeight: '600',
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
         }}>
           Roof Style
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: mobile ? '8px' : '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             { type: 'roof1', image: '/roof1.jpg', label: 'Flat' },
             { type: 'roof2', image: '/roof2.jpg', label: 'Pitched' }
@@ -1217,15 +1313,15 @@ const ConfiguratorContent = ({
             >
               <div style={{
                 width: '100%',
-                height: mobile ? '50px' : '80px',
+                height: '80px',
                 backgroundImage: `url(${image})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundColor: '#f0f0f0'
               }} />
               <div style={{
-                padding: mobile ? '6px' : '8px',
-                fontSize: mobile ? '10px' : '12px',
+                padding: '8px',
+                fontSize: '12px',
                 fontWeight: '500',
                 color: roofType === type ? '#000' : '#666'
               }}>
@@ -1237,12 +1333,12 @@ const ConfiguratorContent = ({
       </div>
 
       {/* AR Button */}
-      <div style={{ marginBottom: mobile ? '16px' : '24px' }}>
+      <div style={{ marginBottom: '16px' }}>
         <button
           onClick={() => setShowARModal(true)}
           style={{
             width: '100%',
-            padding: mobile ? '16px 12px' : '20px 16px',
+            padding: '20px 16px',
             border: '2px solid #4285f4',
             borderRadius: '12px',
             backgroundColor: 'white',
@@ -1250,7 +1346,7 @@ const ConfiguratorContent = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: mobile ? '8px' : '12px',
+            gap: '12px',
             transition: 'all 0.2s ease',
             touchAction: 'manipulation'
           }}
@@ -1263,9 +1359,9 @@ const ConfiguratorContent = ({
             e.target.style.color = '#4285f4';
           }}
         >
-          <span style={{ fontSize: mobile ? '20px' : '24px' }}>📱</span>
+          <span style={{ fontSize: '24px' }}>📱</span>
           <span style={{
-            fontSize: mobile ? '14px' : '16px',
+            fontSize: '16px',
             fontWeight: '600',
             color: '#4285f4'
           }}>
@@ -1275,17 +1371,17 @@ const ConfiguratorContent = ({
       </div>
 
       {/* Frame Color Options */}
-      <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
+      <div style={{ marginBottom: '32px' }}>
         <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
+          margin: '0 0 12px 0', 
+          fontSize: '16px', 
           fontWeight: '600',
           color: '#1a1a1a',
           letterSpacing: '-0.02em'
         }}>
           Frame Color
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: mobile ? '8px' : '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             { color: 'anthracite', hex: '#28282d', label: 'Anthracite' },
             { color: 'white', hex: '#f5f5f5', label: 'White' }
@@ -1294,27 +1390,27 @@ const ConfiguratorContent = ({
               key={color}
               onClick={() => setMaterialColor(color)}
               style={{
-                padding: mobile ? '12px 8px' : '16px 12px',
+                padding: '16px 12px',
                 border: materialColor === color ? '3px solid #000' : '1px solid #d0d0d0',
                 borderRadius: '8px',
                 backgroundColor: 'white',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: mobile ? '8px' : '12px',
+                gap: '12px',
                 transition: 'all 0.2s ease',
                 touchAction: 'manipulation'
               }}
             >
               <div style={{
-                width: mobile ? '16px' : '24px',
-                height: mobile ? '16px' : '24px',
+                width: '24px',
+                height: '24px',
                 backgroundColor: hex,
                 borderRadius: '50%',
                 border: '1px solid #ddd'
               }} />
               <span style={{
-                fontSize: mobile ? '12px' : '14px',
+                fontSize: '14px',
                 fontWeight: '500',
                 color: materialColor === color ? '#000' : '#666'
               }}>
@@ -1486,7 +1582,6 @@ const VerandaConfigurator = () => {
   const [lightColor, setLightColor] = useState('#ffd700');
   const [roofType, setRoofType] = useState('roof1');
   const [materialColor, setMaterialColor] = useState('anthracite');
-  const [configOpen, setConfigOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [showARModal, setShowARModal] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState('day');
@@ -1498,9 +1593,6 @@ const VerandaConfigurator = () => {
   // Interactive object insertion states
   const [showObjectModal, setShowObjectModal] = useState(false);
   const [selectedVeranda, setSelectedVeranda] = useState(null);
-  
-  // Mobile configuration panel state
-  const [showMobileConfig, setShowMobileConfig] = useState(false);
 
   // New states for AI dimension parsing and recording
   const [dimensionInput, setDimensionInput] = useState('3m by 3m');
@@ -1716,18 +1808,12 @@ const VerandaConfigurator = () => {
 
   const pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2) : 1;
 
-  // Mobile-responsive layout - Mobile: full canvas with overlay config, Desktop: side by side
-  const canvasWidth = mobile ? '100%' : '100%';
-  const configWidth = mobile ? '100%' : '30%';
-  const canvasHeight = mobile ? '100vh' : '100vh';
-  const flexDirection = mobile ? 'column' : 'row';
-
   return (
     <div style={{ 
       width: '100vw', 
       height: '100vh', 
       display: 'flex',
-      flexDirection: flexDirection,
+      flexDirection: mobile ? 'column' : 'row',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflow: 'hidden',
       position: 'relative'
@@ -1761,8 +1847,8 @@ const VerandaConfigurator = () => {
 
       {/* Canvas Section */}
       <div style={{ 
-        width: canvasWidth, 
-        height: canvasHeight,
+        width: '100vw', 
+        height: mobile ? '75vh' : '100vh',
         position: 'relative'
       }}>
         <Suspense fallback={<SimpleFallback />}>
@@ -1813,177 +1899,30 @@ const VerandaConfigurator = () => {
             </Suspense>
           </Canvas>
         </Suspense>
-
-        {/* Mobile Configure Button - Floating bottom */}
-        {mobile && (
-          <button
-            onClick={() => setShowMobileConfig(true)}
-            style={{
-              position: 'fixed',
-              bottom: '20px',
-              right: '20px',
-              width: '60px',
-              height: '60px',
-              backgroundColor: '#000',
-              color: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              fontSize: '24px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-              zIndex: 1000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.3s ease',
-              touchAction: 'manipulation'
-            }}
-            onTouchStart={(e) => {
-              e.target.style.transform = 'scale(0.95)';
-            }}
-            onTouchEnd={(e) => {
-              e.target.style.transform = 'scale(1)';
-            }}
-          >
-            ⚙️
-          </button>
-        )}
       </div>
 
-      {/* Mobile Configuration Panel Overlay */}
-      {mobile && (
-        <>
-          {/* Backdrop */}
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 9999,
-              backdropFilter: 'blur(4px)',
-              opacity: showMobileConfig ? 1 : 0,
-              visibility: showMobileConfig ? 'visible' : 'hidden',
-              transition: 'all 0.3s ease'
-            }}
-            onClick={() => setShowMobileConfig(false)}
-          />
-          
-          {/* Sliding Configuration Panel */}
-          <div
-            style={{
-              position: 'fixed',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              backgroundColor: '#fafafa',
-              borderTopLeftRadius: '20px',
-              borderTopRightRadius: '20px',
-              maxHeight: '85vh',
-              overflowY: 'auto',
-              zIndex: 10000,
-              transform: showMobileConfig ? 'translateY(0)' : 'translateY(100%)',
-              transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              boxShadow: '0 -8px 40px rgba(0, 0, 0, 0.2)'
-            }}
-          >
-            {/* Handle Bar */}
-            <div
-              style={{
-                width: '48px',
-                height: '4px',
-                backgroundColor: '#d0d0d0',
-                borderRadius: '2px',
-                margin: '12px auto 0',
-                cursor: 'pointer'
-              }}
-              onClick={() => setShowMobileConfig(false)}
-            />
-            
-            {/* Close Button */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '16px 20px 0'
-              }}
-            >
-              <h2 style={{
-                margin: 0,
-                fontSize: '24px',
-                fontWeight: '700',
-                color: '#1a1a1a',
-                letterSpacing: '-0.03em'
-              }}>
-                Configure
-              </h2>
-              <button
-                onClick={() => setShowMobileConfig(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  padding: '8px',
-                  borderRadius: '50%',
-                  transition: 'background-color 0.2s ease'
-                }}
-                onTouchStart={(e) => {
-                  e.target.style.backgroundColor = '#f0f0f0';
-                }}
-                onTouchEnd={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                }}
-              >
-                ✕
-              </button>
-            </div>
-            
-            {/* Configuration Content */}
-            <div style={{ padding: '0 20px 40px' }}>
-              <ConfiguratorContent 
-                {...{
-                  size, setSize, lightType, setLightType, lightsOn, setLightsOn,
-                  lightColor, setLightColor, roofType, setRoofType, 
-                  materialColor, setMaterialColor, mobile,
-                  dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
-                  speechSupported, parseDimensions, parseStatus,
-                  showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
-                  verandaContents, setVerandaContent
-                }}
-              />
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Desktop Configurator Section - Only visible on desktop */}
-      {!mobile && (
-        <div style={{
-          width: configWidth,
-          height: '100vh',
-          backgroundColor: '#fafafa',
-          borderLeft: '1px solid #e0e0e0',
-          overflowY: 'auto',
-          padding: '32px 24px',
-          fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        }}>
-          <ConfiguratorContent 
-            {...{
-              size, setSize, lightType, setLightType, lightsOn, setLightsOn,
-              lightColor, setLightColor, roofType, setRoofType, 
-              materialColor, setMaterialColor, mobile,
-              dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
-              speechSupported, parseDimensions, parseStatus,
-              showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
-              verandaContents, setVerandaContent
-            }}
-          />
-        </div>
-      )}
+      {/* Configurator Section */}
+      <div style={{
+        width: mobile ? '100vw' : '30%',
+        height: mobile ? '25vh' : '100vh',
+        backgroundColor: '#fafafa',
+        borderLeft: mobile ? 'none' : '1px solid #e0e0e0',
+        borderTop: mobile ? '1px solid #e0e0e0' : 'none',
+        overflowY: 'auto',
+        fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <ConfiguratorContent 
+          {...{
+            size, setSize, lightType, setLightType, lightsOn, setLightsOn,
+            lightColor, setLightColor, roofType, setRoofType, 
+            materialColor, setMaterialColor, mobile,
+            dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
+            speechSupported, parseDimensions, parseStatus,
+            showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
+            verandaContents, setVerandaContent
+          }}
+        />
+      </div>
     </div>
   );
 };
@@ -2275,6 +2214,7 @@ const VerandaModel = ({
         rotation={[0, -Math.PI/2, 0]}
         scale={[scaleX, scaleY, scaleZ]}
         hasContent={!!hasContent}
+        mobile={mobile}
       >
         <primitive ref={verandaRef} object={clonedVeranda} />
       </ClickableVeranda>
