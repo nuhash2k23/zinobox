@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000;
+            overflow: hidden;
+        }
+        #scene-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+        }
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.8) 150%);
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="scene-container"></div>
+    <div class="vignette"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+<script>
+let scene, camera, renderer, composer, backgroundGrid;
+const PARTICLE_COUNT = 100000;
+const curves = [];
+const particleGroups = [];
+
+
+let time = 0;
+
+// Grid shader materials
+
+
+const colorPalettes = {
+    bright: [
+        {r: 1.0, g: 0.8, b: 0.3},  // Golden
+        {r: 0.3, g: 0.7, b: 1.0},  // Bright Blue
+        {r: 1.0, g: 0.4, b: 0.4},  // Coral
+        {r: 0.5, g: 1.0, b: 0.8},  // Cyan
+        {r: 1.0, g: 1.0, b: 1.0}   // White
+    ],
+    dim: [
+        {r: 1.0, g: 0.8, b: 0.3},  
+        {r: 0.3, g: 0.7, b: 1.0},  
+        {r: 1.0, g: 0.4, b: 0.4},  
+        {r: 0.5, g: 1.0, b: 0.8},  
+        {r: 1.0, g: 1.0, b: 1.0}   
+    ]
+};
+function createBackgroundGrid() {
+    const gridGeometry = new THREE.PlaneGeometry(400, 400, 40, 20);
+    const gridMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+            fadeStart: { value: -200 }, // Adjusted fade range
+            fadeEnd: { value: 200 }
+        },
+        vertexShader: `
+            uniform float time;
+            varying vec2 vUv;
+            varying float vElevation;
+            varying vec3 vPosition;
+            
+            void main() {
+                vUv = uv;
+                vPosition = position;
+                vec3 pos = position;
+                
+                // Create wave effect
+                float elevation = sin(pos.x * 0.05 + time) * 15.0 +
+                                sin(pos.y * 0.05 + time * 0.8) * 15.0;
+                                
+                pos.z = elevation;
+                vElevation = elevation;
+                
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform float time;
+            uniform float fadeStart;
+            uniform float fadeEnd;
+            
+            varying vec2 vUv;
+            varying float vElevation;
+            varying vec3 vPosition;
+            
+            void main() {
+                // Grid pattern
+                float xLine = abs(fract(vUv.x * 40.0) - 0.5);
+                float yLine = abs(fract(vUv.y * 40.0) - 0.5);
+                float grid = min(xLine, yLine);
+                
+                // Pulse effect
+                float pulse = sin(time * 2.0) * 0.5 + 0.5;
+                
+                // Fade effect from left to right
+                float fadeRange = fadeEnd - fadeStart;
+                float fadePos = (vPosition.x - fadeStart) / fadeRange;
+                float fade = smoothstep(0.0, 0.5, fadePos);
+                
+                // Combine effects
+                vec3 color = vec3(1.0);
+                float alpha = (1.0 - grid) * 0.23 * fade;
+                
+                // Add glow based on elevation
+                float glow = smoothstep(-15.0, 15.0, vElevation) * 0.25;
+                alpha += glow * pulse * fade;
+                
+                gl_FragColor = vec4(color, alpha * 0.25);
+            }
+        `,
+        transparent: true,
+        wireframe: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+
+    const grid = new THREE.Mesh(gridGeometry, gridMaterial);
+    grid.position.set(0, 0, 0); // Moved further back
+    grid.rotation.z = Math.PI * 0.21;
+    scene.add(grid);
+
+    return grid;
+}
+function createParticleTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+}
+
+
+
+function createBezierCurves() {
+    const origin = new THREE.Vector3(-130,40,33);
+    
+    for (let i = 0; i < 2; i++) { // Create 2 curves for double helix
+        const points = [];
+        const segments = 50; // Number of segments in the helix
+        const radius = 20; // Radius of the helix
+        const height = 200; // Total height/length of the helix
+        const turns = 3; // Number of complete turns
+        
+        for (let j = 0; j <= segments; j++) {
+            const t = j / segments;
+            const angle = 2 * Math.PI * turns * t;
+            
+            // For second strand, offset the angle by PI (180 degrees)
+            const finalAngle = i === 0 ? angle : angle + Math.PI;
+            
+            points.push(new THREE.Vector3(
+                -100 + t * 200, // Move from left (-100) to right (100)
+                Math.sin(finalAngle) * radius,
+                Math.cos(finalAngle) * radius
+            ));
+        }
+
+        const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.5);
+        curves.push(curve);
+    }
+}
+
+
+function init() {
+    scene = new THREE.Scene();
+    // In init() function, replace the camera creation with:
+const fov = window.innerWidth < 768 ? 85 : 120; // Mobile devices get 85 FOV, larger screens get 120
+camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.001, 10000);
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        powerPreference: "high-performance"
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000);
+    document.getElementById('scene-container').appendChild(renderer.domElement);
+camera.position.set(20, 50, 80);
+camera.lookAt(-20, 0, 0);
+
+    createBezierCurves();
+    backgroundGrid = createBackgroundGrid(); 
+
+    const gradientTexture = createGradientTexture();
+    scene.background = gradientTexture;
+
+    const particleTexture = createParticleTexture();
+
+    curves.forEach((curve, curveIndex) => {
+        const particlesPerCurve = Math.floor(PARTICLE_COUNT / curves.length / 2);
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particlesPerCurve * 3);
+        const colors = new Float32Array(particlesPerCurve * 3);
+        const sizes = new Float32Array(particlesPerCurve);
+        const progressArray = new Float32Array(particlesPerCurve);
+        const initialOffsets = new Float32Array(particlesPerCurve * 3);
+
+        for(let i = 0; i < particlesPerCurve; i++) {
+            const progress = Math.random() * -1;
+            progressArray[i] = progress;
+            
+            const offset = {
+                x: (Math.random() - 0.5) * 8,
+                y: (Math.random() - 0.5) * 8,
+                z: (Math.random() - 0.5) * 8
+            };
+
+            initialOffsets[i * 3] = offset.x;
+            initialOffsets[i * 3 + 1] = offset.y;
+            initialOffsets[i * 3 + 2] = offset.z;
+
+            const point = curve.getPoint(0);
+            positions[i * 3] = point.x;
+            positions[i * 3 + 1] = point.y;
+            positions[i * 3 + 2] = point.z;
+
+            const isBright = Math.random() < 0.81;
+            const palette = isBright ? colorPalettes.bright : colorPalettes.dim;
+            const color = palette[Math.floor(Math.random() * palette.length)];
+            
+            colors[i * 3] = color.r;
+            colors[i * 3 + 1] = color.g;
+            colors[i * 3 + 2] = color.b;
+
+            sizes[i] = Math.random() > 0.98 ? 
+                      2 + Math.random() * 2 : 
+                      0.2 + Math.random() * 0.4;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        const material = new THREE.PointsMaterial({
+            size: 0.85,
+            vertexColors: true,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            opacity: 1,
+            depthWrite: false,
+            map: particleTexture,
+            alphaMap: particleTexture,
+            alphaTest: 0.001
+        });
+
+        const particleSystem = new THREE.Points(geometry, material);
+        scene.add(particleSystem);
+
+        particleGroups.push({
+            system: particleSystem,
+            progress: progressArray,
+            curve: curve,
+            speed: 0.001 + Math.random() * 0.001,
+            initialOffsets: initialOffsets,
+            time: Math.random() * 1000
+        });
+    });
+
+    composer = new THREE.EffectComposer(renderer);
+    const renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.25,
+        0.4,
+        0.15
+    );
+    composer.addPass(bloomPass);
+
+    window.addEventListener('resize', onWindowResize, false);
+}
+
+function createGradientTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+
+    const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#000022');
+    gradient.addColorStop(0.5, '#000066');
+    gradient.addColorStop(1, '#000022');
+
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+}
+
+function onWindowResize() {
+    const newFov = window.innerWidth < 768 ? 85 : 120;
+    camera.fov = newFov;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animateGrid() {
+    backgroundGrid.material.uniforms.time.value = time;
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    time += 0.01;
+
+
+    particleGroups.forEach(group => {
+        const positions = group.system.geometry.attributes.position.array;
+        const progress = group.progress;
+        group.time += 0.16;
+        
+        for(let i = 0; i < progress.length; i++) {
+            if(progress[i] < 0) {
+                progress[i] += group.speed * .3;
+                continue;
+            }
+
+            progress[i] += group.speed;
+            
+            if(progress[i] > 1) {
+                progress[i] = Math.random() ;
+                continue;
+            }
+
+            const point = group.curve.getPoint(progress[i]);
+
+            const progressFactor = Math.min(1, (progress[i] * 20));
+            const wobbleX = Math.sin(group.time + i * 0.1) * 0 * progressFactor;
+            const wobbleY = Math.cos(group.time + i * 0.1) * 0 * progressFactor;
+            const wobbleZ = Math.sin(group.time + i * 0.2) * 0 * progressFactor;
+
+            positions[i * 3] = point.x + group.initialOffsets[i * 3] * progressFactor + wobbleX;
+            positions[i * 3 + 1] = point.y + group.initialOffsets[i * 3 + 1] * progressFactor + wobbleY;
+            positions[i * 3 + 2] = point.z + group.initialOffsets[i * 3 + 2] * progressFactor + wobbleZ;
+        }
+
+        group.system.geometry.attributes.position.needsUpdate = true;
+    });
+    animateGrid();
+    scene.background.offset.x += 0.05;
+    scene.background.needsUpdate = true;
+
+    composer.render();
+}
+
+init();
+animate();
+
+</script>
+</body>
+</html>

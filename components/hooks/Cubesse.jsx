@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, Suspense, useMemo } from 'react';
-import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
-import { OrbitControls, useGLTF, useProgress, Html, Environment } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls, useGLTF, useProgress, Html, Environment, Stage } from '@react-three/drei';
 import * as THREE from 'three';
 
 // Simple fallback loader for initial loading
@@ -111,155 +111,6 @@ const isMobile = () => {
          window.innerWidth < 768;
 };
 
-// Object Selection Modal Component
-const ObjectSelectionModal = ({ isOpen, onClose, onSelect, verandaNumber }) => {
-  if (!isOpen) return null;
-
-  const contentOptions = [
-    { id: 'fitness', name: 'Gym Box', icon: '🏋️', description: 'Professional workout equipment' },
-    { id: 'wellness', name: 'Spa Box', icon: '🛁', description: 'Jacuzzi & relaxation area' },
-    { id: 'recreation', name: 'Game Box', icon: '🎱', description: 'Billiards & entertainment' },
-    { id: null, name: 'Veranda Only', icon: '🏗️', description: 'Clear this space' }
-  ];
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 10000,
-          backdropFilter: 'blur(4px)'
-        }}
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          minWidth: '320px',
-          maxWidth: '90vw',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
-          zIndex: 10001,
-          textAlign: 'center'
-        }}
-      >
-        <h3 style={{
-          margin: '0 0 16px 0',
-          fontSize: '20px',
-          fontWeight: '600',
-          color: '#1a1a1a'
-        }}>
-          Add Content to Space {verandaNumber}
-        </h3>
-        
-        <p style={{
-          margin: '0 0 24px 0',
-          fontSize: '14px',
-          color: '#666',
-          lineHeight: '1.5'
-        }}>
-          Choose what to place in this veranda space
-        </p>
-        
-        <div style={{
-          display: 'grid',
-          gap: '12px',
-          marginBottom: '24px'
-        }}>
-          {contentOptions.map(option => (
-            <button
-              key={option.id || 'remove'}
-              onClick={() => {
-                onSelect(option.id);
-                onClose();
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                padding: '16px',
-                border: '2px solid #e0e0e0',
-                borderRadius: '12px',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                textAlign: 'left'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.borderColor = '#000';
-                e.target.style.backgroundColor = '#f8f8f8';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.borderColor = '#e0e0e0';
-                e.target.style.backgroundColor = 'white';
-              }}
-            >
-              <div style={{
-                fontSize: '32px',
-                width: '48px',
-                height: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#f8f8f8',
-                borderRadius: '8px'
-              }}>
-                {option.icon}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#1a1a1a',
-                  marginBottom: '4px'
-                }}>
-                  {option.name}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#666'
-                }}>
-                  {option.description}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-        
-        <button
-          onClick={onClose}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#f0f0f0',
-            color: '#666',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Cancel
-        </button>
-      </div>
-    </>
-  );
-};
-
 // Recording Modal Component
 const RecordingModal = ({ isOpen, onClose, status }) => {
   if (!isOpen) return null;
@@ -360,379 +211,6 @@ const RecordingModal = ({ isOpen, onClose, status }) => {
   );
 };
 
-// WebXR AR Modal Component
-const ARModal = ({ isOpen, onClose, size, materialColor, multiplier }) => {
-  const [arSupported, setArSupported] = useState(false);
-  const [arSession, setArSession] = useState(null);
-  const [arStatus, setArStatus] = useState('Checking AR support...');
-  const [isPlacing, setIsPlacing] = useState(false);
-  const [placedBoxes, setPlacedBoxes] = useState([]);
-
-  // Check AR support on mount
-  useEffect(() => {
-    if (isOpen && typeof window !== 'undefined' && 'xr' in navigator) {
-      navigator.xr.isSessionSupported('immersive-ar')
-        .then(supported => {
-          setArSupported(supported);
-          setArStatus(supported ? 'AR Ready! Tap "Start AR" to begin.' : 'AR not supported on this device');
-        })
-        .catch(() => {
-          setArSupported(false);
-          setArStatus('AR not available. Try on a mobile device with AR support.');
-        });
-    } else if (isOpen) {
-      setArSupported(false);
-      setArStatus('AR requires HTTPS and WebXR support');
-    }
-  }, [isOpen]);
-
-  const startARSession = async () => {
-    try {
-      setArStatus('Starting AR session...');
-      
-      const session = await navigator.xr.requestSession('immersive-ar', {
-        requiredFeatures: ['hit-test'],
-        optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: document.body }
-      });
-
-      setArSession(session);
-      setArStatus('AR session active. Point camera at flat surface and tap to place.');
-      setIsPlacing(true);
-
-      // Initialize WebXR rendering
-      initializeARRendering(session);
-
-      session.addEventListener('end', () => {
-        setArSession(null);
-        setIsPlacing(false);
-        setArStatus('AR session ended');
-        setPlacedBoxes([]);
-      });
-
-    } catch (error) {
-      console.error('Failed to start AR:', error);
-      setArStatus('Failed to start AR. Make sure you\'re on a supported device.');
-    }
-  };
-
-  const initializeARRendering = (session) => {
-    // Create WebGL context for AR
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2', { xrCompatible: true });
-    
-    if (!gl) {
-      setArStatus('WebGL not supported');
-      return;
-    }
-
-    // Initialize WebXR layers
-    session.updateRenderState({
-      baseLayer: new XRWebGLLayer(session, gl)
-    });
-
-    // Get reference space
-    session.requestReferenceSpace('local-floor').then(referenceSpace => {
-      // Create hit test source for ground plane detection
-      session.requestHitTestSource({ space: referenceSpace }).then(hitTestSource => {
-        
-        // Animation loop
-        const onXRFrame = (time, frame) => {
-          session.requestAnimationFrame(onXRFrame);
-
-          const pose = frame.getViewerPose(referenceSpace);
-          if (!pose) return;
-
-          // Get hit test results
-          const hitTestResults = frame.getHitTestResults(hitTestSource);
-          if (hitTestResults.length > 0 && isPlacing) {
-            const hit = hitTestResults[0];
-            const hitPose = hit.getPose(referenceSpace);
-            
-            // Here you would render the AR content
-            // For now, we'll just track hit positions
-            renderARContent(gl, pose, hitPose);
-          }
-        };
-
-        session.requestAnimationFrame(onXRFrame);
-
-        // Handle tap to place
-        canvas.addEventListener('touchstart', (event) => {
-          if (isPlacing && hitTestResults && hitTestResults.length > 0) {
-            const hit = hitTestResults[0];
-            const hitPose = hit.getPose(referenceSpace);
-            
-            // Add box at hit position
-            setPlacedBoxes(prev => [...prev, {
-              id: Date.now(),
-              position: [hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z],
-              size: size,
-              color: materialColor,
-              multiplier: multiplier
-            }]);
-          }
-        });
-      });
-    });
-  };
-
-  const renderARContent = (gl, viewerPose, hitPose) => {
-    // Basic WebGL rendering for AR box
-    // This is a simplified version - in production you'd use a full 3D engine
-    
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-    // Render placed boxes and hit indicator
-    // Implementation would depend on your WebGL setup
-  };
-
-  const endARSession = () => {
-    if (arSession) {
-      arSession.end();
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 10000,
-          backdropFilter: 'blur(4px)'
-        }}
-        onClick={!arSession ? onClose : undefined}
-      />
-      
-      {/* Modal */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '32px',
-          minWidth: '300px',
-          maxWidth: '90vw',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
-          zIndex: 10001,
-          textAlign: 'center'
-        }}
-      >
-        <div style={{
-          width: '60px',
-          height: '60px',
-          backgroundColor: arSession ? '#4CAF50' : '#4285f4',
-          borderRadius: '50%',
-          margin: '0 auto 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px'
-        }}>
-          {arSession ? '👁️' : '📱'}
-        </div>
-        
-        <h3 style={{
-          margin: '0 0 16px 0',
-          fontSize: '20px',
-          fontWeight: '600',
-          color: '#1a1a1a'
-        }}>
-          {arSession ? 'AR Active' : 'AR View'}
-        </h3>
-        
-        <p style={{
-          margin: '0 0 24px 0',
-          fontSize: '14px',
-          color: '#666',
-          lineHeight: '1.5'
-        }}>
-          {arStatus}
-        </p>
-
-        {arSession && placedBoxes.length > 0 && (
-          <div style={{
-            marginBottom: '24px',
-            padding: '12px',
-            backgroundColor: '#f0f9ff',
-            borderRadius: '8px',
-            fontSize: '14px',
-            color: '#0369a1'
-          }}>
-            {placedBoxes.length} veranda{placedBoxes.length !== 1 ? 's' : ''} placed
-          </div>
-        )}
-        
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-          {arSupported && !arSession && (
-            <button
-              onClick={startARSession}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#4285f4',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Start AR
-            </button>
-          )}
-          
-          {arSession && (
-            <button
-              onClick={endARSession}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#f44336',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              End AR
-            </button>
-          )}
-          
-          <button
-            onClick={onClose}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: arSession ? '#666' : '#000',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {arSession ? 'Close' : 'Got it'}
-          </button>
-        </div>
-
-        {/* AR Instructions */}
-        {arSession && (
-          <div style={{
-            marginTop: '16px',
-            padding: '12px',
-            backgroundColor: '#fff3cd',
-            borderRadius: '8px',
-            fontSize: '12px',
-            color: '#856404',
-            textAlign: 'left'
-          }}>
-            <strong>How to use AR:</strong><br />
-            1. Point your camera at a flat surface<br />
-            2. Wait for the surface to be detected<br />
-            3. Tap the screen to place a veranda box<br />
-            4. Move around to see it from different angles
-          </div>
-        )}
-      </div>
-    </>
-  );
-};
-
-// Clickable Veranda Component with simple double-click detection
-const ClickableVeranda = ({ 
-  children, 
-  verandaNumber, 
-  onDoubleClick, 
-  position, 
-  rotation, 
-  scale, 
-  hasContent 
-}) => {
-  const meshRef = useRef();
-  const [hovered, setHovered] = useState(false);
-  const lastClickTimeRef = useRef(0);
-
-  // Simple double-click detection using timestamps
-  const handleClick = (event) => {
-    event.stopPropagation();
-    
-    const currentTime = Date.now();
-    const timeSinceLastClick = currentTime - lastClickTimeRef.current;
-    
-    // If less than 400ms since last click, it's a double-click
-    if (timeSinceLastClick < 400 && timeSinceLastClick > 50) {
-      console.log(`Double-click detected on veranda ${verandaNumber}`);
-      onDoubleClick(verandaNumber);
-      lastClickTimeRef.current = 0; // Reset to prevent triple-clicks
-    } else {
-      lastClickTimeRef.current = currentTime;
-    }
-  };
-
-  // Update cursor on hover
-  useEffect(() => {
-    document.body.style.cursor = hovered ? 'pointer' : 'auto';
-    return () => {
-      document.body.style.cursor = 'auto';
-    };
-  }, [hovered]);
-
-  return (
-    <group
-      ref={meshRef}
-      position={position}
-      rotation={rotation}
-      scale={scale}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHovered(false);
-      }}
-      onClick={handleClick}
-    >
-      {children}
-      
-      {/* Hover indicator text */}
-      {hovered && (
-        <Html center position={[0, 2.8, 0]}>
-          <div style={{
-            background: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: '500',
-            whiteSpace: 'nowrap',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-          }}>
-            Double-click to {hasContent ? 'change' : 'add'} content
-          </div>
-        </Html>
-      )}
-    </group>
-  );
-};
-
 // Reusable Configurator Content Component
 const ConfiguratorContent = ({ 
   size, setSize, lightType, setLightType, lightsOn, setLightsOn,
@@ -740,15 +218,8 @@ const ConfiguratorContent = ({
   materialColor, setMaterialColor, mobile,
   dimensionInput, setDimensionInput, isListening, toggleVoiceInput, 
   speechSupported, parseDimensions, parseStatus,
-  showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
-  verandaContents = {}, setVerandaContent
+  timeOfDay, setTimeOfDay, multiplier, setMultiplier
 }) => {
-  
-  const contentOptions = [
-    { id: 'fitness', name: 'Gym Box', icon: '⚪', description: 'Professional workout equipment' },
-    { id: 'wellness', name: 'Spa Box', icon: '⚫', description: 'Jacuzzi & relaxation area' },
-    { id: 'recreation', name: 'Game Box', icon: '⚪', description: 'Billiards & entertainment' }
-  ];
 
   return (
     <div style={{ 
@@ -929,126 +400,6 @@ const ConfiguratorContent = ({
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Content Assignment Section */}
-      <div style={{ marginBottom: mobile ? '24px' : '32px' }}>
-        <h3 style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: mobile ? '16px' : '18px', 
-          fontWeight: '600',
-          color: '#1a1a1a',
-          letterSpacing: '-0.02em'
-        }}>
-          Space Content
-        </h3>
-        
-  
-        
-        {/* Veranda content assignment */}
-        {Array.from({ length: multiplier }, (_, i) => {
-          const verandaIndex = i + 1;
-          const currentContent = verandaContents ? verandaContents[verandaIndex] : null;
-          const contentOption = contentOptions.find(opt => opt.id === currentContent);
-          
-          return (
-            <div key={verandaIndex} style={{
-              marginBottom: mobile ? '12px' : '16px',
-              padding: mobile ? '16px' : '20px',
-              border: '2px solid #f0f0f0',
-              borderRadius: '12px',
-              backgroundColor: 'white',
-              transition: 'all 0.2s ease'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: mobile ? '12px' : '16px'
-              }}>
-                <span style={{
-                  fontSize: mobile ? '14px' : '16px',
-                  fontWeight: '600',
-                  color: '#1a1a1a',
-                  letterSpacing: '-0.01em'
-                }}>
-                  Space {verandaIndex}
-                </span>
-                
-                {/* Content selection dropdown for all devices */}
-                <select
-                  value={currentContent || ''}
-                  onChange={(e) => setVerandaContent && setVerandaContent(verandaIndex, e.target.value || null)}
-                  style={{
-                    padding: '8px 12px',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: mobile ? '12px' : '14px',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    fontWeight: '500',
-                    color: '#1a1a1a'
-                  }}
-                >
-                  <option value="">Veranda Only</option>
-                  {contentOptions.map(option => (
-                    <option key={option.id} value={option.id}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Current content display */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: mobile ? '12px' : '16px',
-                padding: mobile ? '12px' : '16px',
-                backgroundColor: currentContent ? '#fafafa' : '#f8f8f8',
-                borderRadius: '8px',
-                border: `2px solid ${currentContent ? '#e0e0e0' : '#f0f0f0'}`
-              }}>
-                <div style={{
-                  width: mobile ? '32px' : '40px',
-                  height: mobile ? '32px' : '40px',
-                  backgroundColor: contentOption?.icon === '⚫' ? '#000' : '#fff',
-                  border: contentOption?.icon === '⚫' ? 'none' : '2px solid #000',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: mobile ? '14px' : '16px',
-                  flexShrink: 0
-                }}>
-                  {contentOption 
-                    ? (contentOption.icon === '⚫' ? '○' : '●')
-                    : '○'
-                  }
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: mobile ? '14px' : '16px',
-                    fontWeight: '600',
-                    color: '#1a1a1a',
-                    marginBottom: '4px',
-                    letterSpacing: '-0.01em'
-                  }}>
-                    {contentOption ? contentOption.name : 'Veranda Only'}
-                  </div>
-                  <div style={{
-                    fontSize: mobile ? '11px' : '12px',
-                    color: '#666',
-                    lineHeight: '1.4'
-                  }}>
-                    {contentOption ? contentOption.description : 'Double-click in 3D view or use dropdown'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
       </div>
 
       {/* Time of Day Options */}
@@ -1236,44 +587,6 @@ const ConfiguratorContent = ({
         </div>
       </div>
 
-      {/* AR Button */}
-      <div style={{ marginBottom: mobile ? '16px' : '24px' }}>
-        <button
-          onClick={() => setShowARModal(true)}
-          style={{
-            width: '100%',
-            padding: mobile ? '16px 12px' : '20px 16px',
-            border: '2px solid #4285f4',
-            borderRadius: '12px',
-            backgroundColor: 'white',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: mobile ? '8px' : '12px',
-            transition: 'all 0.2s ease',
-            touchAction: 'manipulation'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#4285f4';
-            e.target.style.color = 'white';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'white';
-            e.target.style.color = '#4285f4';
-          }}
-        >
-          <span style={{ fontSize: mobile ? '20px' : '24px' }}>📱</span>
-          <span style={{
-            fontSize: mobile ? '14px' : '16px',
-            fontWeight: '600',
-            color: '#4285f4'
-          }}>
-            AR View
-          </span>
-        </button>
-      </div>
-
       {/* Frame Color Options */}
       <div style={{ marginBottom: mobile ? '20px' : '32px' }}>
         <h3 style={{ 
@@ -1383,18 +696,10 @@ const Loader = () => {
   );
 };
 
-// Camera Controller for smooth zooming and ground transparency
+// Camera Controller for smooth zooming
 const CameraController = ({ multiplier, mobile }) => {
   const { camera } = useThree();
   const controlsRef = useRef();
-
-  useFrame(() => {
-    // Make ground transparent when camera goes below it
-    const groundYPosition = -0.45; // Approximate ground level
-    if (camera.position.y < groundYPosition) {
-      // Camera is below ground, we'll handle this in the VerandaModel component
-    }
-  });
 
   // Smooth camera adjustment when multiplier changes
   useEffect(() => {
@@ -1404,24 +709,24 @@ const CameraController = ({ multiplier, mobile }) => {
 
     switch (multiplier) {
       case 1:
-        targetPosition = [6, 0.7, 3];
-        cameraPosition = [-8, 3.5, 12];
-        maxDistance = 24;
+        targetPosition = [0, 0, 0];
+        cameraPosition = [2, 1.5, 8];
+        maxDistance = 20;
         break;
       case 2:
-        targetPosition = [6.5, 0.7, 3];
-        cameraPosition = [-11, 4, 16];
-        maxDistance = 30;
+        targetPosition = [1, 0, 0];
+        cameraPosition = [3, 2, 12];
+        maxDistance = 25;
         break;
       case 3:
-        targetPosition = [6, 0.7, 3];
-        cameraPosition = [-13, 6.5, 20];
-        maxDistance = 36;
+        targetPosition = [0, 0, 0];
+        cameraPosition = [4, 2.5, 16];
+        maxDistance = 30;
         break;
       default:
-        targetPosition = [6, 0.7, 3];
-        cameraPosition = [2, 3.5, 12];
-        maxDistance = 24;
+        targetPosition = [0, 0, 0];
+        cameraPosition = [2, 1.5, 8];
+        maxDistance = 20;
     }
 
     // Smooth transition to new camera position
@@ -1467,8 +772,8 @@ const CameraController = ({ multiplier, mobile }) => {
       enableZoom={true}
       enableRotate={true}
       minPolarAngle={0}
-      maxDistance={24} // Will be updated by useEffect
-      target={[6, 0.7, 3]}
+      maxDistance={20} // Will be updated by useEffect
+      target={[0, 0, 0]}
       enableDamping={true}
       dampingFactor={0.05}
       touches={THREE ? {
@@ -1486,50 +791,20 @@ const VerandaConfigurator = () => {
   const [lightColor, setLightColor] = useState('#ffd700');
   const [roofType, setRoofType] = useState('roof1');
   const [materialColor, setMaterialColor] = useState('anthracite');
-  const [configOpen, setConfigOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
-  const [showARModal, setShowARModal] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState('day');
   const [multiplier, setMultiplier] = useState(1);
-
-  // Content management states
-  const [verandaContents, setVerandaContents] = useState({}); // { 1: 'gym', 2: 'spa', 3: 'games' }
-  
-  // Interactive object insertion states
-  const [showObjectModal, setShowObjectModal] = useState(false);
-  const [selectedVeranda, setSelectedVeranda] = useState(null);
   
   // Mobile configuration panel state
   const [showMobileConfig, setShowMobileConfig] = useState(false);
 
-  // New states for AI dimension parsing and recording
+  // States for AI dimension parsing and recording
   const [dimensionInput, setDimensionInput] = useState('3m by 3m');
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [parseStatus, setParseStatus] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
-
-  // Helper function to set content for a specific veranda
-  const setVerandaContent = (verandaNumber, contentType) => {
-    setVerandaContents(prev => ({
-      ...prev,
-      [verandaNumber]: contentType
-    }));
-  };
-
-  // Handler for veranda double-click
-  const handleVerandaDoubleClick = (verandaNumber) => {
-    setSelectedVeranda(verandaNumber);
-    setShowObjectModal(true);
-  };
-
-  // Handler for object selection
-  const handleObjectSelection = (contentType) => {
-    if (selectedVeranda) {
-      setVerandaContent(selectedVeranda, contentType);
-    }
-  };
 
   // Dimension and color parsing function with enhanced patterns
   const parseDimensions = (text) => {
@@ -1717,7 +992,7 @@ const VerandaConfigurator = () => {
   const pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2) : 1;
 
   // Mobile-responsive layout - Mobile: full canvas with overlay config, Desktop: side by side
-  const canvasWidth = mobile ? '100%' : '100%';
+  const canvasWidth = mobile ? '100%' : '70%';
   const configWidth = mobile ? '100%' : '30%';
   const canvasHeight = mobile ? '100vh' : '100vh';
   const flexDirection = mobile ? 'column' : 'row';
@@ -1732,31 +1007,11 @@ const VerandaConfigurator = () => {
       overflow: 'hidden',
       position: 'relative'
     }}>
-      {/* Object Selection Modal */}
-      <ObjectSelectionModal 
-        isOpen={showObjectModal}
-        onClose={() => {
-          setShowObjectModal(false);
-          setSelectedVeranda(null);
-        }}
-        onSelect={handleObjectSelection}
-        verandaNumber={selectedVeranda}
-      />
-
       {/* Recording Modal */}
       <RecordingModal 
         isOpen={isListening} 
         onClose={() => setIsListening(false)}
         status={parseStatus?.message}
-      />
-
-      {/* AR Modal */}
-      <ARModal 
-        isOpen={showARModal} 
-        onClose={() => setShowARModal(false)}
-        size={size}
-        materialColor={materialColor}
-        multiplier={multiplier}
       />
 
       {/* Canvas Section */}
@@ -1769,8 +1024,8 @@ const VerandaConfigurator = () => {
           <Canvas 
             shadows={true}
             camera={{ 
-              position: [2, 1.5, 12], // Zoomed out further from [1,.5,8]
-              fov: mobile ? 85 : 65  // Slightly wider FOV
+              position: [2, 1.5, 8],
+              fov: mobile ? 85 : 65
             }}
             dpr={pixelRatio}
             performance={{
@@ -1790,25 +1045,29 @@ const VerandaConfigurator = () => {
             }}
           >
             <Suspense fallback={<Loader />}>
-              <VerandaModel 
-                size={size}
-                lightType={lightType}
-                lightsOn={lightsOn}
-                lightColor={lightColor}
-                roofType={roofType}
-                materialColor={materialColor}
-                mobile={mobile}
-                timeOfDay={timeOfDay}
-                multiplier={multiplier}
-                verandaContents={verandaContents}
-                onVerandaDoubleClick={handleVerandaDoubleClick}
-              />
+              <Stage
+              adjustCamera={false}
+                intensity={timeOfDay === 'night' ? 0.3 : 1}
+                environment={timeOfDay === 'night' ? "night" : "city"}
+                shadows={{ 
+                  type: 'contact', 
+                  opacity: timeOfDay === 'night' ? 0.2 : 0.4, 
+                  blur: 3 
+                }}
+              >
+                <VerandaModel 
+                  size={size}
+                  lightType={lightType}
+                  lightsOn={lightsOn}
+                  lightColor={lightColor}
+                  roofType={roofType}
+                  materialColor={materialColor}
+                  mobile={mobile}
+                  timeOfDay={timeOfDay}
+                  multiplier={multiplier}
+                />
+              </Stage>
               
-              <Environment 
-                files={timeOfDay === 'night' ? "/sandsloot.hdr" : "/blouberg_sunrise_2_1k.hdr"}
-                background
-                backgroundIntensity={timeOfDay === 'night' ? 0.8 : 1.4}
-              />
               <CameraController multiplier={multiplier} mobile={mobile} />
             </Suspense>
           </Canvas>
@@ -1951,8 +1210,7 @@ const VerandaConfigurator = () => {
                   materialColor, setMaterialColor, mobile,
                   dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
                   speechSupported, parseDimensions, parseStatus,
-                  showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
-                  verandaContents, setVerandaContent
+                  timeOfDay, setTimeOfDay, multiplier, setMultiplier
                 }}
               />
             </div>
@@ -1978,8 +1236,7 @@ const VerandaConfigurator = () => {
               materialColor, setMaterialColor, mobile,
               dimensionInput, setDimensionInput, isListening, toggleVoiceInput,
               speechSupported, parseDimensions, parseStatus,
-              showARModal, setShowARModal, timeOfDay, setTimeOfDay, multiplier, setMultiplier,
-              verandaContents, setVerandaContent
+              timeOfDay, setTimeOfDay, multiplier, setMultiplier
             }}
           />
         </div>
@@ -1990,104 +1247,30 @@ const VerandaConfigurator = () => {
 
 const VerandaModel = ({ 
   size, lightType, lightsOn, lightColor, roofType, materialColor, mobile, 
-  timeOfDay, multiplier, verandaContents = {}, onVerandaDoubleClick
+  timeOfDay, multiplier
 }) => {
-  const { scene } = useGLTF('https://cdn.shopify.com/3d/models/bc863a6a765ab46f/veranda.glb');
-  const { scene: sceneAddition } = useGLTF('/sceneaddition.glb');
-  const { scene: pooltableScene } = useGLTF('/pooltable.glb');
-  const { scene: gymScene } = useGLTF('/h/gym.glb');
-  const { scene: jacuzziScene } = useGLTF('/jacuzzi.glb');
+  const { scene } = useGLTF('/h/veranda.glb');
   const groupRef = useRef();
-  const directionalLightRef = useRef();
-  const pointLightRef = useRef();
-  const sceneAdditionRef = useRef();
-  
-  // Create fixed refs for each possible veranda (up to 3)
-  const veranda1Ref = useRef();
-  const veranda2Ref = useRef();
-  const veranda3Ref = useRef();
-  const verandaRefs = [veranda1Ref, veranda2Ref, veranda3Ref];
-
-  const { camera } = useThree();
-
-  // Force initial render to ensure shadows appear immediately and handle ground transparency
-  useFrame((state) => {
-    if (directionalLightRef.current && directionalLightRef.current.shadow && directionalLightRef.current.shadow.map) {
-      directionalLightRef.current.shadow.map.needsUpdate = true;
-    }
-
-    // Handle ground and plane transparency when camera is below ground level
-    const groundYPosition = -0.25;
-    const shouldBeTransparent = camera.position.y < groundYPosition;
-
-    // Handle ground transparency in scene addition
-    if (sceneAdditionRef.current) {
-      sceneAdditionRef.current.traverse((child) => {
-        if (child.name === 'ground' && child.material) {
-          if (shouldBeTransparent) {
-            child.material.transparent = true;
-            child.material.opacity = 0.08;
-          } else {
-            child.material.transparent = false;
-            child.material.opacity = 1.0;
-          }
-          child.material.needsUpdate = true;
-        }
-      });
-    }
-
-    // Handle plane transparency in veranda models
-    verandaRefs.forEach((verandaRef) => {
-      if (verandaRef && verandaRef.current) {
-        verandaRef.current.traverse((child) => {
-          if (child.name === 'Plane' && child.material) {
-            if (shouldBeTransparent) {
-              child.material.transparent = true;
-              child.material.opacity = 0;
-            } else {
-              child.material.transparent = false;
-              child.material.opacity = 1.0;
-            }
-            child.material.needsUpdate = true;
-          }
-        });
-      }
-    });
-  });
 
   // Memoize the cloned scene and materials to prevent recreation
-  const { clonedScene, frameMaterial, glassMaterial, lightMaterial } = useMemo(() => {
-    if (!scene) return { clonedScene: null, frameMaterial: null, glassMaterial: null, lightMaterial: null };
+  const { clonedScene, frameMaterial, lightMaterial } = useMemo(() => {
+    if (!scene) return { clonedScene: null, frameMaterial: null, lightMaterial: null };
 
     const clonedScene = scene.clone();
 
     // Create frame material with proper color for structural elements
     const frameMaterial = new THREE.MeshStandardMaterial({
       color: materialColor === 'anthracite' ? '#28282d' : '#f5f5f5',
-      metalness: 0.995,
+      metalness: 0.8,
       roughness: 0.2
     });
 
-    // Create glass material for all glass objects
-    const glassMaterial = new THREE.MeshPhysicalMaterial({
-      color: '#9c1515ff',
-      metalness: 0,
-      roughness: 0.1,
-      ior: 1.5,
-      transmission: 0.19,
-      transparent: true,
-      thickness: 0.201,
-      envMapIntensity: 1,
-      clearcoat: 1,
-      clearcoatRoughness: 0.1
-    });
-
     // Create glowing light material with enhanced bloom effect - opposite to frame color
-    const lightObjectColor = materialColor === 'anthracite' ? '#f5f5f5' : '#28282d'; // Opposite of frame color
+    const lightObjectColor = materialColor === 'anthracite' ? '#f5f5f5' : '#28282d';
     const lightMaterial = new THREE.MeshStandardMaterial({
       color: lightsOn ? lightObjectColor : '#333333',
-      emissive: lightsOn ? lightColor : '#000000', // Use lightColor for emissive glow
-      emissiveIntensity: lightsOn ? (timeOfDay === 'night' ? 2.5 : 2.0) : 0, // Increased intensity for bloom effect
+      emissive: lightsOn ? lightColor : '#000000',
+      emissiveIntensity: lightsOn ? (timeOfDay === 'night' ? 1.5 : 1.0) : 0,
       transparent: true,
       opacity: lightsOn ? 1 : 0.3
     });
@@ -2095,10 +1278,9 @@ const VerandaModel = ({
     return {
       clonedScene,
       frameMaterial,
-      glassMaterial,
       lightMaterial
     };
-  }, [scene, mobile, materialColor, lightsOn, lightColor, timeOfDay]);
+  }, [scene, materialColor, lightsOn, lightColor, timeOfDay]);
 
   useEffect(() => {
     if (!clonedScene || !frameMaterial || !lightMaterial) return;
@@ -2152,21 +1334,11 @@ const VerandaModel = ({
       // Configure shadows for meshes
       if (child.isMesh) {
         child.castShadow = true;
-        child.receiveShadow = false;
+        child.receiveShadow = true;
       }
     });
 
-    // Configure sceneAddition objects to receive shadows
-    if (sceneAddition) {
-      sceneAddition.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = false;
-          child.receiveShadow = true;
-        }
-      });
-    }
-
-    // Handle scaling for size with REDUCED multiplier effect
+    // Handle scaling for size
     if (groupRef.current) {
       const baseSize = 3;
       const scaleMultiplier = 0.11;
@@ -2178,21 +1350,9 @@ const VerandaModel = ({
       groupRef.current.scale.set(scaleX, scaleY, scaleZ);
     }
 
-  }, [clonedScene, frameMaterial, lightMaterial, size.width, size.height, lightType, roofType, mobile, sceneAddition, lightsOn, lightColor, timeOfDay]);
+  }, [clonedScene, frameMaterial, lightMaterial, size.width, size.height, lightType, roofType, lightsOn, lightColor, timeOfDay]);
 
-  // Force shadow update on mobile after mounting
-  useEffect(() => {
-    if (mobile && directionalLightRef.current) {
-      const timer = setTimeout(() => {
-        if (directionalLightRef.current.shadow && directionalLightRef.current.shadow.map) {
-          directionalLightRef.current.shadow.map.needsUpdate = true;
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [mobile]);
-
-  if (!clonedScene || !frameMaterial || !glassMaterial || !lightMaterial) {
+  if (!clonedScene || !frameMaterial || !lightMaterial) {
     return null;
   }
 
@@ -2204,11 +1364,11 @@ const VerandaModel = ({
   const scaleY = 1 + (((scaleX - 1) + (scaleZ - 1)) / 2);
   
   const actualVerandaWidth = baseSize * scaleX;
-  const spacingBuffer = 0.05;
+  const spacingBuffer = 0; // Reduced from 0.5 to 0.1 for smaller gap
   const totalSpacing = actualVerandaWidth + spacingBuffer;
 
-  // Create veranda with interactive capabilities
-  const createVeranda = (verandaNumber, offsetX = 0, verandaRef) => {
+  // Create veranda function
+  const createVeranda = (verandaNumber, offsetX = 0) => {
     const clonedVeranda = clonedScene.clone();
     
     // Apply same settings as main veranda
@@ -2260,156 +1420,32 @@ const VerandaModel = ({
       // Configure shadows
       if (child.isMesh) {
         child.castShadow = true;
-        child.receiveShadow = false;
+        child.receiveShadow = true;
       }
     });
 
-    const hasContent = verandaContents && verandaContents[verandaNumber];
-
     return (
-      <ClickableVeranda
+      <group 
         key={`veranda-${verandaNumber}`}
-        verandaNumber={verandaNumber}
-        onDoubleClick={onVerandaDoubleClick}
-        position={[6 + offsetX, -0.5, 3]}
-        rotation={[0, -Math.PI/2, 0]}
+        position={[offsetX, 0, 0]} 
+        rotation={[0, 0, 0]} 
         scale={[scaleX, scaleY, scaleZ]}
-        hasContent={!!hasContent}
       >
-        <primitive ref={verandaRef} object={clonedVeranda} />
-      </ClickableVeranda>
+        <primitive object={clonedVeranda} />
+      </group>
     );
-  };
-
-  // Get content objects based on veranda contents
-  const getContentObject = (contentType, position, rotation = [0, -Math.PI/2, 0]) => {
-    switch (contentType) {
-      case 'fitness':
-        return gymScene && (
-          <primitive 
-            object={gymScene.clone()} 
-            position={position}
-            rotation={rotation}
-            scale={[1, 1, 1]}
-          />
-        );
-      case 'wellness':
-        return jacuzziScene && (
-          <primitive 
-            object={jacuzziScene.clone()} 
-            position={position}
-            rotation={rotation}
-            scale={[1, 1, 1]}
-          />
-        );
-      case 'recreation':
-        return pooltableScene && (
-          <primitive 
-            object={pooltableScene.clone()} 
-            position={position}
-            rotation={rotation}
-            scale={[1, 1, 1]}
-          />
-        );
-      default:
-        return null;
-    }
   };
 
   return (
     <>
-      {/* Ambient light for general illumination */}
-      <ambientLight intensity={timeOfDay === 'night' ? 0.15 : (mobile ? 0.4 : 0.3)} />
-      
-      {/* Directional light that looks at the veranda and casts shadows */}
-      <directionalLight
-        ref={directionalLightRef}
-        position={[5, 7, -3.8]}
-        target-position={[6, 0, 3]}
-        intensity={timeOfDay === 'night' ? (mobile ? 0.43 : 0.54) : (mobile ? 1.86 : 1.98)}
-        color={timeOfDay === 'night' ? '#b8c5d1' : '#ffffff'}
-        castShadow={true}
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-15}
-        shadow-camera-right={15}
-        shadow-camera-top={15}
-        shadow-camera-bottom={-15}
-        shadow-camera-near={0.1}
-        shadow-camera-far={50}
-        shadow-radius={6}
-        shadow-bias={-0.0005}
-      />
-
-      {/* Point light at center of veranda when lights are on */}
-      {lightsOn && (
-        <pointLight
-          ref={pointLightRef}
-          position={[6, 2, 3]}
-          intensity={timeOfDay === 'night' ? .65 : 0.8}
-          color={lightColor}
-          distance={20}
-          decay={2}
-          castShadow={false}
-        />
-      )}
-
-      {/* Additional point lights for each veranda with rod lights (bloom simulation) */}
-      {lightsOn && multiplier >= 1 && (
-        <pointLight
-          position={[6, 1.5, 3]}
-          intensity={0.3}
-          color={lightColor}
-          distance={8}
-          decay={2}
-        />
-      )}
-      {lightsOn && multiplier >= 2 && (
-        <pointLight
-          position={[6 + totalSpacing, 1.5, 3]}
-          intensity={0.3}
-          color={lightColor}
-          distance={8}
-          decay={2}
-        />
-      )}
-      {lightsOn && multiplier === 3 && (
-        <pointLight
-          position={[6 - totalSpacing, 1.5, 3]}
-          intensity={0.3}
-          color={lightColor}
-          distance={8}
-          decay={2}
-        />
-      )}
-
-      {/* Additional ambient lighting when lights are on */}
-      {lightsOn && (
-        <ambientLight intensity={timeOfDay === 'night' ? 0.4 : 0.25} color={lightColor} />
-      )}
-
-      {/* Scene addition - NOT affected by scaling, with ground transparency handling */}
-      {sceneAddition && (
-        <primitive 
-          ref={sceneAdditionRef}
-          object={sceneAddition.clone()} 
-          position={[0, -0.68, 0]} 
-          rotation={[0, 0, 0]}
-        />
-      )}
-      
       {/* Main veranda (veranda 1) */}
-      {createVeranda(1, 0, verandaRefs[0])}
-
-      {/* Content for main veranda */}
-      {verandaContents && verandaContents[1] && getContentObject(verandaContents[1], [6, -0.45, 3], [0, -Math.PI/2, 0])}
+      {createVeranda(1, 0)}
 
       {/* Second veranda */}
-      {multiplier >= 2 && createVeranda(2, totalSpacing, verandaRefs[1])}
-      {multiplier >= 2 && verandaContents && verandaContents[2] && getContentObject(verandaContents[2], [6.25 + totalSpacing, -0.5, 3], [0, Math.PI, 0])}
+      {multiplier >= 2 && createVeranda(2, totalSpacing)}
 
       {/* Third veranda */}
-      {multiplier === 3 && createVeranda(3, -totalSpacing, verandaRefs[2])}
-      {multiplier === 3 && verandaContents && verandaContents[3] && getContentObject(verandaContents[3], [6 - totalSpacing, -0.5, 3], [0, -Math.PI/2, 0])}
+      {multiplier === 3 && createVeranda(3, -totalSpacing)}
     </>
   );
 };
@@ -2418,17 +1454,13 @@ const VerandaModel = ({
 if (typeof window !== 'undefined') {
   try {
     useGLTF.preload('/h/veranda.glb');
-    useGLTF.preload('/sceneaddition.glb');
-    useGLTF.preload('/pooltable.glb');
-    useGLTF.preload('/h/gym.glb');
-    useGLTF.preload('/jacuzzi.glb');
   } catch (error) {
     console.warn('Failed to preload GLTF:', error);
   }
 }
 
 // Main export wrapped with ClientOnly and ErrorBoundary
-const VerandaConfiguratorApp = () => {
+const SimpleVerandaConfigurator = () => {
   return (
     <ErrorBoundary>
       <ClientOnly>
@@ -2438,4 +1470,4 @@ const VerandaConfiguratorApp = () => {
   );
 };
 
-export default VerandaConfiguratorApp;
+export default SimpleVerandaConfigurator;

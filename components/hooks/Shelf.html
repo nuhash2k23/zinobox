@@ -326,37 +326,6 @@
             z-index: 1000;
         }
         
-        .dimension-overlay {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            pointer-events: none;
-            z-index: 1001;
-        }
-        
-        .dimension-overlay.front-width {
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        .dimension-overlay.left-depth {
-            bottom: 200px;
-            left: 100px;
-            transform: rotate(-90deg);
-            transform-origin: center;
-        }
-        
-        .dimension-overlay.wall-height {
-            top: 50%;
-            right: 100px;
-            transform: translateY(-50%);
-        }
-        
         .plus-indicator {
             position: absolute;
             width: 30px;
@@ -396,20 +365,10 @@
             <div class="viewer-controls">
                 <button class="control-button" id="toggle-dimensions">📐 Dimensions</button>
                 <button class="control-button" id="reset-camera">🔄 Reset cam</button>
+                <button class="control-button" id="clear-shelves">🗑️ Clear</button>
             </div>
             <div class="dimensions-display" id="dimensions-display">
                 W: <span id="dim-width">300</span> mm  H: <span id="dim-height">350</span> mm  D: <span id="dim-depth">300</span> mm
-            </div>
-            
-            <!-- Fixed dimension overlays -->
-            <div class="dimension-overlay front-width" id="front-width-dim" style="display: none;">
-                Width: <span id="width-overlay">300</span> mm
-            </div>
-            <div class="dimension-overlay left-depth" id="left-depth-dim" style="display: none;">
-                Depth: <span id="depth-overlay">300</span> mm
-            </div>
-            <div class="dimension-overlay wall-height" id="wall-height-dim" style="display: none;">
-                Height: <span id="height-overlay">350</span> mm
             </div>
             
             <div id="canvas-container"></div>
@@ -443,7 +402,6 @@
             <div class="section">
                 <h3 class="section-title">Structure Elements</h3>
                 <div class="options-grid" id="structure-options">
-                    <!-- Acrylic options (default) -->
                     <div class="option-card active" data-structure="with-panels">
                         <div class="option-icon">
                             <img src="with-panels-icon.png" alt="With top and bottom only" />
@@ -462,7 +420,6 @@
             <div class="section">
                 <h3 class="section-title">Width (mm)</h3>
                 <div class="size-options" id="width-options">
-                    <!-- Acrylic options (default) -->
                     <div class="size-button" data-width="270">270</div>
                     <div class="size-button active" data-width="300">300</div>
                     <div class="size-button" data-width="370">370</div>
@@ -472,7 +429,6 @@
             <div class="section">
                 <h3 class="section-title">Depth (mm)</h3>
                 <div class="size-options" id="depth-options">
-                    <!-- Acrylic options (default) -->
                     <div class="size-button" data-depth="270">270</div>
                     <div class="size-button active" data-depth="300">300</div>
                     <div class="size-button" data-depth="370">370</div>
@@ -482,7 +438,6 @@
             <div class="section">
                 <h3 class="section-title">Height (mm)</h3>
                 <div class="height-options" id="height-options">
-                    <!-- Acrylic options (default) -->
                     <div class="height-button" data-height="121">121</div>
                     <div class="height-button" data-height="180">180</div>
                     <div class="height-button" data-height="200">200</div>
@@ -533,30 +488,451 @@
         import { GLTFLoader } from 'three/loaders/GLTFLoader';
         import { RGBELoader } from 'three/loaders/RGBELoader';
 
-        let scene, camera, renderer, controls, shelf, floorPlane, wallPlane;
-        let raycaster, mouse, hoveredObject = null, selectedPanel = null, selectedPipes = null;
-        let panelObjects = [], pipesObjects = [], allPanelObjects = [];
-        let originalMaterials = new Map();
+        // Core scene elements
+        let scene, camera, renderer, controls;
+        let raycaster, mouse;
         let initialCameraPosition, initialCameraTarget;
         let dimensionsVisible = false;
         let colorSectionEnabled = false;
         let plusIndicators = [];
         
-        // Procedural shelf components
-        let shelfGroup, pipeFrame, connectors = [], supporters = [], screwLegs = [], spacers = [];
-        let generatedPanels = {};
+        // Materials cache for performance
+        let materialCache = new Map();
         
         // GLB Loaders for components
         let connectorsGLB = {}, supporterGLB = null, screwLegGLB = null;
         
         // Constants
-        const PIPE_RADIUS = 0.02; // Medium radius
-        const SCREW_LEG_GAP = 0.06; // 60 units gap
-        const BASE_SCALE = 0.01; // Scale for device viewing
+        const PIPE_RADIUS = 0.08;
+        const SCREW_LEG_GAP = 0.4;
+        const BASE_SCALE = 0.01;
+        const GLB_SCALE = 0.1;
         
-        // Hover materials
-        let yellowEdgeMaterial, lightBlueMaterial;
+        // Shelf management
+        class ShelfManager {
+            constructor() {
+                this.shelves = [];
+                this.selectedShelf = null;
+                this.shelfCounter = 0;
+                this.mainGroup = new THREE.Group();
+                scene.add(this.mainGroup);
+            }
+            
+            createShelf(config, position = { x: 0, y: 0, z: 0 }) {
+                const shelf = new Shelf(this.shelfCounter++, config, position);
+                this.shelves.push(shelf);
+                this.mainGroup.add(shelf.group);
+                this.updateConnectors();
+                return shelf;
+            }
+            
+            removeShelf(shelfId) {
+                const index = this.shelves.findIndex(s => s.id === shelfId);
+                if (index > -1) {
+                    const shelf = this.shelves[index];
+                    this.mainGroup.remove(shelf.group);
+                    shelf.dispose();
+                    this.shelves.splice(index, 1);
+                    this.updateConnectors();
+                }
+            }
+            
+            clearAll() {
+                this.shelves.forEach(shelf => {
+                    this.mainGroup.remove(shelf.group);
+                    shelf.dispose();
+                });
+                this.shelves = [];
+                this.selectedShelf = null;
+                removePlusIndicators();
+            }
+            
+            addHorizontalShelf() {
+                if (this.shelves.length === 0) return;
+                
+                const lastShelf = this.shelves[this.shelves.length - 1];
+                const spacing = (lastShelf.config.width + currentConfig.width) * BASE_SCALE / 2;
+                const newPosition = {
+                    x: lastShelf.position.x + spacing,
+                    y: lastShelf.position.y,
+                    z: lastShelf.position.z
+                };
+                
+                this.createShelf(currentConfig, newPosition);
+            }
+            
+            addVerticalShelf() {
+                if (this.shelves.length === 0) return;
+                
+                const lastShelf = this.shelves[this.shelves.length - 1];
+                const spacing = (lastShelf.config.height + currentConfig.height) * BASE_SCALE / 2;
+                const newPosition = {
+                    x: lastShelf.position.x,
+                    y: lastShelf.position.y + spacing,
+                    z: lastShelf.position.z
+                };
+                
+                this.createShelf(currentConfig, newPosition);
+            }
+            
+            updateConnectors() {
+                // Smart connector placement logic
+                this.shelves.forEach(shelf => {
+                    shelf.updateConnectorTypes(this.shelves);
+                });
+            }
+            
+            selectShelf(shelfId) {
+                // Deselect previous
+                if (this.selectedShelf) {
+                    this.selectedShelf.setSelected(false);
+                }
+                
+                // Select new
+                this.selectedShelf = this.shelves.find(s => s.id === shelfId);
+                if (this.selectedShelf) {
+                    this.selectedShelf.setSelected(true);
+                    createPlusIndicators();
+                    
+                    if (currentConfig.type === 'acrylic') {
+                        enableColorSection();
+                    }
+                }
+            }
+            
+            getIntersectedShelf(intersects) {
+                for (let intersect of intersects) {
+                    for (let shelf of this.shelves) {
+                        if (shelf.containsObject(intersect.object)) {
+                            return shelf;
+                        }
+                    }
+                }
+                return null;
+            }
+        }
         
+        // Individual shelf class
+        class Shelf {
+            constructor(id, config, position = { x: 0, y: 0, z: 0 }) {
+                this.id = id;
+                this.config = { ...config };
+                this.position = position;
+                this.group = new THREE.Group();
+                this.group.position.set(position.x, position.y, position.z);
+                this.group.userData.shelfId = id;
+                
+                this.pipes = [];
+                this.panels = {};
+                this.connectors = [];
+                this.supporters = [];
+                this.screwLegs = [];
+                this.spacers = [];
+                this.originalMaterials = new Map();
+                this.isSelected = false;
+                
+                this.generate();
+            }
+            
+            generate() {
+                this.clear();
+                
+                const width = this.config.width * BASE_SCALE;
+                const height = this.config.height * BASE_SCALE;
+                const depth = this.config.depth * BASE_SCALE;
+                
+                this.generatePipeFrame(width, height, depth);
+                this.placeConnectors(width, height, depth);
+                this.placeSupporters(width, height, depth);
+                this.placeScrewLegsAndSpacers(width, height, depth);
+                this.generatePanels(width, height, depth);
+                this.updatePanelVisibility();
+            }
+            
+            clear() {
+                this.group.clear();
+                this.pipes = [];
+                this.panels = {};
+                this.connectors = [];
+                this.supporters = [];
+                this.screwLegs = [];
+                this.spacers = [];
+            }
+            
+            generatePipeFrame(width, height, depth) {
+                const corners = [
+                    [-width/2, height/2, -depth/2], [width/2, height/2, -depth/2],
+                    [width/2, height/2, depth/2], [-width/2, height/2, depth/2],
+                    [-width/2, -height/2, -depth/2], [width/2, -height/2, -depth/2],
+                    [width/2, -height/2, depth/2], [-width/2, -height/2, depth/2]
+                ];
+                
+                const connections = [
+                    [0,1],[1,2],[2,3],[3,0], // Top frame
+                    [4,5],[5,6],[6,7],[7,4], // Bottom frame
+                    [0,4],[1,5],[2,6],[3,7]  // Vertical edges
+                ];
+                
+                connections.forEach(([startIdx, endIdx]) => {
+                    const start = new THREE.Vector3(...corners[startIdx]);
+                    const end = new THREE.Vector3(...corners[endIdx]);
+                    const pipe = this.createPipe(start, end);
+                    this.pipes.push(pipe);
+                    this.group.add(pipe);
+                });
+            }
+            
+            createPipe(start, end) {
+                const direction = new THREE.Vector3().subVectors(end, start);
+                const length = direction.length();
+                const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+                
+                const geometry = new THREE.CylinderGeometry(PIPE_RADIUS, PIPE_RADIUS, length, 8);
+                const material = this.getMaterial('pipe');
+                const cylinder = new THREE.Mesh(geometry, material);
+                
+                cylinder.position.copy(center);
+                cylinder.lookAt(end);
+                cylinder.rotateX(Math.PI / 2);
+                cylinder.castShadow = true;
+                cylinder.receiveShadow = true;
+                cylinder.userData.objectType = 'pipe';
+                cylinder.userData.shelfId = this.id;
+                
+                this.originalMaterials.set(cylinder, material.clone());
+                return cylinder;
+            }
+            
+            placeConnectors(width, height, depth) {
+                // Top corners - always 3T connectors for outer corners
+                const topPositions = [
+                    { pos: [-width/2, height/2, -depth/2], rot: [0, -Math.PI/2, 0], type: '3T' },
+                    { pos: [width/2, height/2, -depth/2], rot: [0, Math.PI, 0], type: '3T' },
+                    { pos: [width/2, height/2, depth/2], rot: [0, Math.PI/2, 0], type: '3T' },
+                    { pos: [-width/2, height/2, depth/2], rot: [0, 0, 0], type: '3T' }
+                ];
+                
+                // Bottom corners - always 4T connectors
+                const bottomPositions = [
+                    { pos: [-width/2, -height/2, -depth/2], rot: [0, -Math.PI/2, 0], type: '4T' },
+                    { pos: [width/2, -height/2, -depth/2], rot: [0, Math.PI, 0], type: '4T' },
+                    { pos: [width/2, -height/2, depth/2], rot: [0, Math.PI/2, 0], type: '4T' },
+                    { pos: [-width/2, -height/2, depth/2], rot: [0, 0, 0], type: '4T' }
+                ];
+                
+                [...topPositions, ...bottomPositions].forEach(connector => {
+                    if (connectorsGLB[connector.type]) {
+                        const connectorObj = connectorsGLB[connector.type].clone();
+                        connectorObj.position.set(...connector.pos);
+                        connectorObj.rotation.set(...connector.rot);
+                        connectorObj.scale.setScalar(GLB_SCALE);
+                        connectorObj.userData.objectType = 'structural';
+                        connectorObj.userData.shelfId = this.id;
+                        this.connectors.push(connectorObj);
+                        this.group.add(connectorObj);
+                    }
+                });
+            }
+            
+            placeSupporters(width, height, depth) {
+                // 8 supporters with individual rotations for each position
+                const supporterConfigs = [
+                    // Top corners (clockwise from top-left-back)
+                    { pos: [-width/2 + PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS], rot: [0, Math.PI*1.5, 0] },
+                    { pos: [width/2 - PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS], rot: [0, 0, 0] },
+                    { pos: [width/2 - PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI*0.5, 0] },
+                    { pos: [-width/2 + PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI, 0] },
+                    // Bottom corners (clockwise from bottom-left-back)
+                    { pos: [-width/2 + PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS], rot: [0, Math.PI*1.5, 0] },
+                    { pos: [width/2 - PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS], rot: [0, 0, 0] },
+                    { pos: [width/2 - PIPE_RADIUS, -height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI*0.5, 0] },
+                    { pos: [-width/2 + PIPE_RADIUS, -height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI, 0] }
+                ];
+                
+                supporterConfigs.forEach(config => {
+                    if (supporterGLB) {
+                        const supporter = supporterGLB.clone();
+                        supporter.position.set(...config.pos);
+                        supporter.rotation.set(...config.rot);
+                        supporter.scale.setScalar(GLB_SCALE);
+                        supporter.userData.objectType = 'structural';
+                        supporter.userData.shelfId = this.id;
+                        this.supporters.push(supporter);
+                        this.group.add(supporter);
+                    }
+                });
+            }
+            
+            placeScrewLegsAndSpacers(width, height, depth) {
+                const bottomPositions = [
+                    [-width/2, -height/2, -depth/2], [width/2, -height/2, -depth/2],
+                    [width/2, -height/2, depth/2], [-width/2, -height/2, depth/2]
+                ];
+                
+                bottomPositions.forEach(pos => {
+                    // Spacer
+                    const spacerGeometry = new THREE.CylinderGeometry(PIPE_RADIUS, PIPE_RADIUS, SCREW_LEG_GAP, 8);
+                    const spacerMaterial = this.getMaterial('pipe');
+                    const spacer = new THREE.Mesh(spacerGeometry, spacerMaterial);
+                    spacer.position.set(pos[0], pos[1] - SCREW_LEG_GAP/2, pos[2]);
+                    spacer.castShadow = true;
+                    spacer.receiveShadow = true;
+                    spacer.userData.shelfId = this.id;
+                    this.spacers.push(spacer);
+                    this.group.add(spacer);
+                    
+                    // Screw leg
+                    if (screwLegGLB) {
+                        const screwLeg = screwLegGLB.clone();
+                        screwLeg.position.set(pos[0], pos[1] - SCREW_LEG_GAP, pos[2]);
+                        screwLeg.scale.setScalar(GLB_SCALE);
+                        screwLeg.userData.objectType = 'structural';
+                        screwLeg.userData.shelfId = this.id;
+                        this.screwLegs.push(screwLeg);
+                        this.group.add(screwLeg);
+                    }
+                });
+            }
+            
+            generatePanels(width, height, depth) {
+                const panelConfigs = {
+                    'panel': { size: [width, depth], position: [0, height/2, 0], rotation: [-Math.PI/2, 0, 0] },
+                    'panel2': { size: [width, depth], position: [0, -height/2, 0], rotation: [-Math.PI/2, 0, 0] },
+                    'panelleft': { size: [depth, height], position: [-width/2, 0, 0], rotation: [0, Math.PI/2, 0] },
+                    'panelright': { size: [depth, height], position: [width/2, 0, 0], rotation: [0, -Math.PI/2, 0] },
+                    'panelback': { size: [width, height], position: [0, 0, -depth/2], rotation: [0, 0, 0] }
+                };
+                
+                Object.entries(panelConfigs).forEach(([name, config]) => {
+                    const geometry = new THREE.PlaneGeometry(config.size[0], config.size[1]);
+                    const material = this.getMaterial('panel');
+                    const panel = new THREE.Mesh(geometry, material);
+                    
+                    panel.position.set(...config.position);
+                    panel.rotation.set(...config.rotation);
+                    panel.name = name;
+                    panel.userData.objectType = 'panel';
+                    panel.userData.shelfId = this.id;
+                    panel.castShadow = true;
+                    panel.receiveShadow = true;
+                    
+                    if (this.config.type === 'acrylic') {
+                        panel.userData.interactive = 'panel';
+                    }
+                    
+                    this.originalMaterials.set(panel, material.clone());
+                    this.panels[name] = panel;
+                    this.group.add(panel);
+                });
+            }
+            
+            updatePanelVisibility() {
+                Object.values(this.panels).forEach(panel => panel.visible = false);
+                
+                const { type, structure } = this.config;
+                
+                if (type === 'acrylic') {
+                    if (structure === 'with-panels') {
+                        if (this.panels.panel) this.panels.panel.visible = true;
+                        if (this.panels.panel2) this.panels.panel2.visible = true;
+                    }
+                } else if (type === 'stainless') {
+                    if (structure === 'all-no-front') {
+                        ['panelback', 'panelleft', 'panelright', 'panel', 'panel2'].forEach(name => {
+                            if (this.panels[name]) this.panels[name].visible = true;
+                        });
+                    } else if (structure === 'without-back') {
+                        ['panelleft', 'panelright', 'panel', 'panel2'].forEach(name => {
+                            if (this.panels[name]) this.panels[name].visible = true;
+                        });
+                    } else if (structure === 'with-panels') {
+                        if (this.panels.panel) this.panels.panel.visible = true;
+                        if (this.panels.panel2) this.panels.panel2.visible = true;
+                    }
+                }
+            }
+            
+            getMaterial(type) {
+                const key = `${type}-${this.config.type}-${this.config.color || 'default'}`;
+                
+                if (materialCache.has(key)) {
+                    return materialCache.get(key).clone();
+                }
+                
+                let material;
+                
+                if (type === 'pipe') {
+                    material = new THREE.MeshPhysicalMaterial({
+                        color: 0xe6e6e6,
+                        metalness: 0.9,
+                        roughness: 0.1,
+                        clearcoat: 1.0,
+                        clearcoatRoughness: 0.1
+                    });
+                } else if (type === 'panel') {
+                    if (this.config.type === 'acrylic') {
+                        material = new THREE.MeshPhysicalMaterial({
+                            color: 0xff8c00,
+                            transparent: true,
+                            opacity: 0.6,
+                            side: THREE.DoubleSide,
+                            roughness: 0.1,
+                            metalness: 0.0
+                        });
+                    } else {
+                        material = new THREE.MeshPhysicalMaterial({
+                            color: 0xff8c00,
+                            transparent: false,
+                            roughness: 0.1,
+                            metalness: 0.7,
+                            clearcoat: 1.0,
+                            clearcoatRoughness: 0.1,
+                            side: THREE.DoubleSide
+                        });
+                    }
+                }
+                
+                materialCache.set(key, material);
+                return material.clone();
+            }
+            
+            setSelected(selected) {
+                this.isSelected = selected;
+                const color = selected ? 0x0099ff : null;
+                
+                this.pipes.forEach(pipe => {
+                    if (color) {
+                        pipe.material = new THREE.MeshBasicMaterial({ 
+                            color: color,
+                            transparent: true,
+                            opacity: 0.9
+                        });
+                    } else {
+                        pipe.material = this.originalMaterials.get(pipe);
+                    }
+                });
+            }
+            
+            containsObject(object) {
+                return object.userData.shelfId === this.id;
+            }
+            
+            updateConnectorTypes(allShelves) {
+                // Smart connector logic for multi-shelf configurations
+                // This would determine if corners should be 3T or 4T based on adjacent shelves
+            }
+            
+            updateConfig(newConfig) {
+                this.config = { ...newConfig };
+                this.generate();
+            }
+            
+            dispose() {
+                this.group.clear();
+            }
+        }
+        
+        let shelfManager;
         let currentConfig = {
             type: 'acrylic',
             structure: 'with-panels',
@@ -573,10 +949,8 @@
 
             // Camera
             camera = new THREE.PerspectiveCamera(75, (window.innerWidth * 0.7) / window.innerHeight, 0.1, 1000);
-            camera.position.set(5, 5, 5);
-            
-            // Store initial camera position
-            initialCameraPosition = camera.position.clone();
+            camera.position.set(2, 0, 0);
+            initialCameraPosition = new THREE.Vector3(2, 0, 0);
             initialCameraTarget = new THREE.Vector3(0, 0, 0);
 
             // Renderer
@@ -594,21 +968,14 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.target.copy(initialCameraTarget);
-            
-            // Restrict camera movement
-            controls.minPolarAngle = 0; // Prevent looking from below
-            controls.maxPolarAngle = Math.PI / 2; // Limit to horizontal view
-            
-            // Limit horizontal rotation to half circle (180 degrees)
-            controls.minAzimuthAngle = -Math.PI / 2; // -90 degrees
-            controls.maxAzimuthAngle = Math.PI / 2;   // +90 degrees
+            controls.minPolarAngle = 0;
+            controls.maxPolarAngle = Math.PI / 2;
+            controls.minAzimuthAngle = -Math.PI / 2;
+            controls.maxAzimuthAngle = Math.PI / 2;
 
-            // Raycaster setup
+            // Raycaster
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
-
-            // Create hover materials
-            createHoverMaterials();
 
             // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -621,75 +988,25 @@
             directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
 
-            // Create floor and wall planes
-            createEnvironmentPlanes();
-
-            // Load HDR environment
+            // HDR environment
             const rgbeLoader = new RGBELoader();
             rgbeLoader.load('https://threejs.org/examples/textures/equirectangular/venice_sunset_1k.hdr', function(texture) {
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 scene.environment = texture;
             });
 
-            // Load shelf components and generate procedural shelf
-            loadComponentsAndGenerate();
+            // Initialize shelf manager
+            shelfManager = new ShelfManager();
 
-            // Event listeners
+            // Load components and create initial shelf
+            loadComponentsAndGenerate();
             setupEventListeners();
             
-            // Initially disable color section and set default config
-            disableColorSection();
-            
-            // Set initial default for acrylic
-            currentConfig = {
-                type: 'acrylic',
-                structure: 'with-panels',
-                width: 300,
-                depth: 300,
-                height: 350,
-                color: 'transparent-orange'
-            };
-        }
-
-        function createHoverMaterials() {
-            // Yellow material for panel hover
-            yellowEdgeMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xffff00,
-                transparent: true,
-                opacity: 0.7,
-                side: THREE.DoubleSide
-            });
-            
-            // Light blue material for pipes hover
-            lightBlueMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0x87ceeb,
-                transparent: true,
-                opacity: 0.7,
-                side: THREE.DoubleSide
-            });
-        }
-
-        function createEnvironmentPlanes() {
-            const planeColor = 0xffffff;
-            const planeMaterial = new THREE.MeshLambertMaterial({ 
-                color: planeColor,
-                side: THREE.DoubleSide
-            });
-
-            // Floor plane
-            const floorGeometry = new THREE.PlaneGeometry(200, 200);
-            floorPlane = new THREE.Mesh(floorGeometry, planeMaterial);
-            floorPlane.rotation.x = -Math.PI / 2;
-            floorPlane.position.y = 0;
-            floorPlane.receiveShadow = false; // No shadows on floor
-            // scene.add(floorPlane);
-
-            // Wall plane
-            const wallGeometry = new THREE.PlaneGeometry(200, 200);
-            wallPlane = new THREE.Mesh(wallGeometry, planeMaterial);
-            wallPlane.position.z = -1.2;
-            wallPlane.receiveShadow = false; // No shadows on wall
-            // scene.add(wallPlane);
+            if (currentConfig.type === 'acrylic') {
+                disableColorSection();
+            } else {
+                enableColorSection();
+            }
         }
 
         function loadComponentsAndGenerate() {
@@ -697,406 +1014,187 @@
             let loadedComponents = 0;
             const totalComponents = 4;
             
-            // Load 3TConnector
-            loader.load('/3TConnector.glb', 
-                function(gltf) {
-                    connectorsGLB['3T'] = gltf.scene.clone();
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                },
-                undefined,
-                function(error) {
-                    console.warn('3TConnector.glb not found, using placeholder');
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                }
-            );
+            const componentsToLoad = [
+                { url: '/3TConnector.glb', key: '3T' },
+                { url: '/4TConnector.glb', key: '4T' },
+                { url: '/Suppoter.1.glb', type: 'supporter' },
+                { url: '/screwlegs.glb', type: 'screwleg' }
+            ];
             
-            // Load 4TConnector
-            loader.load('/4TConnector.glb',
-                function(gltf) {
-                    connectorsGLB['4T'] = gltf.scene.clone();
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                },
-                undefined,
-                function(error) {
-                    console.warn('4TConnector.glb not found, using placeholder');
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                }
-            );
-            
-            // Load supporter
-            loader.load('/Suppoter.1.glb',
-                function(gltf) {
-                    supporterGLB = gltf.scene.clone();
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                },
-                undefined,
-                function(error) {
-                    console.warn('supporter.glb not found, using placeholder');
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                }
-            );
-            
-            // Load screwlegs
-            loader.load('/screwlegs.glb',
-                function(gltf) {
-                    screwLegGLB = gltf.scene.clone();
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                },
-                undefined,
-                function(error) {
-                    console.warn('screwlegs.glb not found, using placeholder');
-                    loadedComponents++;
-                    if (loadedComponents === totalComponents) generateProceduralShelf();
-                }
-            );
+            componentsToLoad.forEach(component => {
+                loader.load(
+                    component.url,
+                    function(gltf) {
+                        if (component.key) {
+                            connectorsGLB[component.key] = gltf.scene.clone();
+                        } else if (component.type === 'supporter') {
+                            supporterGLB = gltf.scene.clone();
+                        } else if (component.type === 'screwleg') {
+                            screwLegGLB = gltf.scene.clone();
+                        }
+                        
+                        loadedComponents++;
+                        if (loadedComponents === totalComponents) {
+                            createInitialShelf();
+                        }
+                    },
+                    undefined,
+                    function(error) {
+                        console.warn(`${component.url} not found, using placeholder`);
+                        loadedComponents++;
+                        if (loadedComponents === totalComponents) {
+                            createInitialShelf();
+                        }
+                    }
+                );
+            });
         }
 
-        function generateProceduralShelf() {
-            // Clear existing shelf
-            if (shelfGroup) {
-                scene.remove(shelfGroup);
-            }
-            
-            // Create main shelf group
-            shelfGroup = new THREE.Group();
-            shelf = shelfGroup; // Keep reference for compatibility
-            
-            // Calculate dimensions in scene units
-            const width = currentConfig.width * BASE_SCALE;
-            const height = currentConfig.height * BASE_SCALE;  
-            const depth = currentConfig.depth * BASE_SCALE;
-            
-            // Generate pipe frame structure
-            generatePipeFrame(width, height, depth);
-            
-            // Place connectors at corners
-            placeConnectors(width, height, depth);
-            
-            // Place supporters at corners (positioned toward center)
-            placeSupporters(width, height, depth);
-            
-            // Place screw legs and spacers at bottom corners
-            placeScrewLegsAndSpacers(width, height, depth);
-            
-            // Generate panels
-            generatePanels(width, height, depth);
-            
-            // Update panel visibility based on current configuration
-            updatePanelVisibility();
-            
-            // Add to scene
-            scene.add(shelfGroup);
-            
-            // Adjust camera for better viewing
-            adjustCameraForSize(width, height, depth);
-            
-            // Hide loading indicator
+        function createInitialShelf() {
+            shelfManager.createShelf(currentConfig);
             document.getElementById('loading').style.display = 'none';
-            
-            console.log('Procedural shelf generated successfully');
         }
 
-        function generatePipeFrame(width, height, depth) {
-            pipeFrame = new THREE.Group();
-            
-            // Define 8 corner positions
-            const corners = [
-                // Top corners
-                [-width/2, height/2, -depth/2],   // Top-left-back
-                [width/2, height/2, -depth/2],    // Top-right-back  
-                [width/2, height/2, depth/2],     // Top-right-front
-                [-width/2, height/2, depth/2],    // Top-left-front
-                // Bottom corners
-                [-width/2, -height/2, -depth/2],  // Bottom-left-back
-                [width/2, -height/2, -depth/2],   // Bottom-right-back
-                [width/2, -height/2, depth/2],    // Bottom-right-front
-                [-width/2, -height/2, depth/2]    // Bottom-left-front
-            ];
-            
-            // Create pipe connections
-            const connections = [
-                // Top frame edges
-                [0, 1], [1, 2], [2, 3], [3, 0],
-                // Bottom frame edges  
-                [4, 5], [5, 6], [6, 7], [7, 4],
-                // Vertical edges
-                [0, 4], [1, 5], [2, 6], [3, 7]
-            ];
-            
-            // Generate cylinder pipes for each connection
-            connections.forEach(([startIdx, endIdx]) => {
-                const start = new THREE.Vector3(...corners[startIdx]);
-                const end = new THREE.Vector3(...corners[endIdx]);
-                const pipe = createPipeBetweenPoints(start, end);
-                pipe.userData.interactive = 'pipes';
-                pipe.userData.objectType = 'structural';
-                pipesObjects.push(pipe);
-                pipeFrame.add(pipe);
-            });
-            
-            shelfGroup.add(pipeFrame);
-        }
+        function onMouseMove(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-        function createPipeBetweenPoints(start, end) {
-            const direction = new THREE.Vector3().subVectors(end, start);
-            const length = direction.length();
-            const center = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(shelfManager.mainGroup, true);
             
-            // Create cylinder geometry
-            const geometry = new THREE.CylinderGeometry(PIPE_RADIUS, PIPE_RADIUS, length, 8);
-            const material = new THREE.MeshPhysicalMaterial({
-                color: 0xcccccc,
-                metalness: 0.8,
-                roughness: 0.2
-            });
-            
-            const cylinder = new THREE.Mesh(geometry, material);
-            
-            // Position and orient cylinder
-            cylinder.position.copy(center);
-            cylinder.lookAt(end);
-            cylinder.rotateX(Math.PI / 2);
-            
-            cylinder.castShadow = true;
-            cylinder.receiveShadow = true;
-            
-            // Store original material
-            originalMaterials.set(cylinder, material.clone());
-            
-            return cylinder;
-        }
-
-        function placeConnectors(width, height, depth) {
-            connectors = [];
-            
-            // Top 4 corners - 3TConnector
-            const topPositions = [
-                [-width/2, height/2, -depth/2],   
-                [width/2, height/2, -depth/2],    
-                [width/2, height/2, depth/2],     
-                [-width/2, height/2, depth/2]     
-            ];
-            
-            topPositions.forEach(pos => {
-                if (connectorsGLB['3T']) {
-                    const connector = connectorsGLB['3T'].clone();
-                    connector.position.set(...pos);
-                    connector.userData.objectType = 'structural';
-                    connectors.push(connector);
-                    shelfGroup.add(connector);
+            // Reset all shelves hover state
+            shelfManager.shelves.forEach(shelf => {
+                if (!shelf.isSelected) {
+                    shelf.pipes.forEach(pipe => {
+                        pipe.material = shelf.originalMaterials.get(pipe);
+                    });
                 }
             });
             
-            // Bottom 4 corners - 4TConnector  
-            const bottomPositions = [
-                [-width/2, -height/2, -depth/2],  
-                [width/2, -height/2, -depth/2],   
-                [width/2, -height/2, depth/2],    
-                [-width/2, -height/2, depth/2]    
-            ];
-            
-            bottomPositions.forEach(pos => {
-                if (connectorsGLB['4T']) {
-                    const connector = connectorsGLB['4T'].clone();
-                    connector.position.set(...pos);
-                    connector.userData.objectType = 'structural';
-                    connectors.push(connector);
-                    shelfGroup.add(connector);
+            if (intersects.length > 0) {
+                const intersectedShelf = shelfManager.getIntersectedShelf(intersects);
+                if (intersectedShelf && !intersectedShelf.isSelected) {
+                    // Highlight all pipes of hovered shelf
+                    intersectedShelf.pipes.forEach(pipe => {
+                        pipe.material = new THREE.MeshBasicMaterial({ 
+                            color: 0x87ceeb,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+                    });
+                    renderer.domElement.style.cursor = 'pointer';
+                } else {
+                    renderer.domElement.style.cursor = 'default';
                 }
-            });
+            } else {
+                renderer.domElement.style.cursor = 'default';
+            }
         }
 
-        function placeSupporters(width, height, depth) {
-            supporters = [];
-            
-            // All 8 corner positions with center adjustment
-            const positions = [
-                // Top corners (adjusted toward center)
-                [-width/2 + PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS],   
-                [width/2 - PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS],    
-                [width/2 - PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS],     
-                [-width/2 + PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS],    
-                // Bottom corners (adjusted toward center)
-                [-width/2 + PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS],  
-                [width/2 - PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS],   
-                [width/2 - PIPE_RADIUS, -height/2, depth/2 - PIPE_RADIUS],    
-                [-width/2 + PIPE_RADIUS, -height/2, depth/2 - PIPE_RADIUS]    
-            ];
-            
-            positions.forEach(pos => {
-                if (supporterGLB) {
-                    const supporter = supporterGLB.clone();
-                    supporter.position.set(...pos);
-                    supporter.userData.objectType = 'structural';
-                    supporters.push(supporter);
-                    shelfGroup.add(supporter);
-                }
-            });
-        }
+        function onMouseClick(event) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-        function placeScrewLegsAndSpacers(width, height, depth) {
-            screwLegs = [];
-            spacers = [];
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(shelfManager.mainGroup, true);
             
-            // Bottom 4 corner positions
-            const bottomPositions = [
-                [-width/2, -height/2, -depth/2],  
-                [width/2, -height/2, -depth/2],   
-                [width/2, -height/2, depth/2],    
-                [-width/2, -height/2, depth/2]    
-            ];
-            
-            bottomPositions.forEach(pos => {
-                // Create spacer cylinder
-                const spacerGeometry = new THREE.CylinderGeometry(PIPE_RADIUS, PIPE_RADIUS, SCREW_LEG_GAP, 8);
-                const spacerMaterial = new THREE.MeshPhysicalMaterial({
-                    color: 0xcccccc,
-                    metalness: 0.8,
-                    roughness: 0.2
-                });
-                const spacer = new THREE.Mesh(spacerGeometry, spacerMaterial);
-                spacer.position.set(pos[0], pos[1] - SCREW_LEG_GAP/2, pos[2]);
-                spacer.castShadow = true;
-                spacer.receiveShadow = true;
-                spacers.push(spacer);
-                shelfGroup.add(spacer);
-                
-                // Place screw leg
-                if (screwLegGLB) {
-                    const screwLeg = screwLegGLB.clone();
-                    screwLeg.position.set(pos[0], pos[1] - SCREW_LEG_GAP, pos[2]);
-                    screwLeg.userData.objectType = 'structural';
-                    screwLegs.push(screwLeg);
-                    shelfGroup.add(screwLeg);
+            if (intersects.length > 0) {
+                const intersectedShelf = shelfManager.getIntersectedShelf(intersects);
+                if (intersectedShelf) {
+                    shelfManager.selectShelf(intersectedShelf.id);
                 }
-            });
-        }
-
-        function generatePanels(width, height, depth) {
-            generatedPanels = {};
-            
-            // Panel configurations
-            const panelConfigs = {
-                'panel': { // Top panel
-                    size: [width, depth],
-                    position: [0, height/2, 0],
-                    rotation: [-Math.PI/2, 0, 0]
-                },
-                'panel2': { // Bottom panel  
-                    size: [width, depth],
-                    position: [0, -height/2, 0],
-                    rotation: [-Math.PI/2, 0, 0]
-                },
-                'panelleft': { // Left panel
-                    size: [depth, height],
-                    position: [-width/2, 0, 0],
-                    rotation: [0, Math.PI/2, 0]
-                },
-                'panelright': { // Right panel
-                    size: [depth, height],
-                    position: [width/2, 0, 0],
-                    rotation: [0, -Math.PI/2, 0]
-                },
-                'panelback': { // Back panel
-                    size: [width, height],
-                    position: [0, 0, -depth/2],
-                    rotation: [0, 0, 0]
-                }
-            };
-            
-            Object.entries(panelConfigs).forEach(([name, config]) => {
-                const geometry = new THREE.PlaneGeometry(config.size[0], config.size[1]);
-                const material = new THREE.MeshPhysicalMaterial({
-                    color: 0xff8c00,
-                    transparent: true,
-                    opacity: 0.6,
-                    side: THREE.DoubleSide,
-                    roughness: 0.1,
-                    metalness: 0.0
-                });
-                
-                const panel = new THREE.Mesh(geometry, material);
-                panel.position.set(...config.position);
-                panel.rotation.set(...config.rotation);
-                panel.name = name;
-                panel.userData.interactive = 'panel';
-                panel.userData.objectType = 'panel';
-                panel.castShadow = true;
-                panel.receiveShadow = true;
-                
-                // Store original material
-                originalMaterials.set(panel, material.clone());
-                
-                // Add to collections
-                if (name === 'panel' || name === 'panel2') {
-                    panelObjects.push(panel);
-                }
-                allPanelObjects.push(panel);
-                
-                generatedPanels[name] = panel;
-                shelfGroup.add(panel);
-            });
-        }
-
-        function adjustCameraForSize(width, height, depth) {
-            const maxDimension = Math.max(width, height, depth);
-            const distance = maxDimension * 8; // Zoom out as structure gets bigger
-            
-            camera.position.set(distance, distance, distance);
-            controls.target.set(0, 0, 0);
-            controls.update();
-            
-            // Update initial camera position for reset function
-            initialCameraPosition = camera.position.clone();
-            initialCameraTarget = new THREE.Vector3(0, 0, 0);
-        }
-
-        function updatePanelVisibility() {
-            if (!shelfGroup) return;
-            
-            // Hide all panels first
-            Object.values(generatedPanels).forEach(panel => {
-                panel.visible = false;
-            });
-            
-            const { type, structure } = currentConfig;
-            
-            if (type === 'acrylic') {
-                if (structure === 'with-panels') {
-                    // Show only top and bottom panels
-                    if (generatedPanels.panel) generatedPanels.panel.visible = true;
-                    if (generatedPanels.panel2) generatedPanels.panel2.visible = true;
-                } else if (structure === 'without-shelves') {
-                    // Show no panels
-                    // All remain hidden
-                }
-            } else if (type === 'stainless') {
-                if (structure === 'all-no-front') {
-                    // Show back, left, right, top, bottom panels
-                    if (generatedPanels.panelback) generatedPanels.panelback.visible = true;
-                    if (generatedPanels.panelleft) generatedPanels.panelleft.visible = true;
-                    if (generatedPanels.panelright) generatedPanels.panelright.visible = true;
-                    if (generatedPanels.panel) generatedPanels.panel.visible = true;
-                    if (generatedPanels.panel2) generatedPanels.panel2.visible = true;
-                } else if (structure === 'without-back') {
-                    // Show left, right, top, bottom panels
-                    if (generatedPanels.panelleft) generatedPanels.panelleft.visible = true;
-                    if (generatedPanels.panelright) generatedPanels.panelright.visible = true;
-                    if (generatedPanels.panel) generatedPanels.panel.visible = true;
-                    if (generatedPanels.panel2) generatedPanels.panel2.visible = true;
-                } else if (structure === 'with-panels') {
-                    // Show only top and bottom panels
-                    if (generatedPanels.panel) generatedPanels.panel.visible = true;
-                    if (generatedPanels.panel2) generatedPanels.panel2.visible = true;
+            } else {
+                // Clicked empty space - deselect
+                if (shelfManager.selectedShelf) {
+                    shelfManager.selectedShelf.setSelected(false);
+                    shelfManager.selectedShelf = null;
+                    removePlusIndicators();
+                    
+                    if (currentConfig.type === 'acrylic') {
+                        disableColorSection();
+                    }
                 }
             }
+        }
+
+        function createPlusIndicators() {
+            removePlusIndicators();
+            
+            if (!shelfManager.selectedShelf) return;
+            
+            const horizontalPlus = document.createElement('div');
+            horizontalPlus.className = 'plus-indicator horizontal';
+            horizontalPlus.style.position = 'absolute';
+            horizontalPlus.setAttribute('title', 'Add shelf horizontally');
+            horizontalPlus.addEventListener('click', () => shelfManager.addHorizontalShelf());
+            document.body.appendChild(horizontalPlus);
+            
+            const verticalPlus = document.createElement('div');
+            verticalPlus.className = 'plus-indicator vertical';
+            verticalPlus.style.position = 'absolute';
+            verticalPlus.setAttribute('title', 'Add shelf vertically');
+            verticalPlus.addEventListener('click', () => shelfManager.addVerticalShelf());
+            document.body.appendChild(verticalPlus);
+            
+            plusIndicators.push(horizontalPlus, verticalPlus);
+        }
+
+        function updatePlusIndicatorPositions() {
+            if (plusIndicators.length === 0 || !shelfManager.selectedShelf) return;
+            
+            const bbox = new THREE.Box3().setFromObject(shelfManager.selectedShelf.group);
+            const center = bbox.getCenter(new THREE.Vector3());
+            const size = bbox.getSize(new THREE.Vector3());
+            
+            // Apply shelf position offset
+            center.add(new THREE.Vector3(shelfManager.selectedShelf.position.x, 
+                                       shelfManager.selectedShelf.position.y, 
+                                       shelfManager.selectedShelf.position.z));
+            
+            const horizontalPos = new THREE.Vector3(center.x + size.x/2 + 0.5, center.y, center.z);
+            const verticalPos = new THREE.Vector3(center.x, center.y + size.y/2 + 0.5, center.z);
+            
+            horizontalPos.project(camera);
+            verticalPos.project(camera);
+            
+            const canvasRect = renderer.domElement.getBoundingClientRect();
+            
+            if (plusIndicators[0]) {
+                const x = (horizontalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
+                const y = (-horizontalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
+                plusIndicators[0].style.left = (x - 15) + 'px';
+                plusIndicators[0].style.top = (y - 15) + 'px';
+            }
+            
+            if (plusIndicators[1]) {
+                const x = (verticalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
+                const y = (-verticalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
+                plusIndicators[1].style.left = (x - 15) + 'px';
+                plusIndicators[1].style.top = (y - 15) + 'px';
+            }
+        }
+
+        function removePlusIndicators() {
+            plusIndicators.forEach(indicator => {
+                if (indicator.parentNode) {
+                    indicator.parentNode.removeChild(indicator);
+                }
+            });
+            plusIndicators = [];
+        }
+
+        function enableColorSection() {
+            colorSectionEnabled = true;
+            const colorSection = document.getElementById('color-section');
+            colorSection.classList.remove('color-section-disabled');
+        }
+
+        function disableColorSection() {
+            colorSectionEnabled = false;
+            const colorSection = document.getElementById('color-section');
+            colorSection.classList.add('color-section-disabled');
         }
 
         function updateShelfTypeOptions() {
@@ -1106,8 +1204,10 @@
             const heightOptions = document.getElementById('height-options');
             const colorSection = document.getElementById('color-section');
             
+            // Clear material cache when switching types for performance
+            materialCache.clear();
+            
             if (currentConfig.type === 'acrylic') {
-                // Acrylic structure options
                 structureOptions.innerHTML = `
                     <div class="option-card active" data-structure="with-panels">
                         <div class="option-icon">
@@ -1123,7 +1223,6 @@
                     </div>
                 `;
                 
-                // Acrylic width/depth options
                 widthOptions.innerHTML = `
                     <div class="size-button" data-width="270">270</div>
                     <div class="size-button active" data-width="300">300</div>
@@ -1135,7 +1234,6 @@
                     <div class="size-button" data-depth="370">370</div>
                 `;
                 
-                // Acrylic height options
                 heightOptions.innerHTML = `
                     <div class="height-button" data-height="121">121</div>
                     <div class="height-button" data-height="180">180</div>
@@ -1148,7 +1246,6 @@
                     <div class="height-button" data-height="603">603</div>
                 `;
                 
-                // Acrylic colors (transparent)
                 colorSection.querySelector('.color-options').innerHTML = `
                     <div class="color-option active" data-color="transparent-orange">
                         <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,140,0,0.5));"></div>
@@ -1168,14 +1265,13 @@
                     </div>
                 `;
                 
-                currentConfig.width = 300;
-                currentConfig.depth = 300;
-                currentConfig.height = 350;
-                currentConfig.structure = 'with-panels'; // Default to with-panels for acrylic
-                currentConfig.color = 'transparent-orange';
+                Object.assign(currentConfig, {
+                    width: 300, depth: 300, height: 350,
+                    structure: 'with-panels', color: 'transparent-orange'
+                });
                 
+                disableColorSection();
             } else if (currentConfig.type === 'stainless') {
-                // Stainless structure options
                 structureOptions.innerHTML = `
                     <div class="option-card active" data-structure="all-no-front">
                         <div class="option-icon">
@@ -1197,7 +1293,6 @@
                     </div>
                 `;
                 
-                // Stainless width/depth options
                 widthOptions.innerHTML = `
                     <div class="size-button" data-width="121">121</div>
                     <div class="size-button active" data-width="313">313</div>
@@ -1211,12 +1306,10 @@
                     <div class="size-button" data-depth="603">603</div>
                 `;
                 
-                // Stainless height options (constant 313 unless without-back)
                 heightOptions.innerHTML = `
                     <div class="height-button active" data-height="313">313</div>
                 `;
                 
-                // Stainless colors (shiny non-transparent)
                 colorSection.querySelector('.color-options').innerHTML = `
                     <div class="color-option active" data-color="orange">
                         <div class="color-swatch" style="background: #ff8c00;"></div>
@@ -1248,577 +1341,26 @@
                     </div>
                 `;
                 
-                currentConfig.width = 313;
-                currentConfig.depth = 313;
-                currentConfig.height = 313;
-                currentConfig.structure = 'all-no-front'; // Default to all-no-front for stainless
-                currentConfig.color = 'orange';
-            }
-            
-            // Update panel materials immediately when shelf type changes
-            updateAllPanelMaterials();
-            updatePanelVisibility();
-            updateShelfScale();
-            
-            // For stainless, enable color section immediately (no need to click panels)
-            if (currentConfig.type === 'stainless') {
-                enableColorSection();
-            } else {
-                // For acrylic, disable color section until panel is clicked
-                disableColorSection();
-            }
-            
-            setupEventListeners(); // Re-setup event listeners for new elements
-        }
-
-        function updateStructureOptions() {
-            const heightOptions = document.getElementById('height-options');
-            
-            if (currentConfig.type === 'stainless' && currentConfig.structure === 'without-back') {
-                // Without back has height options: 121, 313, 483, 603
-                heightOptions.innerHTML = `
-                    <div class="height-button" data-height="121">121</div>
-                    <div class="height-button active" data-height="313">313</div>
-                    <div class="height-button" data-height="483">483</div>
-                    <div class="height-button" data-height="603">603</div>
-                `;
-            } else if (currentConfig.type === 'stainless') {
-                // Other stainless options have constant height 313
-                heightOptions.innerHTML = `
-                    <div class="height-button active" data-height="313">313</div>
-                `;
-                currentConfig.height = 313;
-            }
-            
-            updatePanelVisibility();
-            updateAllPanelMaterials(); // Apply transparency to panels for stainless
-            setupEventListeners(); // Re-setup event listeners
-        }
-
-        function updateAllPanelMaterials() {
-            if (!shelfGroup) return;
-            
-            if (currentConfig.type === 'acrylic') {
-                // For acrylic, restore original materials for all panels except selected
-                Object.values(generatedPanels).forEach(panel => {
-                    if (panel.visible && panel !== selectedPanel) {
-                        panel.material = originalMaterials.get(panel);
-                    }
+                Object.assign(currentConfig, {
+                    width: 313, depth: 313, height: 313,
+                    structure: 'all-no-front', color: 'orange'
                 });
                 
-                // Apply current color to selected panel if it exists
-                if (selectedPanel && selectedPanel.visible) {
-                    applyColorToSinglePanel(selectedPanel, currentConfig.color);
-                }
-            } else if (currentConfig.type === 'stainless') {
-                // For stainless, apply current color to all visible panels
-                applyColorToPanel(currentConfig.color);
-            }
-        }
-
-        function updateShelfScale() {
-            // Regenerate the entire shelf with new dimensions
-            if (shelfGroup) {
-                generateProceduralShelf();
+                enableColorSection();
             }
             
-            // Update dimensions display
-            updateDimensionsDisplay();
+            // Update all existing shelves
+            shelfManager.shelves.forEach(shelf => {
+                shelf.updateConfig(currentConfig);
+            });
+            
+            setupEventListeners();
         }
 
         function updateDimensionsDisplay() {
             document.getElementById('dim-width').textContent = currentConfig.width;
             document.getElementById('dim-height').textContent = currentConfig.height;
             document.getElementById('dim-depth').textContent = currentConfig.depth;
-            
-            // Update 3D dimension labels if visible
-            if (dimensionsVisible) {
-                create3DDimensionLabels();
-            }
-        }
-
-        function create3DDimensionLabels() {
-            if (!shelf) return;
-            
-            // Remove existing dimension elements
-            removeDimensionElements();
-            
-            const bbox = new THREE.Box3().setFromObject(shelf);
-            const center = bbox.getCenter(new THREE.Vector3());
-            const size = bbox.getSize(new THREE.Vector3());
-            
-            // Horizontal dimensions on floor level
-            // Outside width dimension (on floor, front edge)
-            const widthOutsideStart = new THREE.Vector3(-size.x/2 - 0.5, -size.y/2 - 0.3, size.z/2 + 0.2);
-            const widthOutsideEnd = new THREE.Vector3(size.x/2 + 0.5, -size.y/2 - 0.3, size.z/2 + 0.2);
-            
-            // Inside width dimension (on floor, inside)
-            const widthInsideStart = new THREE.Vector3(-size.x/2 + 0.1, -size.y/2 - 0.5, 0);
-            const widthInsideEnd = new THREE.Vector3(size.x/2 - 0.1, -size.y/2 - 0.5, 0);
-            
-            // Outside depth dimension (on floor, right edge)
-            const depthOutsideStart = new THREE.Vector3(size.x/2 + 0.2, -size.y/2 - 0.3, -size.z/2 - 0.5);
-            const depthOutsideEnd = new THREE.Vector3(size.x/2 + 0.2, -size.y/2 - 0.3, size.z/2 + 0.5);
-            
-            // Inside depth dimension (on floor, inside)
-            const depthInsideStart = new THREE.Vector3(0, -size.y/2 - 0.7, -size.z/2 + 0.1);
-            const depthInsideEnd = new THREE.Vector3(0, -size.y/2 - 0.7, size.z/2 - 0.1);
-            
-            // Vertical dimensions on wall
-            // Outside height dimension (on wall, left edge)
-            const heightOutsideStart = new THREE.Vector3(-size.x/2 - 0.5, -size.y/2 - 0.3, -size.z/2 - 0.3);
-            const heightOutsideEnd = new THREE.Vector3(-size.x/2 - 0.5, size.y/2 + 0.3, -size.z/2 - 0.3);
-            
-            // Inside height dimension (on wall, inside)
-            const heightInsideStart = new THREE.Vector3(-size.x/2 + 0.1, -size.y/2 + 0.1, -size.z/2 - 0.5);
-            const heightInsideEnd = new THREE.Vector3(-size.x/2 + 0.1, size.y/2 - 0.1, -size.z/2 - 0.5);
-            
-            // Store dimension data for updating positions
-            dimensionElements = [
-                { 
-                    start: widthOutsideStart, 
-                    end: widthOutsideEnd, 
-                    label: `Outside: ${currentConfig.width} mm`,
-                    type: 'width-outside'
-                },
-                { 
-                    start: widthInsideStart, 
-                    end: widthInsideEnd, 
-                    label: `Inside: ${currentConfig.width - 30} mm`,
-                    type: 'width-inside'
-                },
-                { 
-                    start: depthOutsideStart, 
-                    end: depthOutsideEnd, 
-                    label: `Outside: ${currentConfig.depth} mm`,
-                    type: 'depth-outside'
-                },
-                { 
-                    start: depthInsideStart, 
-                    end: depthInsideEnd, 
-                    label: `Inside: ${currentConfig.depth - 30} mm`,
-                    type: 'depth-inside'
-                },
-                { 
-                    start: heightOutsideStart, 
-                    end: heightOutsideEnd, 
-                    label: `Outside: ${currentConfig.height} mm`,
-                    type: 'height-outside'
-                },
-                { 
-                    start: heightInsideStart, 
-                    end: heightInsideEnd, 
-                    label: `Inside: ${currentConfig.height - 80} mm`,
-                    type: 'height-inside'
-                }
-            ];
-        }
-
-        function updateDimensionPositions() {
-            if (!dimensionsVisible || dimensionElements.length === 0) return;
-            
-            // Remove old dimension DOM elements
-            document.querySelectorAll('.dimension-label, .dimension-line, .dimension-arrow').forEach(el => {
-                el.remove();
-            });
-            
-            dimensionElements.forEach(dim => {
-                // Project 3D positions to screen coordinates
-                const startScreen = dim.start.clone().project(camera);
-                const endScreen = dim.end.clone().project(camera);
-                const midScreen = startScreen.clone().add(endScreen).multiplyScalar(0.5);
-                
-                const canvasRect = renderer.domElement.getBoundingClientRect();
-                
-                // Convert to pixel coordinates
-                const startX = (startScreen.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const startY = (-startScreen.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                const endX = (endScreen.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const endY = (-endScreen.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                const midX = (midScreen.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const midY = (-midScreen.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                
-                // Create dimension line
-                const line = document.createElement('div');
-                line.className = 'dimension-line';
-                const length = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-                const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
-                
-                line.style.width = length + 'px';
-                line.style.height = '2px';
-                line.style.left = startX + 'px';
-                line.style.top = startY + 'px';
-                line.style.transformOrigin = '0 50%';
-                line.style.transform = `rotate(${angle}deg)`;
-                document.body.appendChild(line);
-                
-                // Create label
-                const label = document.createElement('div');
-                label.className = 'dimension-label';
-                label.textContent = dim.label;
-                label.style.left = (midX - 50) + 'px';
-                label.style.top = (midY - 15) + 'px';
-                document.body.appendChild(label);
-                
-                // Create start arrow (pointing towards the line)
-                const startArrow = document.createElement('div');
-                startArrow.className = 'dimension-arrow';
-                startArrow.style.left = (startX - 6) + 'px';
-                startArrow.style.top = (startY - 4) + 'px';
-                
-                // Calculate arrow direction based on line angle
-                const normalizedAngle = ((angle % 360) + 360) % 360;
-                if (normalizedAngle >= -45 && normalizedAngle <= 45) {
-                    // Pointing right
-                    startArrow.style.borderLeft = '6px solid #888888';
-                    startArrow.style.borderTop = '4px solid transparent';
-                    startArrow.style.borderBottom = '4px solid transparent';
-                } else if (normalizedAngle > 45 && normalizedAngle < 135) {
-                    // Pointing down
-                    startArrow.style.borderTop = '6px solid #888888';
-                    startArrow.style.borderLeft = '4px solid transparent';
-                    startArrow.style.borderRight = '4px solid transparent';
-                } else if (normalizedAngle >= 135 && normalizedAngle <= 225) {
-                    // Pointing left
-                    startArrow.style.borderRight = '6px solid #888888';
-                    startArrow.style.borderTop = '4px solid transparent';
-                    startArrow.style.borderBottom = '4px solid transparent';
-                } else {
-                    // Pointing up
-                    startArrow.style.borderBottom = '6px solid #888888';
-                    startArrow.style.borderLeft = '4px solid transparent';
-                    startArrow.style.borderRight = '4px solid transparent';
-                }
-                document.body.appendChild(startArrow);
-                
-                // Create end arrow (pointing towards the line)
-                const endArrow = document.createElement('div');
-                endArrow.className = 'dimension-arrow';
-                endArrow.style.left = (endX - 6) + 'px';
-                endArrow.style.top = (endY - 4) + 'px';
-                
-                // End arrow points opposite direction
-                if (normalizedAngle >= -45 && normalizedAngle <= 45) {
-                    // Pointing left
-                    endArrow.style.borderRight = '6px solid #888888';
-                    endArrow.style.borderTop = '4px solid transparent';
-                    endArrow.style.borderBottom = '4px solid transparent';
-                } else if (normalizedAngle > 45 && normalizedAngle < 135) {
-                    // Pointing up
-                    endArrow.style.borderBottom = '6px solid #888888';
-                    endArrow.style.borderLeft = '4px solid transparent';
-                    endArrow.style.borderRight = '4px solid transparent';
-                } else if (normalizedAngle >= 135 && normalizedAngle <= 225) {
-                    // Pointing right
-                    endArrow.style.borderLeft = '6px solid #888888';
-                    endArrow.style.borderTop = '4px solid transparent';
-                    endArrow.style.borderBottom = '4px solid transparent';
-                } else {
-                    // Pointing down
-                    endArrow.style.borderTop = '6px solid #888888';
-                    endArrow.style.borderLeft = '4px solid transparent';
-                    endArrow.style.borderRight = '4px solid transparent';
-                }
-                document.body.appendChild(endArrow);
-            });
-        }
-
-        function removeDimensionElements() {
-            document.querySelectorAll('.dimension-label, .dimension-line, .dimension-arrow').forEach(el => {
-                el.remove();
-            });
-        }
-
-        function onMouseMove(event) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            
-            if (!shelfGroup) return;
-            
-            const intersects = raycaster.intersectObject(shelfGroup, true);
-            
-            // Reset previous hover
-            if (hoveredObject && hoveredObject !== selectedPanel) {
-                restoreOriginalMaterial(hoveredObject);
-            }
-            
-            hoveredObject = null;
-            
-            if (intersects.length > 0) {
-                const object = intersects[0].object;
-                
-                if (object.userData.interactive === 'panel') {
-                    hoveredObject = object;
-                    applyHoverEffect(object, 'panel');
-                    renderer.domElement.style.cursor = 'pointer';
-                } else if (object.userData.interactive === 'pipes') {
-                    hoveredObject = object;
-                    applyHoverEffect(object, 'pipes');
-                    renderer.domElement.style.cursor = 'pointer';
-                } else {
-                    renderer.domElement.style.cursor = 'default';
-                }
-            } else {
-                renderer.domElement.style.cursor = 'default';
-            }
-        }
-
-        function onMouseClick(event) {
-            if (!hoveredObject) return;
-            
-            if (hoveredObject.userData.interactive === 'panel') {
-                if (currentConfig.type === 'acrylic') {
-                    // For acrylic, select individual panel and enable color section
-                    selectedPanel = hoveredObject;
-                    selectedPipes = null;
-                    removePlusIndicators();
-                    
-                    // Apply more vivid yellow color to clicked panel
-                    const vividYellowMaterial = new THREE.MeshBasicMaterial({ 
-                        color: 0xffd700,
-                        transparent: true,
-                        opacity: 0.8,
-                        side: THREE.DoubleSide
-                    });
-                    hoveredObject.material = vividYellowMaterial;
-                    
-                    enableColorSection();
-                } else if (currentConfig.type === 'stainless') {
-                    // For stainless, just show visual feedback (colors already enabled)
-                    selectedPanel = hoveredObject;
-                    selectedPipes = null;
-                    removePlusIndicators();
-                    
-                    // Apply more vivid yellow color to clicked panel for feedback
-                    const vividYellowMaterial = new THREE.MeshBasicMaterial({ 
-                        color: 0xffd700,
-                        transparent: true,
-                        opacity: 0.8,
-                        side: THREE.DoubleSide
-                    });
-                    hoveredObject.material = vividYellowMaterial;
-                }
-            } else if (hoveredObject.userData.interactive === 'pipes') {
-                selectedPipes = hoveredObject;
-                selectedPanel = null;
-                // Apply more vivid color
-                hoveredObject.material = new THREE.MeshBasicMaterial({ 
-                    color: 0x0099ff,
-                    transparent: true,
-                    opacity: 0.9,
-                    side: THREE.DoubleSide
-                });
-                createPlusIndicators(hoveredObject);
-                enableColorSection();
-            }
-        }
-
-        function applyHoverEffect(object, type) {
-            if (type === 'panel') {
-                // Color the entire panel geometry with yellow
-                object.material = yellowEdgeMaterial;
-            } else if (type === 'pipes') {
-                object.material = lightBlueMaterial;
-            }
-        }
-
-        function restoreOriginalMaterial(object) {
-            if (object.userData.interactive === 'panel' && object !== selectedPanel) {
-                object.material = originalMaterials.get(object);
-            } else if (object.userData.interactive === 'pipes' && object !== selectedPipes) {
-                object.material = originalMaterials.get(object);
-            }
-        }
-
-        function enableColorSection() {
-            colorSectionEnabled = true;
-            const colorSection = document.getElementById('color-section');
-            colorSection.classList.remove('color-section-disabled');
-        }
-
-        function disableColorSection() {
-            colorSectionEnabled = false;
-            const colorSection = document.getElementById('color-section');
-            colorSection.classList.add('color-section-disabled');
-        }
-
-        function applyColorToPanel(color) {
-            if (currentConfig.type === 'stainless') {
-                // For stainless, apply color to ALL visible panels
-                Object.values(generatedPanels).forEach(panel => {
-                    if (panel.visible) {
-                        applyColorToSinglePanel(panel, color);
-                    }
-                });
-            } else if (currentConfig.type === 'acrylic') {
-                // For acrylic, only apply to selected panel
-                if (!selectedPanel) return;
-                applyColorToSinglePanel(selectedPanel, color);
-            }
-            
-            currentConfig.color = color;
-        }
-
-        function applyColorToSinglePanel(panel, color) {
-            let material;
-            
-            if (currentConfig.type === 'acrylic') {
-                // Transparent materials for acrylic
-                switch (color) {
-                    case 'transparent-orange':
-                        material = new THREE.MeshPhysicalMaterial({
-                            color: 0xff8c00,
-                            transparent: true,
-                            opacity: 0.6,
-                            roughness: 0.1,
-                            metalness: 0.0,
-                            side: THREE.DoubleSide
-                        });
-                        break;
-                    case 'transparent-black':
-                        material = new THREE.MeshPhysicalMaterial({
-                            color: 0x333333,
-                            transparent: true,
-                            opacity: 0.7,
-                            roughness: 0.1,
-                            metalness: 0.0,
-                            side: THREE.DoubleSide
-                        });
-                        break;
-                    case 'solid-white':
-                        material = new THREE.MeshPhysicalMaterial({
-                            color: 0xffffff,
-                            transparent: false,
-                            roughness: 0.2,
-                            metalness: 0.0,
-                            side: THREE.DoubleSide
-                        });
-                        break;
-                    case 'clear':
-                        material = new THREE.MeshPhysicalMaterial({
-                            color: 0xffffff,
-                            transparent: true,
-                            opacity: 0.2,
-                            roughness: 0.0,
-                            metalness: 0.0,
-                            transmission: 0.9,
-                            thickness: 0.1,
-                            side: THREE.DoubleSide
-                        });
-                        break;
-                }
-            } else if (currentConfig.type === 'stainless') {
-                // Shiny non-transparent materials for stainless
-                const colorMap = {
-                    'orange': 0xff8c00,
-                    'yellow': 0xffff00,
-                    'white': 0xffffff,
-                    'black': 0x000000,
-                    'pink': 0xff69b4,
-                    'sky': 0x87ceeb,
-                    'matt-olive': 0x808000
-                };
-                
-                const materialColor = colorMap[color] || 0xffffff;
-                const isMatte = color === 'matt-olive';
-                
-                material = new THREE.MeshPhysicalMaterial({
-                    color: materialColor,
-                    transparent: false,
-                    roughness: isMatte ? 0.8 : 0.1,
-                    metalness: isMatte ? 0.0 : 0.7,
-                    clearcoat: isMatte ? 0.0 : 1.0,
-                    clearcoatRoughness: 0.1,
-                    side: THREE.DoubleSide
-                });
-            }
-            
-            if (material) {
-                panel.material = material;
-            }
-        }
-
-        function createPlusIndicators(object) {
-            // Remove existing indicators
-            removePlusIndicators();
-            
-            // Use the actual object bounds, not the scaled shelf bounds
-            const bbox = new THREE.Box3().setFromObject(object);
-            const center = bbox.getCenter(new THREE.Vector3());
-            const size = bbox.getSize(new THREE.Vector3());
-            
-            // Create horizontal plus indicator (for side-by-side expansion)
-            const horizontalPlus = document.createElement('div');
-            horizontalPlus.className = 'plus-indicator horizontal';
-            horizontalPlus.style.position = 'absolute';
-            horizontalPlus.setAttribute('title', 'Add shelf side-by-side');
-            document.body.appendChild(horizontalPlus);
-            
-            // Create vertical plus indicator (for stacking)
-            const verticalPlus = document.createElement('div');
-            verticalPlus.className = 'plus-indicator vertical';
-            verticalPlus.style.position = 'absolute';
-            verticalPlus.setAttribute('title', 'Stack shelves vertically');
-            document.body.appendChild(verticalPlus);
-            
-            plusIndicators.push(horizontalPlus, verticalPlus);
-            
-            // Position indicators (will be updated in render loop)
-            updatePlusIndicatorPositions(object);
-        }
-
-        function updatePlusIndicatorPositions(object) {
-            if (plusIndicators.length === 0) return;
-            
-            // Use the pipe object bounds for positioning relative to shelf structure
-            const bbox = new THREE.Box3().setFromObject(shelfGroup);
-            const center = bbox.getCenter(new THREE.Vector3());
-            const size = bbox.getSize(new THREE.Vector3());
-            
-            // Position indicators relative to the overall shelf structure
-            const horizontalPos = new THREE.Vector3(
-                center.x + size.x / 2 + 0.5, 
-                center.y, 
-                center.z
-            );
-            const verticalPos = new THREE.Vector3(
-                center.x, 
-                center.y + size.y / 2 + 0.5, 
-                center.z
-            );
-            
-            horizontalPos.project(camera);
-            verticalPos.project(camera);
-            
-            const canvasRect = renderer.domElement.getBoundingClientRect();
-            
-            // Position horizontal indicator (side-by-side expansion)
-            if (plusIndicators[0]) {
-                const x = (horizontalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const y = (-horizontalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                plusIndicators[0].style.left = (x - 15) + 'px';
-                plusIndicators[0].style.top = (y - 15) + 'px';
-            }
-            
-            // Position vertical indicator (stacking)
-            if (plusIndicators[1]) {
-                const x = (verticalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const y = (-verticalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                plusIndicators[1].style.left = (x - 15) + 'px';
-                plusIndicators[1].style.top = (y - 15) + 'px';
-            }
-        }
-
-        function removePlusIndicators() {
-            plusIndicators.forEach(indicator => {
-                if (indicator.parentNode) {
-                    indicator.parentNode.removeChild(indicator);
-                }
-            });
-            plusIndicators = [];
         }
 
         function resetCamera() {
@@ -1835,16 +1377,14 @@
             if (dimensionsVisible) {
                 dimensionsDisplay.style.display = 'block';
                 button.classList.add('active');
-                create3DDimensionLabels();
             } else {
                 dimensionsDisplay.style.display = 'none';
                 button.classList.remove('active');
-                removeDimensionElements();
             }
         }
 
         function setupEventListeners() {
-            // Clear existing listeners to avoid duplicates
+            // Clear existing to avoid duplicates
             const newElements = ['structure-options', 'width-options', 'depth-options', 'height-options'];
             newElements.forEach(id => {
                 const element = document.getElementById(id);
@@ -1853,16 +1393,18 @@
                 }
             });
 
-            // Mouse events for 3D interaction (only set once)
+            // Mouse events
             if (!renderer.domElement.hasMouseListeners) {
                 renderer.domElement.addEventListener('mousemove', onMouseMove);
                 renderer.domElement.addEventListener('click', onMouseClick);
                 renderer.domElement.hasMouseListeners = true;
             }
 
-            // UI Controls (only set once)
+            // UI Controls
             const toggleBtn = document.getElementById('toggle-dimensions');
             const resetBtn = document.getElementById('reset-camera');
+            const clearBtn = document.getElementById('clear-shelves');
+            
             if (toggleBtn && !toggleBtn.hasClickListener) {
                 toggleBtn.addEventListener('click', toggleDimensions);
                 toggleBtn.hasClickListener = true;
@@ -1871,8 +1413,15 @@
                 resetBtn.addEventListener('click', resetCamera);
                 resetBtn.hasClickListener = true;
             }
+            if (clearBtn && !clearBtn.hasClickListener) {
+                clearBtn.addEventListener('click', () => {
+                    shelfManager.clearAll();
+                    shelfManager.createShelf(currentConfig);
+                });
+                clearBtn.hasClickListener = true;
+            }
 
-            // Shelf type selection
+            // Configuration controls
             document.querySelectorAll('[data-type]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-type]').forEach(item => item.classList.remove('active'));
@@ -1882,70 +1431,69 @@
                 });
             });
 
-            // Structure selection
             document.querySelectorAll('[data-structure]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-structure]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.structure = el.dataset.structure;
-                    updateStructureOptions();
+                    shelfManager.shelves.forEach(shelf => shelf.updateConfig(currentConfig));
                 });
             });
 
-            // Width selection
             document.querySelectorAll('[data-width]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-width]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.width = parseInt(el.dataset.width);
-                    updateShelfScale();
+                    updateDimensionsDisplay();
                 });
             });
 
-            // Depth selection
             document.querySelectorAll('[data-depth]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-depth]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.depth = parseInt(el.dataset.depth);
-                    updateShelfScale();
+                    updateDimensionsDisplay();
                 });
             });
 
-            // Height selection
             document.querySelectorAll('[data-height]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-height]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.height = parseInt(el.dataset.height);
-                    updateShelfScale();
+                    updateDimensionsDisplay();
                 });
             });
 
-            // Color selection
             document.querySelectorAll('[data-color]').forEach(el => {
                 el.addEventListener('click', () => {
                     if (!colorSectionEnabled) return;
                     
-                    // For acrylic, need selected panel. For stainless, colors affect all panels
-                    if (currentConfig.type === 'acrylic' && !selectedPanel) return;
-                    
                     document.querySelectorAll('[data-color]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
-                    applyColorToPanel(el.dataset.color);
+                    currentConfig.color = el.dataset.color;
+                    
+                    if (shelfManager.selectedShelf) {
+                        shelfManager.selectedShelf.updateConfig(currentConfig);
+                    }
                 });
             });
 
-            // Submit button (only set once)
             const submitBtn = document.querySelector('.submit-button');
             if (submitBtn && !submitBtn.hasClickListener) {
                 submitBtn.addEventListener('click', () => {
-                    alert('Configuration submitted:\n' + JSON.stringify(currentConfig, null, 2));
+                    const configs = shelfManager.shelves.map(shelf => ({
+                        id: shelf.id,
+                        config: shelf.config,
+                        position: shelf.position
+                    }));
+                    alert('Configuration submitted:\n' + JSON.stringify(configs, null, 2));
                 });
                 submitBtn.hasClickListener = true;
             }
 
-            // Window resize (only set once)
             if (!window.hasResizeListener) {
                 window.addEventListener('resize', onWindowResize);
                 window.hasResizeListener = true;
@@ -1965,15 +1513,12 @@
             requestAnimationFrame(animate);
             controls.update();
             
-            // Update plus indicator positions if they exist
-            if (selectedPipes && plusIndicators.length > 0) {
-                updatePlusIndicatorPositions(selectedPipes);
-            }
+            updatePlusIndicatorPositions();
             
             renderer.render(scene, camera);
         }
 
-        // Initialize the application
+        // Initialize
         init();
         animate();
     </script>
