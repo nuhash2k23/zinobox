@@ -327,35 +327,68 @@
         }
         
         .plus-indicator {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #4285f4;
+            position: fixed;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #4285f4;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #4285f4;
             cursor: pointer;
             transition: all 0.2s ease;
             z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
         .plus-indicator:hover {
             background: #4285f4;
             color: white;
             transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
         }
         
-        .plus-indicator.horizontal::before {
+        .plus-indicator::before {
             content: "+";
+            font-size: 20px;
+            font-weight: 900;
         }
         
-        .plus-indicator.vertical::before {
-            content: "+";
+        .plus-indicator.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .warning-message {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background: rgba(255, 193, 7, 0.9);
+            color: #333;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 300px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .shelf-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
         }
     </style>
 </head>
@@ -368,7 +401,11 @@
                 <button class="control-button" id="clear-shelves">🗑️ Clear</button>
             </div>
             <div class="dimensions-display" id="dimensions-display">
-                W: <span id="dim-width">300</span> mm  H: <span id="dim-height">350</span> mm  D: <span id="dim-depth">300</span> mm
+                Selected: W:<span id="dim-width">300</span>mm H:<span id="dim-height">350</span>mm D:<span id="dim-depth">300</span>mm
+            </div>
+            <div class="warning-message" id="warning-message"></div>
+            <div class="shelf-info" id="shelf-info">
+                Grid: 1x1 | Click shelf to select | Total Size: 300x350x300mm
             </div>
             
             <div id="canvas-container"></div>
@@ -418,7 +455,7 @@
             </div>
             
             <div class="section">
-                <h3 class="section-title">Width (mm)</h3>
+                <h3 class="section-title">Width (mm) - Selected Shelf</h3>
                 <div class="size-options" id="width-options">
                     <div class="size-button" data-width="270">270</div>
                     <div class="size-button active" data-width="300">300</div>
@@ -427,7 +464,7 @@
             </div>
             
             <div class="section">
-                <h3 class="section-title">Depth (mm)</h3>
+                <h3 class="section-title">Depth (mm) - Selected Row</h3>
                 <div class="size-options" id="depth-options">
                     <div class="size-button" data-depth="270">270</div>
                     <div class="size-button active" data-depth="300">300</div>
@@ -436,7 +473,7 @@
             </div>
             
             <div class="section">
-                <h3 class="section-title">Height (mm)</h3>
+                <h3 class="section-title">Height (mm) - Selected Row</h3>
                 <div class="height-options" id="height-options">
                     <div class="height-button" data-height="121">121</div>
                     <div class="height-button" data-height="180">180</div>
@@ -452,7 +489,7 @@
             
             <div class="section" id="color-section">
                 <h3 class="section-title">
-                    Colour
+                    Colour - Selected Panel/Shelf
                     <span class="info-icon">i</span>
                 </h3>
                 <div class="color-options">
@@ -498,6 +535,7 @@
         
         // Materials cache for performance
         let materialCache = new Map();
+        let yellowEdgeMaterial;
         
         // GLB Loaders for components
         let connectorsGLB = {}, supporterGLB = null, screwLegGLB = null;
@@ -507,104 +545,403 @@
         const SCREW_LEG_GAP = 0.4;
         const BASE_SCALE = 0.01;
         const GLB_SCALE = 0.1;
+        const MAX_SIZE_LIMIT = 2500; // 2.5 meters in mm
+        const SHELF_SPACING = 0.002; // Minimal gap for seamless connection
         
-        // Shelf management
-        class ShelfManager {
+        let currentConfig = {
+            type: 'acrylic',
+            structure: 'with-panels',
+            width: 300,
+            depth: 300,
+            height: 350,
+            color: 'transparent-orange'
+        };
+
+        let selectedPanel = null; // For individual panel selection in acrylic mode
+
+        // Grid-based shelf management system
+        class GridShelfManager {
             constructor() {
-                this.shelves = [];
-                this.selectedShelf = null;
-                this.shelfCounter = 0;
+                this.grid = []; // 2D array [row][col] 
+                this.selectedCoords = null; // No initial selection
                 this.mainGroup = new THREE.Group();
+                this.shelfIdCounter = 0;
                 scene.add(this.mainGroup);
             }
             
-            createShelf(config, position = { x: 0, y: 0, z: 0 }) {
-                const shelf = new Shelf(this.shelfCounter++, config, position);
-                this.shelves.push(shelf);
+            createShelf(config, row = 0, col = 0) {
+                // Initialize grid structure if needed
+                while (this.grid.length <= row) {
+                    this.grid.push([]);
+                }
+                while (this.grid[row].length <= col) {
+                    this.grid[row].push(null);
+                }
+                
+                const shelf = new Shelf(this.shelfIdCounter++, config, row, col);
+                this.grid[row][col] = shelf;
                 this.mainGroup.add(shelf.group);
-                this.updateConnectors();
+                
+                this.updateAllPositions();
+                this.updateAllConnectors();
+                this.updateCameraForGrid();
+                this.updateShelfInfo();
+                
                 return shelf;
             }
             
-            removeShelf(shelfId) {
-                const index = this.shelves.findIndex(s => s.id === shelfId);
-                if (index > -1) {
-                    const shelf = this.shelves[index];
+            removeShelf(row, col) {
+                if (this.grid[row] && this.grid[row][col]) {
+                    const shelf = this.grid[row][col];
                     this.mainGroup.remove(shelf.group);
                     shelf.dispose();
-                    this.shelves.splice(index, 1);
-                    this.updateConnectors();
+                    this.grid[row][col] = null;
+                    
+                    this.updateAllPositions();
+                    this.updateAllConnectors();
+                    this.updateCameraForGrid();
+                    this.updateShelfInfo();
                 }
             }
             
             clearAll() {
-                this.shelves.forEach(shelf => {
-                    this.mainGroup.remove(shelf.group);
-                    shelf.dispose();
+                this.grid.forEach((row, rowIndex) => {
+                    row.forEach((shelf, colIndex) => {
+                        if (shelf) {
+                            this.mainGroup.remove(shelf.group);
+                            shelf.dispose();
+                        }
+                    });
                 });
-                this.shelves = [];
-                this.selectedShelf = null;
+                this.grid = [];
+                this.selectedCoords = null;
+                selectedPanel = null;
+                this.createShelf(currentConfig, 0, 0);
                 removePlusIndicators();
+                disableColorSection(); // Reset to disabled for acrylic
             }
             
             addHorizontalShelf() {
-                if (this.shelves.length === 0) return;
+                if (!this.selectedCoords) return;
                 
-                const lastShelf = this.shelves[this.shelves.length - 1];
-                const spacing = (lastShelf.config.width + currentConfig.width) * BASE_SCALE / 2;
-                const newPosition = {
-                    x: lastShelf.position.x + spacing,
-                    y: lastShelf.position.y,
-                    z: lastShelf.position.z
-                };
+                const row = this.selectedCoords.row;
+                const col = this.selectedCoords.col;
                 
-                this.createShelf(currentConfig, newPosition);
+                // Check if width would exceed base row width
+                const baseRowWidth = this.getBaseRowTotalWidth();
+                const newShelfWidth = currentConfig.width;
+                const currentRowWidth = this.getRowTotalWidth(row);
+                
+                if (currentRowWidth + newShelfWidth > baseRowWidth && row > 0) {
+                    showWarning("Cannot exceed base row width. Expand base row first to add more shelves horizontally.");
+                    return;
+                }
+                
+                // Check size limits
+                const newTotalWidth = this.calculateTotalWidth() + currentConfig.width;
+                if (newTotalWidth > MAX_SIZE_LIMIT) {
+                    showWarning("Please note, the total height and width of the shelf unit should not exceed 2.5 meters. Kindly adjust your configuration to stay within these limits");
+                    return;
+                }
+                
+                const newCol = col + 1;
+                this.createShelf(currentConfig, row, newCol);
+                this.selectShelf(row, newCol);
             }
             
             addVerticalShelf() {
-                if (this.shelves.length === 0) return;
+                if (!this.selectedCoords) return;
                 
-                const lastShelf = this.shelves[this.shelves.length - 1];
-                const spacing = (lastShelf.config.height + currentConfig.height) * BASE_SCALE / 2;
-                const newPosition = {
-                    x: lastShelf.position.x,
-                    y: lastShelf.position.y + spacing,
-                    z: lastShelf.position.z
-                };
+                const row = this.selectedCoords.row;
+                const col = this.selectedCoords.col;
                 
-                this.createShelf(currentConfig, newPosition);
-            }
-            
-            updateConnectors() {
-                // Smart connector placement logic
-                this.shelves.forEach(shelf => {
-                    shelf.updateConnectorTypes(this.shelves);
-                });
-            }
-            
-            selectShelf(shelfId) {
-                // Deselect previous
-                if (this.selectedShelf) {
-                    this.selectedShelf.setSelected(false);
+                // Check size limits
+                const newTotalHeight = this.calculateTotalHeight() + currentConfig.height;
+                if (newTotalHeight > MAX_SIZE_LIMIT) {
+                    showWarning("Please note, the total height and width of the shelf unit should not exceed 2.5 meters. Kindly adjust your configuration to stay within these limits");
+                    return;
                 }
                 
-                // Select new
-                this.selectedShelf = this.shelves.find(s => s.id === shelfId);
-                if (this.selectedShelf) {
-                    this.selectedShelf.setSelected(true);
-                    createPlusIndicators();
+                // Add directly above the selected shelf at the exact same column
+                const newRow = row + 1;
+                
+                // Ensure the grid row exists and has enough columns
+                while (this.grid.length <= newRow) {
+                    this.grid.push([]);
+                }
+                while (this.grid[newRow].length <= col) {
+                    this.grid[newRow].push(null);
+                }
+                
+                this.createShelf(currentConfig, newRow, col);
+                this.selectShelf(newRow, col);
+            }
+            
+            getBaseRowTotalWidth() {
+                // Get total width of bottom row (row 0)
+                return this.getRowTotalWidth(0);
+            }
+            
+            getRowTotalWidth(row) {
+                if (!this.grid[row]) return 0;
+                
+                let totalWidth = 0;
+                for (let col = 0; col < this.grid[row].length; col++) {
+                    const shelf = this.grid[row][col];
+                    if (shelf) {
+                        totalWidth += shelf.config.width;
+                    }
+                }
+                return totalWidth;
+            }
+            
+            updateAllPositions() {
+                let globalOffsetY = 0;
+                
+                for (let row = 0; row < this.grid.length; row++) {
+                    let globalOffsetX = 0;
+                    let maxHeightInRow = 0;
                     
-                    if (currentConfig.type === 'acrylic') {
-                        enableColorSection();
+                    // First pass: calculate max height in row
+                    for (let col = 0; col < this.grid[row].length; col++) {
+                        const shelf = this.grid[row][col];
+                        if (shelf) {
+                            maxHeightInRow = Math.max(maxHeightInRow, shelf.config.height * BASE_SCALE);
+                        }
+                    }
+                    
+                    // Second pass: position shelves
+                    for (let col = 0; col < this.grid[row].length; col++) {
+                        const shelf = this.grid[row][col];
+                        if (shelf) {
+                            const shelfWidth = shelf.config.width * BASE_SCALE;
+                            const shelfHeight = shelf.config.height * BASE_SCALE;
+                            
+                            // Position at seamless connection points
+                            const posX = globalOffsetX + shelfWidth/2;
+                            const posY = globalOffsetY + shelfHeight/2;
+                            
+                            shelf.group.position.set(posX, posY, 0);
+                            shelf.worldPosition = { x: posX, y: posY, z: 0 };
+                            
+                            globalOffsetX += shelfWidth + SHELF_SPACING;
+                        }
+                    }
+                    
+                    globalOffsetY += maxHeightInRow + SHELF_SPACING;
+                }
+            }
+            
+            updateAllConnectors() {
+                // Update connector types based on grid position
+                for (let row = 0; row < this.grid.length; row++) {
+                    for (let col = 0; col < this.grid[row].length; col++) {
+                        const shelf = this.grid[row][col];
+                        if (shelf) {
+                            shelf.updateConnectorTypes(this.isGlobalLeftmost(row, col), this.isGlobalRightmost(row, col));
+                        }
                     }
                 }
             }
             
+            isGlobalLeftmost(row, col) {
+                // Check if this shelf has no adjacent shelf to its left on the same row
+                // A shelf is leftmost for 3T connectors only if there's no shelf directly to its left
+                if (col === 0) return true; // Truly leftmost position
+                
+                // Check if there's a shelf immediately to the left
+                if (this.grid[row] && this.grid[row][col - 1]) {
+                    return false; // There's an adjacent shelf, so this creates a joint
+                }
+                
+                return true; // No adjacent shelf to the left
+            }
+            
+            isGlobalRightmost(row, col) {
+                // Check if this shelf has no adjacent shelf to its right on the same row
+                // A shelf is rightmost for 3T connectors only if there's no shelf directly to its right
+                
+                // Check if there's a shelf immediately to the right
+                if (this.grid[row] && col + 1 < this.grid[row].length && this.grid[row][col + 1]) {
+                    return false; // There's an adjacent shelf, so this creates a joint
+                }
+                
+                return true; // No adjacent shelf to the right
+            }
+            
+            selectShelf(row, col) {
+                // Deselect previous
+                const prevShelf = this.getSelectedShelf();
+                if (prevShelf) {
+                    prevShelf.setSelected(false);
+                }
+                
+                // Clear panel selection
+                selectedPanel = null;
+                
+                this.selectedCoords = { row, col };
+                const newShelf = this.getSelectedShelf();
+                if (newShelf) {
+                    newShelf.setSelected(true);
+                    this.updateConfigFromSelected();
+                    createPlusIndicators();
+                    
+                    if (currentConfig.type === 'acrylic') {
+                        disableColorSection(); // Disable until panel is selected
+                    } else {
+                        enableColorSection();
+                    }
+                    
+                    this.updateShelfInfo();
+                }
+            }
+            
+            getSelectedShelf() {
+                if (!this.selectedCoords) return null;
+                const { row, col } = this.selectedCoords;
+                return this.grid[row] && this.grid[row][col] ? this.grid[row][col] : null;
+            }
+            
+            updateSelectedShelfWidth(newWidth) {
+                const shelf = this.getSelectedShelf();
+                if (!shelf) return;
+                
+                shelf.config.width = newWidth;
+                shelf.regenerate();
+                this.updateAllPositions();
+                this.updateCameraForGrid();
+                this.updateShelfInfo();
+                this.checkSizeLimits();
+            }
+            
+            updateRowDepth(newDepth) {
+                if (!this.selectedCoords) return;
+                const selectedRow = this.selectedCoords.row;
+                
+                // Update all shelves in the row
+                if (this.grid[selectedRow]) {
+                    this.grid[selectedRow].forEach(shelf => {
+                        if (shelf) {
+                            shelf.config.depth = newDepth;
+                            shelf.regenerate();
+                        }
+                    });
+                }
+                
+                this.updateAllPositions();
+                this.updateShelfInfo();
+            }
+            
+            updateRowHeight(newHeight) {
+                if (!this.selectedCoords) return;
+                const selectedRow = this.selectedCoords.row;
+                
+                // Update all shelves in the row
+                if (this.grid[selectedRow]) {
+                    this.grid[selectedRow].forEach(shelf => {
+                        if (shelf) {
+                            shelf.config.height = newHeight;
+                            shelf.regenerate();
+                        }
+                    });
+                }
+                
+                this.updateAllPositions();
+                this.updateCameraForGrid();
+                this.updateShelfInfo();
+                this.checkSizeLimits();
+            }
+            
+            updateConfigFromSelected() {
+                const shelf = this.getSelectedShelf();
+                if (shelf) {
+                    Object.assign(currentConfig, shelf.config);
+                    updateUIFromConfig();
+                }
+            }
+            
+            calculateTotalWidth() {
+                let maxWidth = 0;
+                for (let row = 0; row < this.grid.length; row++) {
+                    let rowWidth = 0;
+                    for (let col = 0; col < this.grid[row].length; col++) {
+                        const shelf = this.grid[row][col];
+                        if (shelf) {
+                            rowWidth += shelf.config.width;
+                        }
+                    }
+                    maxWidth = Math.max(maxWidth, rowWidth);
+                }
+                return maxWidth;
+            }
+            
+            calculateTotalHeight() {
+                let totalHeight = 0;
+                for (let row = 0; row < this.grid.length; row++) {
+                    let maxRowHeight = 0;
+                    for (let col = 0; col < this.grid[row].length; col++) {
+                        const shelf = this.grid[row][col];
+                        if (shelf) {
+                            maxRowHeight = Math.max(maxRowHeight, shelf.config.height);
+                        }
+                    }
+                    if (maxRowHeight > 0) {
+                        totalHeight += maxRowHeight;
+                    }
+                }
+                return totalHeight;
+            }
+            
+            checkSizeLimits() {
+                const totalWidth = this.calculateTotalWidth();
+                const totalHeight = this.calculateTotalHeight();
+                
+                if (totalWidth > MAX_SIZE_LIMIT || totalHeight > MAX_SIZE_LIMIT) {
+                    showWarning("Please note, the total height and width of the shelf unit should not exceed 2.5 meters. Kindly adjust your configuration to stay within these limits");
+                }
+            }
+            
+            updateCameraForGrid() {
+                const totalWidth = this.calculateTotalWidth() * BASE_SCALE;
+                const totalHeight = this.calculateTotalHeight() * BASE_SCALE;
+                const maxDimension = Math.max(totalWidth, totalHeight, 3);
+                
+                const targetDistance = maxDimension * 2.5;
+                const currentDistance = camera.position.length();
+                
+                if (Math.abs(currentDistance - targetDistance) > 0.5) {
+                    camera.position.normalize().multiplyScalar(targetDistance);
+                    controls.update();
+                }
+            }
+            
+            updateShelfInfo() {
+                const gridRows = this.grid.length;
+                const gridCols = Math.max(...this.grid.map(row => row.filter(s => s).length));
+                const gridSize = `${gridRows}x${gridCols}`;
+                
+                let selectedInfo = "Click shelf to select";
+                if (this.selectedCoords) {
+                    selectedInfo = `(${this.selectedCoords.row},${this.selectedCoords.col})`;
+                }
+                
+                const shelf = this.getSelectedShelf();
+                const totalSize = `${this.calculateTotalWidth()}x${this.calculateTotalHeight()}x${shelf ? shelf.config.depth : 300}mm`;
+                
+                document.getElementById('shelf-info').textContent = `Grid: ${gridSize} | Selected: ${selectedInfo} | Total Size: ${totalSize}`;
+            }
+            
             getIntersectedShelf(intersects) {
                 for (let intersect of intersects) {
-                    for (let shelf of this.shelves) {
-                        if (shelf.containsObject(intersect.object)) {
-                            return shelf;
+                    const shelfId = intersect.object.userData.shelfId;
+                    if (shelfId !== undefined) {
+                        for (let row = 0; row < this.grid.length; row++) {
+                            for (let col = 0; col < this.grid[row].length; col++) {
+                                const shelf = this.grid[row][col];
+                                if (shelf && shelf.id === shelfId) {
+                                    return { shelf, row, col, object: intersect.object };
+                                }
+                            }
                         }
                     }
                 }
@@ -614,12 +951,12 @@
         
         // Individual shelf class
         class Shelf {
-            constructor(id, config, position = { x: 0, y: 0, z: 0 }) {
+            constructor(id, config, row, col) {
                 this.id = id;
                 this.config = { ...config };
-                this.position = position;
+                this.row = row;
+                this.col = col;
                 this.group = new THREE.Group();
-                this.group.position.set(position.x, position.y, position.z);
                 this.group.userData.shelfId = id;
                 
                 this.pipes = [];
@@ -630,6 +967,7 @@
                 this.spacers = [];
                 this.originalMaterials = new Map();
                 this.isSelected = false;
+                this.worldPosition = { x: 0, y: 0, z: 0 };
                 
                 this.generate();
             }
@@ -647,6 +985,10 @@
                 this.placeScrewLegsAndSpacers(width, height, depth);
                 this.generatePanels(width, height, depth);
                 this.updatePanelVisibility();
+            }
+            
+            regenerate() {
+                this.generate();
             }
             
             clear() {
@@ -704,25 +1046,60 @@
             }
             
             placeConnectors(width, height, depth) {
-                // Top corners - always 3T connectors for outer corners
+                // Will be updated by grid manager with correct types
+                this.connectors = [];
+            }
+            
+            updateConnectorTypes(isLeftmost, isRightmost) {
+                // Clear existing connectors
+                this.connectors.forEach(connector => {
+                    this.group.remove(connector);
+                });
+                this.connectors = [];
+                
+                const width = this.config.width * BASE_SCALE;
+                const height = this.config.height * BASE_SCALE;
+                const depth = this.config.depth * BASE_SCALE;
+                
+                // Top corners - 3T only if global leftmost or rightmost
                 const topPositions = [
-                    { pos: [-width/2, height/2, -depth/2], rot: [0, -Math.PI/2, 0], type: '3T' },
-                    { pos: [width/2, height/2, -depth/2], rot: [0, Math.PI, 0], type: '3T' },
-                    { pos: [width/2, height/2, depth/2], rot: [0, Math.PI/2, 0], type: '3T' },
-                    { pos: [-width/2, height/2, depth/2], rot: [0, 0, 0], type: '3T' }
+                    { pos: [-width/2, height/2, -depth/2], rot: [0, -Math.PI/2, 0], isLeft: true },
+                    { pos: [width/2, height/2, -depth/2], rot: [0, Math.PI, 0], isLeft: false },
+                    { pos: [width/2, height/2, depth/2], rot: [0, Math.PI/2, 0], isLeft: false },
+                    { pos: [-width/2, height/2, depth/2], rot: [0, 0, 0], isLeft: true }
                 ];
                 
-                // Bottom corners - always 4T connectors
+                topPositions.forEach(connector => {
+                    let connectorType = '4T'; // Default
+                    
+                    // Only use 3T for global leftmost and rightmost positions
+                    if ((connector.isLeft && isLeftmost) || (!connector.isLeft && isRightmost)) {
+                        connectorType = '3T';
+                    }
+                    
+                    if (connectorsGLB[connectorType]) {
+                        const connectorObj = connectorsGLB[connectorType].clone();
+                        connectorObj.position.set(...connector.pos);
+                        connectorObj.rotation.set(...connector.rot);
+                        connectorObj.scale.setScalar(GLB_SCALE);
+                        connectorObj.userData.objectType = 'structural';
+                        connectorObj.userData.shelfId = this.id;
+                        this.connectors.push(connectorObj);
+                        this.group.add(connectorObj);
+                    }
+                });
+                
+                // Bottom corners - always 4T
                 const bottomPositions = [
-                    { pos: [-width/2, -height/2, -depth/2], rot: [0, -Math.PI/2, 0], type: '4T' },
-                    { pos: [width/2, -height/2, -depth/2], rot: [0, Math.PI, 0], type: '4T' },
-                    { pos: [width/2, -height/2, depth/2], rot: [0, Math.PI/2, 0], type: '4T' },
-                    { pos: [-width/2, -height/2, depth/2], rot: [0, 0, 0], type: '4T' }
+                    { pos: [-width/2, -height/2, -depth/2], rot: [0, -Math.PI/2, 0] },
+                    { pos: [width/2, -height/2, -depth/2], rot:[0, Math.PI, 0] },
+                    { pos: [width/2, -height/2, depth/2], rot: [0, Math.PI/2, 0] },
+                    { pos: [-width/2, -height/2, depth/2], rot: [0, 0, 0] }
                 ];
                 
-                [...topPositions, ...bottomPositions].forEach(connector => {
-                    if (connectorsGLB[connector.type]) {
-                        const connectorObj = connectorsGLB[connector.type].clone();
+                bottomPositions.forEach(connector => {
+                    if (connectorsGLB['4T']) {
+                        const connectorObj = connectorsGLB['4T'].clone();
                         connectorObj.position.set(...connector.pos);
                         connectorObj.rotation.set(...connector.rot);
                         connectorObj.scale.setScalar(GLB_SCALE);
@@ -735,14 +1112,11 @@
             }
             
             placeSupporters(width, height, depth) {
-                // 8 supporters with individual rotations for each position
                 const supporterConfigs = [
-                    // Top corners (clockwise from top-left-back)
                     { pos: [-width/2 + PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS], rot: [0, Math.PI*1.5, 0] },
                     { pos: [width/2 - PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS], rot: [0, 0, 0] },
                     { pos: [width/2 - PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI*0.5, 0] },
                     { pos: [-width/2 + PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI, 0] },
-                    // Bottom corners (clockwise from bottom-left-back)
                     { pos: [-width/2 + PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS], rot: [0, Math.PI*1.5, 0] },
                     { pos: [width/2 - PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS], rot: [0, 0, 0] },
                     { pos: [width/2 - PIPE_RADIUS, -height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI*0.5, 0] },
@@ -816,6 +1190,7 @@
                     panel.castShadow = true;
                     panel.receiveShadow = true;
                     
+                    // Make panels interactive only for acrylic type
                     if (this.config.type === 'acrylic') {
                         panel.userData.interactive = 'panel';
                     }
@@ -871,21 +1246,43 @@
                     });
                 } else if (type === 'panel') {
                     if (this.config.type === 'acrylic') {
+                        const colorMap = {
+                            'transparent-orange': { color: 0xff8c00, opacity: 0.6 },
+                            'transparent-black': { color: 0x333333, opacity: 0.7 },
+                            'solid-white': { color: 0xffffff, opacity: 1.0 },
+                            'clear': { color: 0xffffff, opacity: 0.2 }
+                        };
+                        
+                        const colorConfig = colorMap[this.config.color] || colorMap['transparent-orange'];
+                        
                         material = new THREE.MeshPhysicalMaterial({
-                            color: 0xff8c00,
-                            transparent: true,
-                            opacity: 0.6,
+                            color: colorConfig.color,
+                            transparent: colorConfig.opacity < 1.0,
+                            opacity: colorConfig.opacity,
                             side: THREE.DoubleSide,
                             roughness: 0.1,
                             metalness: 0.0
                         });
                     } else {
+                        const colorMap = {
+                            'orange': 0xff8c00,
+                            'yellow': 0xffff00,
+                            'white': 0xffffff,
+                            'black': 0x000000,
+                            'pink': 0xff69b4,
+                            'sky': 0x87ceeb,
+                            'matt-olive': 0x808000
+                        };
+                        
+                        const materialColor = colorMap[this.config.color] || 0xff8c00;
+                        const isMatte = this.config.color === 'matt-olive';
+                        
                         material = new THREE.MeshPhysicalMaterial({
-                            color: 0xff8c00,
+                            color: materialColor,
                             transparent: false,
-                            roughness: 0.1,
-                            metalness: 0.7,
-                            clearcoat: 1.0,
+                            roughness: isMatte ? 0.8 : 0.1,
+                            metalness: isMatte ? 0.0 : 0.7,
+                            clearcoat: isMatte ? 0.0 : 1.0,
                             clearcoatRoughness: 0.1,
                             side: THREE.DoubleSide
                         });
@@ -913,34 +1310,12 @@
                 });
             }
             
-            containsObject(object) {
-                return object.userData.shelfId === this.id;
-            }
-            
-            updateConnectorTypes(allShelves) {
-                // Smart connector logic for multi-shelf configurations
-                // This would determine if corners should be 3T or 4T based on adjacent shelves
-            }
-            
-            updateConfig(newConfig) {
-                this.config = { ...newConfig };
-                this.generate();
-            }
-            
             dispose() {
                 this.group.clear();
             }
         }
         
-        let shelfManager;
-        let currentConfig = {
-            type: 'acrylic',
-            structure: 'with-panels',
-            width: 300,
-            depth: 300,
-            height: 350,
-            color: 'transparent-orange'
-        };
+        let gridManager;
 
         function init() {
             // Scene setup
@@ -976,6 +1351,12 @@
             // Raycaster
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
+            
+            // Create edge highlight material for panels
+            yellowEdgeMaterial = new THREE.LineBasicMaterial({ 
+                color: 0xffff00,
+                linewidth: 3
+            });
 
             // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -995,18 +1376,14 @@
                 scene.environment = texture;
             });
 
-            // Initialize shelf manager
-            shelfManager = new ShelfManager();
+            // Initialize grid manager
+            gridManager = new GridShelfManager();
 
             // Load components and create initial shelf
             loadComponentsAndGenerate();
             setupEventListeners();
             
-            if (currentConfig.type === 'acrylic') {
-                disableColorSection();
-            } else {
-                enableColorSection();
-            }
+            disableColorSection(); // Start disabled for acrylic
         }
 
         function loadComponentsAndGenerate() {
@@ -1051,8 +1428,10 @@
         }
 
         function createInitialShelf() {
-            shelfManager.createShelf(currentConfig);
+            gridManager.createShelf(currentConfig, 0, 0);
+            // Don't auto-select the initial shelf
             document.getElementById('loading').style.display = 'none';
+            gridManager.updateShelfInfo();
         }
 
         function onMouseMove(event) {
@@ -1061,29 +1440,48 @@
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(shelfManager.mainGroup, true);
+            const intersects = raycaster.intersectObject(gridManager.mainGroup, true);
             
             // Reset all shelves hover state
-            shelfManager.shelves.forEach(shelf => {
-                if (!shelf.isSelected) {
-                    shelf.pipes.forEach(pipe => {
-                        pipe.material = shelf.originalMaterials.get(pipe);
-                    });
-                }
+            gridManager.grid.forEach(row => {
+                row.forEach(shelf => {
+                    if (shelf && !shelf.isSelected) {
+                        shelf.pipes.forEach(pipe => {
+                            pipe.material = shelf.originalMaterials.get(pipe);
+                        });
+                    }
+                });
             });
             
+            // Remove panel edge highlights if any
+            const existingEdge = gridManager.mainGroup.getObjectByName('edge-highlight');
+            if (existingEdge) {
+                gridManager.mainGroup.remove(existingEdge);
+            }
+            
             if (intersects.length > 0) {
-                const intersectedShelf = shelfManager.getIntersectedShelf(intersects);
-                if (intersectedShelf && !intersectedShelf.isSelected) {
-                    // Highlight all pipes of hovered shelf
-                    intersectedShelf.pipes.forEach(pipe => {
-                        pipe.material = new THREE.MeshBasicMaterial({ 
-                            color: 0x87ceeb,
-                            transparent: true,
-                            opacity: 0.8
+                const result = gridManager.getIntersectedShelf(intersects);
+                if (result) {
+                    const isPanel = result.object.userData.objectType === 'panel';
+                    const isAcrylic = result.shelf.config.type === 'acrylic';
+                    
+                    if (isPanel && isAcrylic && result.object.userData.interactive === 'panel') {
+                        // Panel hover for acrylic - show edge highlight
+                        applyPanelEdgeHighlight(result.object);
+                        renderer.domElement.style.cursor = 'pointer';
+                    } else if (!result.shelf.isSelected) {
+                        // Shelf hover - highlight all pipes
+                        result.shelf.pipes.forEach(pipe => {
+                            pipe.material = new THREE.MeshBasicMaterial({ 
+                                color: 0x87ceeb,
+                                transparent: true,
+                                opacity: 0.8
+                            });
                         });
-                    });
-                    renderer.domElement.style.cursor = 'pointer';
+                        renderer.domElement.style.cursor = 'pointer';
+                    } else {
+                        renderer.domElement.style.cursor = 'default';
+                    }
                 } else {
                     renderer.domElement.style.cursor = 'default';
                 }
@@ -1098,81 +1496,139 @@
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(shelfManager.mainGroup, true);
+            const intersects = raycaster.intersectObject(gridManager.mainGroup, true);
             
             if (intersects.length > 0) {
-                const intersectedShelf = shelfManager.getIntersectedShelf(intersects);
-                if (intersectedShelf) {
-                    shelfManager.selectShelf(intersectedShelf.id);
-                }
-            } else {
-                // Clicked empty space - deselect
-                if (shelfManager.selectedShelf) {
-                    shelfManager.selectedShelf.setSelected(false);
-                    shelfManager.selectedShelf = null;
-                    removePlusIndicators();
+                const result = gridManager.getIntersectedShelf(intersects);
+                if (result) {
+                    const isPanel = result.object.userData.objectType === 'panel';
+                    const isAcrylic = result.shelf.config.type === 'acrylic';
                     
-                    if (currentConfig.type === 'acrylic') {
-                        disableColorSection();
+                    if (isPanel && isAcrylic && result.object.userData.interactive === 'panel') {
+                        // Panel clicked for acrylic - select individual panel
+                        selectedPanel = result.object;
+                        
+                        // Apply yellow highlight to selected panel
+                        const vividYellowMaterial = new THREE.MeshBasicMaterial({ 
+                            color: 0xffd700,
+                            transparent: true,
+                            opacity: 0.8,
+                            side: THREE.DoubleSide
+                        });
+                        result.object.material = vividYellowMaterial;
+                        
+                        enableColorSection();
+                        
+                        // Also select the shelf
+                        gridManager.selectShelf(result.row, result.col);
+                        
+                    } else {
+                        // Shelf clicked - select entire shelf
+                        selectedPanel = null;
+                        gridManager.selectShelf(result.row, result.col);
                     }
                 }
+            } else {
+                // Clicked empty space - deselect all
+                const prevShelf = gridManager.getSelectedShelf();
+                if (prevShelf) {
+                    prevShelf.setSelected(false);
+                }
+                gridManager.selectedCoords = null;
+                selectedPanel = null;
+                removePlusIndicators();
+                disableColorSection();
+                gridManager.updateShelfInfo();
             }
+        }
+
+        function applyPanelEdgeHighlight(panel) {
+            // Create edge highlight without making panel transparent
+            const edges = new THREE.EdgesGeometry(panel.geometry);
+            const edgeLines = new THREE.LineSegments(edges, yellowEdgeMaterial);
+            
+            // Position edge lines to match panel
+            edgeLines.position.copy(panel.position);
+            edgeLines.rotation.copy(panel.rotation);
+            edgeLines.scale.copy(panel.scale);
+            edgeLines.name = 'edge-highlight';
+            
+            gridManager.mainGroup.add(edgeLines);
         }
 
         function createPlusIndicators() {
             removePlusIndicators();
             
-            if (!shelfManager.selectedShelf) return;
+            const selectedShelf = gridManager.getSelectedShelf();
+            if (!selectedShelf) return;
             
+            // Create horizontal plus indicator
             const horizontalPlus = document.createElement('div');
             horizontalPlus.className = 'plus-indicator horizontal';
-            horizontalPlus.style.position = 'absolute';
             horizontalPlus.setAttribute('title', 'Add shelf horizontally');
-            horizontalPlus.addEventListener('click', () => shelfManager.addHorizontalShelf());
+            horizontalPlus.addEventListener('click', (e) => {
+                e.stopPropagation();
+                gridManager.addHorizontalShelf();
+            });
             document.body.appendChild(horizontalPlus);
             
+            // Create vertical plus indicator
             const verticalPlus = document.createElement('div');
             verticalPlus.className = 'plus-indicator vertical';
-            verticalPlus.style.position = 'absolute';
             verticalPlus.setAttribute('title', 'Add shelf vertically');
-            verticalPlus.addEventListener('click', () => shelfManager.addVerticalShelf());
+            verticalPlus.addEventListener('click', (e) => {
+                e.stopPropagation();
+                gridManager.addVerticalShelf();
+            });
             document.body.appendChild(verticalPlus);
             
             plusIndicators.push(horizontalPlus, verticalPlus);
         }
 
         function updatePlusIndicatorPositions() {
-            if (plusIndicators.length === 0 || !shelfManager.selectedShelf) return;
+            if (plusIndicators.length === 0) return;
             
-            const bbox = new THREE.Box3().setFromObject(shelfManager.selectedShelf.group);
-            const center = bbox.getCenter(new THREE.Vector3());
+            const selectedShelf = gridManager.getSelectedShelf();
+            if (!selectedShelf) return;
+            
+            // Get the actual shelf bounding box in world space
+            const bbox = new THREE.Box3().setFromObject(selectedShelf.group);
             const size = bbox.getSize(new THREE.Vector3());
+            const center = bbox.getCenter(new THREE.Vector3());
             
-            // Apply shelf position offset
-            center.add(new THREE.Vector3(shelfManager.selectedShelf.position.x, 
-                                       shelfManager.selectedShelf.position.y, 
-                                       shelfManager.selectedShelf.position.z));
+            // Position indicators relative to shelf bounds
+            const horizontalWorldPos = new THREE.Vector3(
+                center.x + size.x/2 + 0.2, 
+                center.y, 
+                center.z
+            );
+            const verticalWorldPos = new THREE.Vector3(
+                center.x, 
+                center.y + size.y/2 + 0.2, 
+                center.z
+            );
             
-            const horizontalPos = new THREE.Vector3(center.x + size.x/2 + 0.5, center.y, center.z);
-            const verticalPos = new THREE.Vector3(center.x, center.y + size.y/2 + 0.5, center.z);
+            // Project to screen coordinates
+            horizontalWorldPos.project(camera);
+            verticalWorldPos.project(camera);
             
-            horizontalPos.project(camera);
-            verticalPos.project(camera);
-            
+            // Convert to pixel positions
             const canvasRect = renderer.domElement.getBoundingClientRect();
             
             if (plusIndicators[0]) {
-                const x = (horizontalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const y = (-horizontalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                plusIndicators[0].style.left = (x - 15) + 'px';
-                plusIndicators[0].style.top = (y - 15) + 'px';
+                const x = (horizontalWorldPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
+                const y = (-horizontalWorldPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
+                plusIndicators[0].style.left = (x - 18) + 'px';
+                plusIndicators[0].style.top = (y - 18) + 'px';
+                plusIndicators[0].style.display = (x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight) ? 'flex' : 'none';
             }
             
             if (plusIndicators[1]) {
-                const x = (verticalPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const y = (-verticalPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                plusIndicators[1].style.left = (x - 15) + 'px';
-                plusIndicators[1].style.top = (y - 15) + 'px';
+                const x = (verticalWorldPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
+                const y = (-verticalWorldPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
+                plusIndicators[1].style.left = (x - 18) + 'px';
+                plusIndicators[1].style.top = (y - 18) + 'px';
+                plusIndicators[1].style.display = (x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight) ? 'flex' : 'none';
             }
         }
 
@@ -1183,6 +1639,16 @@
                 }
             });
             plusIndicators = [];
+        }
+
+        function showWarning(message) {
+            const warningElement = document.getElementById('warning-message');
+            warningElement.textContent = message;
+            warningElement.style.display = 'block';
+            
+            setTimeout(() => {
+                warningElement.style.display = 'none';
+            }, 5000);
         }
 
         function enableColorSection() {
@@ -1197,6 +1663,27 @@
             colorSection.classList.add('color-section-disabled');
         }
 
+        function updateUIFromConfig() {
+            // Update UI elements to reflect current config
+            document.querySelectorAll('[data-width]').forEach(el => {
+                el.classList.toggle('active', parseInt(el.dataset.width) === currentConfig.width);
+            });
+            
+            document.querySelectorAll('[data-depth]').forEach(el => {
+                el.classList.toggle('active', parseInt(el.dataset.depth) === currentConfig.depth);
+            });
+            
+            document.querySelectorAll('[data-height]').forEach(el => {
+                el.classList.toggle('active', parseInt(el.dataset.height) === currentConfig.height);
+            });
+            
+            document.querySelectorAll('[data-color]').forEach(el => {
+                el.classList.toggle('active', el.dataset.color === currentConfig.color);
+            });
+            
+            updateDimensionsDisplay();
+        }
+
         function updateShelfTypeOptions() {
             const structureOptions = document.getElementById('structure-options');
             const widthOptions = document.getElementById('width-options');
@@ -1204,7 +1691,7 @@
             const heightOptions = document.getElementById('height-options');
             const colorSection = document.getElementById('color-section');
             
-            // Clear material cache when switching types for performance
+            // Clear material cache when switching types
             materialCache.clear();
             
             if (currentConfig.type === 'acrylic') {
@@ -1270,7 +1757,7 @@
                     structure: 'with-panels', color: 'transparent-orange'
                 });
                 
-                disableColorSection();
+                disableColorSection(); // Disabled until panel selected
             } else if (currentConfig.type === 'stainless') {
                 structureOptions.innerHTML = `
                     <div class="option-card active" data-structure="all-no-front">
@@ -1346,14 +1833,21 @@
                     structure: 'all-no-front', color: 'orange'
                 });
                 
-                enableColorSection();
+                enableColorSection(); // Enabled for stainless
             }
             
             // Update all existing shelves
-            shelfManager.shelves.forEach(shelf => {
-                shelf.updateConfig(currentConfig);
+            gridManager.grid.forEach(row => {
+                row.forEach(shelf => {
+                    if (shelf) {
+                        shelf.config.type = currentConfig.type;
+                        shelf.config.structure = currentConfig.structure;
+                        shelf.regenerate();
+                    }
+                });
             });
             
+            gridManager.updateAllConnectors();
             setupEventListeners();
         }
 
@@ -1415,8 +1909,7 @@
             }
             if (clearBtn && !clearBtn.hasClickListener) {
                 clearBtn.addEventListener('click', () => {
-                    shelfManager.clearAll();
-                    shelfManager.createShelf(currentConfig);
+                    gridManager.clearAll();
                 });
                 clearBtn.hasClickListener = true;
             }
@@ -1436,7 +1929,11 @@
                     document.querySelectorAll('[data-structure]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.structure = el.dataset.structure;
-                    shelfManager.shelves.forEach(shelf => shelf.updateConfig(currentConfig));
+                    const selectedShelf = gridManager.getSelectedShelf();
+                    if (selectedShelf) {
+                        selectedShelf.config.structure = currentConfig.structure;
+                        selectedShelf.regenerate();
+                    }
                 });
             });
 
@@ -1445,6 +1942,7 @@
                     document.querySelectorAll('[data-width]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.width = parseInt(el.dataset.width);
+                    gridManager.updateSelectedShelfWidth(currentConfig.width);
                     updateDimensionsDisplay();
                 });
             });
@@ -1454,6 +1952,7 @@
                     document.querySelectorAll('[data-depth]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.depth = parseInt(el.dataset.depth);
+                    gridManager.updateRowDepth(currentConfig.depth);
                     updateDimensionsDisplay();
                 });
             });
@@ -1463,6 +1962,7 @@
                     document.querySelectorAll('[data-height]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.height = parseInt(el.dataset.height);
+                    gridManager.updateRowHeight(currentConfig.height);
                     updateDimensionsDisplay();
                 });
             });
@@ -1475,8 +1975,33 @@
                     el.classList.add('active');
                     currentConfig.color = el.dataset.color;
                     
-                    if (shelfManager.selectedShelf) {
-                        shelfManager.selectedShelf.updateConfig(currentConfig);
+                    if (currentConfig.type === 'acrylic' && selectedPanel) {
+                        // Apply color to selected panel only
+                        const colorMap = {
+                            'transparent-orange': { color: 0xff8c00, opacity: 0.6 },
+                            'transparent-black': { color: 0x333333, opacity: 0.7 },
+                            'solid-white': { color: 0xffffff, opacity: 1.0 },
+                            'clear': { color: 0xffffff, opacity: 0.2 }
+                        };
+                        
+                        const colorConfig = colorMap[currentConfig.color] || colorMap['transparent-orange'];
+                        const material = new THREE.MeshPhysicalMaterial({
+                            color: colorConfig.color,
+                            transparent: colorConfig.opacity < 1.0,
+                            opacity: colorConfig.opacity,
+                            side: THREE.DoubleSide,
+                            roughness: 0.1,
+                            metalness: 0.0
+                        });
+                        
+                        selectedPanel.material = material;
+                    } else if (currentConfig.type === 'stainless') {
+                        // Apply color to entire selected shelf
+                        const selectedShelf = gridManager.getSelectedShelf();
+                        if (selectedShelf) {
+                            selectedShelf.config.color = currentConfig.color;
+                            selectedShelf.regenerate();
+                        }
                     }
                 });
             });
@@ -1484,11 +2009,18 @@
             const submitBtn = document.querySelector('.submit-button');
             if (submitBtn && !submitBtn.hasClickListener) {
                 submitBtn.addEventListener('click', () => {
-                    const configs = shelfManager.shelves.map(shelf => ({
-                        id: shelf.id,
-                        config: shelf.config,
-                        position: shelf.position
-                    }));
+                    const configs = [];
+                    gridManager.grid.forEach((row, rowIndex) => {
+                        row.forEach((shelf, colIndex) => {
+                            if (shelf) {
+                                configs.push({
+                                    position: { row: rowIndex, col: colIndex },
+                                    config: shelf.config,
+                                    worldPosition: shelf.worldPosition
+                                });
+                            }
+                        });
+                    });
                     alert('Configuration submitted:\n' + JSON.stringify(configs, null, 2));
                 });
                 submitBtn.hasClickListener = true;

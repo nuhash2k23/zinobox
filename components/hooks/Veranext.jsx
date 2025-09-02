@@ -655,46 +655,39 @@ const ARModal = ({ isOpen, onClose, size, materialColor, multiplier }) => {
   );
 };
 
-// Mobile Touch Disclaimer Component
+// Mobile Touch Disclaimer Component using drei Html
 const TouchDisclaimer = ({ isVisible, message, onClose }) => {
   if (!isVisible) return null;
 
   return (
-    <div
+    <Html
+      center
+      position={[0, -3, 0]}
       style={{
-        position: 'fixed',
-        bottom: '100px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
-        color: 'white',
-        padding: '12px 20px',
-        borderRadius: '25px',
-        fontSize: '14px',
-        fontWeight: '500',
-        zIndex: 5000,
-        textAlign: 'center',
-        maxWidth: '90vw',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        animation: 'fadeInSlideUp 0.3s ease-out'
+        transform: 'translate3d(-50%, 0, 0)',
+        pointerEvents: 'auto'
       }}
-      onClick={onClose}
     >
-      {message}
-      <style jsx>{`
-        @keyframes fadeInSlideUp {
-          from {
-            opacity: 0;
-            transform: translateX(-50%) translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
-        }
-      `}</style>
-    </div>
+      <div
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          color: 'white',
+          padding: '12px 20px',
+          borderRadius: '25px',
+          fontSize: '14px',
+          fontWeight: '500',
+          textAlign: 'center',
+          maxWidth: '280px',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap'
+        }}
+        onClick={onClose}
+      >
+        {message}
+      </div>
+    </Html>
   );
 };
 
@@ -1848,7 +1841,7 @@ const VerandaConfigurator = () => {
       {/* Canvas Section */}
       <div style={{ 
         width: '100vw', 
-        height: mobile ? '75vh' : '100vh',
+        height: mobile ? '60vh' : '100vh',
         position: 'relative'
       }}>
         <Suspense fallback={<SimpleFallback />}>
@@ -1904,7 +1897,7 @@ const VerandaConfigurator = () => {
       {/* Configurator Section */}
       <div style={{
         width: mobile ? '100vw' : '30%',
-        height: mobile ? '25vh' : '100vh',
+        height: mobile ? '40vh' : '100vh',
         backgroundColor: '#fafafa',
         borderLeft: mobile ? 'none' : '1px solid #e0e0e0',
         borderTop: mobile ? '1px solid #e0e0e0' : 'none',
