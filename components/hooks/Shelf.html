@@ -28,15 +28,342 @@
             overflow: hidden;
         }
         
-        .container {
-            display: flex;
-            height: 100vh;
+        /* Desktop Styles */
+        @media (min-width: 769px) {
+            .container {
+                display: flex;
+                height: 100vh;
+            }
+            
+            .viewer {
+                width: 70%;
+                position: relative;
+                background: #000000;
+            }
+            
+            .configurator {
+                width: 30%;
+                background: white;
+                padding: 20px;
+                overflow-y: auto;
+                box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+                position: relative;
+            }
+            
+            .mobile-tabs {
+                display: none;
+            }
+            
+            .mobile-configurator {
+                display: none;
+            }
+            
+            .desktop-configurator {
+                display: block;
+            }
         }
         
-        .viewer {
-            width: 70%;
-            position: relative;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            body {
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            .container {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+            
+            .viewer {
+                height: 75vh;
+                width: 100%;
+                position: relative;
+                background: #000000;
+            }
+            
+            .configurator {
+                height: 25vh;
+                width: 100%;
+                background: white;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .desktop-configurator {
+                display: none;
+            }
+            
+            .mobile-configurator {
+                display: block;
+                height: 100%;
+                position: relative;
+            }
+            
+            .mobile-tabs {
+                display: flex;
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 100;
+                gap: 5px;
+            }
+            
+            .mobile-tab {
+                padding: 8px 12px;
+                background: rgba(255, 255, 255, 0.9);
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                color: #666;
+                min-width: 60px;
+                text-align: center;
+            }
+            
+            .mobile-tab.active {
+                background: #4285f4;
+                color: white;
+                border-color: #4285f4;
+            }
+            
+            .mobile-tab-content {
+                display: none;
+                height: 100%;
+                padding: 15px;
+                overflow-y: auto;
+            }
+            
+            .mobile-tab-content.active {
+                display: block;
+            }
+            
+            .mobile-tab-content h3 {
+                font-size: 16px;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+            
+            /* Type Tab Content */
+            .mobile-type-options {
+                display: flex;
+                gap: 10px;
+                height: calc(100% - 80px);
+            }
+            
+            .mobile-option-card {
+                flex: 1;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 15px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .mobile-option-card:hover,
+            .mobile-option-card.active {
+                border-color: #4285f4;
+                background: #f8f9ff;
+            }
+            
+            .mobile-option-icon {
+                width: 60px;
+                height: 60px;
+                margin: 0 auto 12px;
+                background: #f0f0f0;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .mobile-option-icon img {
+                width: 50px;
+                height: 50px;
+                object-fit: contain;
+            }
+            
+            .mobile-option-title {
+                font-weight: 500;
+                font-size: 14px;
+                color: #333;
+                margin-bottom: 6px;
+            }
+            
+            .mobile-option-subtitle {
+                font-size: 11px;
+                color: #666;
+            }
+            
+            /* Structure Tab Content */
+            .mobile-structure-scroll {
+                display: flex;
+                overflow-x: auto;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .mobile-structure-tab {
+                min-width: 80px;
+                padding: 8px 12px;
+                border: 2px solid #e0e0e0;
+                border-radius: 6px;
+                background: white;
+                cursor: pointer;
+                text-align: center;
+                font-size: 12px;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                white-space: nowrap;
+            }
+            
+            .mobile-structure-tab.active {
+                border-color: #4285f4;
+                background: #f8f9ff;
+                color: #4285f4;
+            }
+            
+            .mobile-structure-content {
+                display: none;
+                height: calc(100% - 50px);
+                overflow-y: auto;
+            }
+            
+            .mobile-structure-content.active {
+                display: block;
+            }
+            
+            .mobile-structure-options {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+            
+            .mobile-structure-options .mobile-option-card {
+                height: auto;
+                min-height: 100px;
+            }
+            
+            .mobile-dimension-section {
+                margin-bottom: 15px;
+            }
+            
+            .mobile-dimension-title {
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+                margin-bottom: 10px;
+            }
+            
+            .mobile-size-options {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            
+            .mobile-size-button {
+                flex: 1;
+                min-width: 50px;
+                padding: 8px 10px;
+                border: 2px solid #e0e0e0;
+                border-radius: 6px;
+                background: white;
+                cursor: pointer;
+                text-align: center;
+                font-weight: 500;
+                font-size: 12px;
+                transition: all 0.3s ease;
+            }
+            
+            .mobile-size-button.active {
+                border-color: #4285f4;
+                background: #f8f9ff;
+                color: #4285f4;
+            }
+            
+            /* Color Tab Content */
+            .mobile-color-options {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                height: calc(100% - 50px);
+                overflow-y: auto;
+            }
+            
+            .mobile-color-option {
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 12px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-align: center;
+                background: white;
+                height: fit-content;
+            }
+            
+            .mobile-color-option.active {
+                border-color: #4285f4;
+                background: #f8f9ff;
+            }
+            
+            .mobile-color-swatch {
+                width: 40px;
+                height: 40px;
+                border-radius: 4px;
+                margin: 0 auto 8px;
+                border: 1px solid #ddd;
+            }
+            
+            .mobile-color-name {
+                font-size: 12px;
+                font-weight: 500;
+                color: #333;
+            }
+            
+            .mobile-color-section-disabled .mobile-color-option {
+                cursor: not-allowed;
+                background: #f5f5f5;
+                opacity: 0.6;
+            }
+            
+            /* Submit Section */
+            .mobile-submit-section {
+                position: absolute;
+                bottom: 15px;
+                left: 15px;
+                right: 15px;
+                z-index: 50;
+            }
+            
+            .mobile-submit-button {
+                width: 100%;
+                padding: 12px;
+                background: #4285f4;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            
+            .mobile-submit-button:hover {
+                background: #3367d6;
+            }
         }
         
         #canvas-container {
@@ -44,16 +371,20 @@
             height: 100%;
         }
         
-        .configurator {
-            width: 30%;
-            background: white;
-            padding: 20px;
-            overflow-y: auto;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-        }
-        
         .section {
             margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .section.tour-highlight {
+            background: rgba(66, 133, 244, 0.1) !important;
+            border: 2px solid #4285f4 !important;
+            border-radius: 12px !important;
+            padding: 15px !important;
+            margin: -5px !important;
+            box-shadow: 0 4px 20px rgba(66, 133, 244, 0.3) !important;
+            position: relative !important;
+            z-index: 1700 !important;
         }
         
         .section-title {
@@ -91,19 +422,20 @@
             padding: 15px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             background: white;
         }
         
         .option-card:hover {
             border-color: #4285f4;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
         }
         
         .option-card.active {
             border-color: #4285f4;
             background: #f8f9ff;
+            transform: translateY(-1px);
         }
         
         .option-icon {
@@ -151,11 +483,12 @@
             cursor: pointer;
             text-align: center;
             font-weight: 500;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
         
         .size-button:hover {
             border-color: #4285f4;
+            transform: translateY(-1px);
         }
         
         .size-button.active {
@@ -175,13 +508,14 @@
             border-radius: 8px;
             padding: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             text-align: center;
             background: white;
         }
         
         .color-option:hover {
             border-color: #4285f4;
+            transform: translateY(-1px);
         }
         
         .color-option.active {
@@ -222,6 +556,18 @@
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-section.tour-highlight {
+            background: rgba(66, 133, 244, 0.1) !important;
+            border: 2px solid #4285f4 !important;
+            border-radius: 12px !important;
+            padding: 25px !important;
+            margin: 10px -5px -5px !important;
+            box-shadow: 0 4px 20px rgba(66, 133, 244, 0.3) !important;
+            position: relative !important;
+            z-index: 1700 !important;
         }
         
         .submit-button {
@@ -234,11 +580,13 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: all 0.3s ease;
         }
         
         .submit-button:hover {
             background: #3367d6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
         }
         
         .height-options {
@@ -256,11 +604,12 @@
             text-align: center;
             font-weight: 500;
             font-size: 13px;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
         
         .height-button:hover {
             border-color: #4285f4;
+            transform: translateY(-1px);
         }
         
         .height-button.active {
@@ -302,11 +651,24 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .viewer-controls {
+                top: 10px;
+                left: 10px;
+            }
+            
+            .control-button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
         }
         
         .control-button:hover {
             background: rgba(0, 0, 0, 1);
+            transform: translateY(-1px);
         }
         
         .control-button.active {
@@ -315,15 +677,25 @@
         
         .dimensions-display {
             position: absolute;
-            top: 20px;
-            left: 200px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
+            top: 70px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: 8px;
             font-size: 14px;
             display: none;
             z-index: 1000;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .dimensions-display {
+                top: 60px;
+                left: 10px;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
         }
         
         .plus-indicator {
@@ -340,13 +712,13 @@
             font-weight: bold;
             color: #4285f4;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             z-index: 1000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
         .plus-indicator:hover {
-            background: #4285f4;
+            background: #d8e0ee;
             color: white;
             transform: scale(1.1);
             box-shadow: 0 6px 16px rgba(0,0,0,0.3);
@@ -364,11 +736,27 @@
             pointer-events: none;
         }
         
+        .plus-indicator.tour-highlight {
+            background: rgba(66, 133, 244, 0.9) !important;
+            color: white !important;
+            border-color: #ffd700 !important;
+            border-width: 4px !important;
+            box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.3), 0 4px 12px rgba(0,0,0,0.2) !important;
+            z-index: 1700 !important;
+            animation: pulseGlow 2s infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
         .warning-message {
             position: absolute;
             top: 70px;
             left: 20px;
-            background: rgba(255, 193, 7, 0.9);
+            background: rgba(255, 193, 7, 0.95);
             color: #333;
             padding: 12px 16px;
             border-radius: 8px;
@@ -377,144 +765,639 @@
             max-width: 300px;
             z-index: 1000;
             display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
-        .shelf-info {
+        @media (max-width: 768px) {
+            .warning-message {
+                top: 60px;
+                left: 10px;
+                font-size: 12px;
+                max-width: calc(100% - 20px);
+            }
+        }
+        
+        .delete-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 18px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            z-index: 1000;
+        }
+        
+        @media (max-width: 768px) {
+            .delete-button {
+                bottom: 10px;
+                right: 10px;
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+        }
+        
+        .delete-button:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+        }
+        
+        .delete-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+        
+        .tour-button {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 16px;
+            background: rgba(66, 133, 244, 0.9);
             color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
             z-index: 1000;
+        }
+        
+        @media (max-width: 768px) {
+            .tour-button {
+                bottom: 10px;
+                left: 10px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+        
+        .tour-button:hover {
+            background: rgba(66, 133, 244, 1);
+            transform: translateY(-1px);
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .modal {
+                padding: 30px 20px;
+                max-width: 90%;
+            }
+        }
+        
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            color: #333;
+        }
+        
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-title {
+                font-size: 24px;
+            }
+        }
+        
+        .modal-description {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-description {
+                font-size: 14px;
+            }
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .modal-button {
+            padding: 12px 24px;
+            border: 2px solid #4285f4;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-button.primary {
+            background: #4285f4;
+            color: white;
+        }
+        
+        .modal-button.primary:hover {
+            background: #3367d6;
+            transform: translateY(-1px);
+        }
+        
+        .modal-button.secondary {
+            background: white;
+            color: #4285f4;
+        }
+        
+        .modal-button.secondary:hover {
+            background: #f8f9ff;
+            transform: translateY(-1px);
+        }
+        
+        .tour-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.18);
+            z-index: 2500;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .tour-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .tour-tooltip {
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            z-index: 2600;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .tour-tooltip {
+                width: 90%;
+                max-width: 320px;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) scale(0.9) !important;
+            }
+            
+            .tour-overlay.show .tour-tooltip {
+                transform: translate(-50%, -50%) scale(1) !important;
+            }
+        }
+        
+        .tour-overlay.show .tour-tooltip {
+            transform: scale(1);
+        }
+        
+        .tour-step {
+            font-size: 14px;
+            color: #4285f4;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .tour-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .tour-description {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        
+        .tour-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+        
+        .tour-button-group {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .tour-nav-button {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: #666;
+        }
+        
+        .tour-nav-button:hover {
+            border-color: #4285f4;
+            color: #4285f4;
+        }
+        
+        .tour-nav-button.primary {
+            background: #4285f4;
+            color: white;
+            border-color: #4285f4;
+        }
+        
+        .tour-nav-button.primary:hover {
+            background: #3367d6;
+        }
+        
+        .viewer.tour-highlight {
+            position: relative;
+            z-index: 1700;
+            box-shadow: inset 0 0 0 4px #4285f4;
+        }
+        
+        /* Mobile tab highlighting */
+        .mobile-tab.tour-highlight {
+            background: rgba(66, 133, 244, 0.9) !important;
+            color: white !important;
+            border: 3px solid #ffd700 !important;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.3) !important;
+            z-index: 1700 !important;
+            animation: pulseGlow 2s infinite;
+        }
+        
+        .mobile-submit-section.tour-highlight {
+            background: rgba(66, 133, 244, 0.1) !important;
+            border: 2px solid #4285f4 !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            margin: -10px !important;
+            box-shadow: 0 4px 20px rgba(66, 133, 244, 0.3) !important;
+            z-index: 1700 !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="viewer">
+            <!-- Mobile Tabs -->
+            <div class="mobile-tabs">
+                <div class="mobile-tab active" data-tab="type">Type</div>
+                <div class="mobile-tab" data-tab="structure">Structure</div>
+                <div class="mobile-tab" data-tab="color">Colour</div>
+            </div>
+            
             <div class="viewer-controls">
                 <button class="control-button" id="toggle-dimensions">📐 Dimensions</button>
                 <button class="control-button" id="reset-camera">🔄 Reset cam</button>
-                <button class="control-button" id="clear-shelves">🗑️ Clear</button>
             </div>
             <div class="dimensions-display" id="dimensions-display">
-                Selected: W:<span id="dim-width">300</span>mm H:<span id="dim-height">350</span>mm D:<span id="dim-depth">300</span>mm
+                Selected: W:<span id="dim-width">270</span>mm H:<span id="dim-height">270</span>mm D:<span id="dim-depth">270</span>mm
             </div>
             <div class="warning-message" id="warning-message"></div>
-            <div class="shelf-info" id="shelf-info">
-                Grid: 1x1 | Click shelf to select | Total Size: 300x350x300mm
-            </div>
+            <div class="tour-button" id="tour-button">🎯 Tour</div>
+            
+            <button class="delete-button" id="delete-button">
+                <svg class="delete-icon" viewBox="0 0 24 24">
+                    <path d="M3 6v18h18v-18h-18zm5 14c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm5 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm5 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm4-18v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.315c0 .901.73 2 1.631 2h5.712z"/>
+                </svg>
+                Remove selected element
+            </button>
             
             <div id="canvas-container"></div>
             <div class="loading" id="loading">Loading 3D Model...</div>
         </div>
         
         <div class="configurator">
-            <div class="section">
-                <h3 class="section-title">
-                    Choose Your Shelf Type
-                    <span class="info-icon">i</span>
-                </h3>
-                <div class="options-grid">
-                    <div class="option-card active" data-type="acrylic">
-                        <div class="option-icon">
-                            <img src="acrylic-shelf-icon.png" alt="Acrylic Panel Shelf" />
+            <!-- Desktop Configurator -->
+            <div class="desktop-configurator">
+                <div class="section" id="shelf-type-section">
+                    <h3 class="section-title">
+                        Choose Your Shelf Type
+                        <span class="info-icon">i</span>
+                    </h3>
+                    <div class="options-grid">
+                        <div class="option-card active" data-type="acrylic">
+                            <div class="option-icon">
+                                <img src="/acrylictopbottom.png" alt="Acrylic Panel Shelf" />
+                            </div>
+                            <div class="option-title">Acrylic Panel Shelf</div>
+                            <div class="option-subtitle">*Open shelves only</div>
                         </div>
-                        <div class="option-title">Acrylic Panel Shelf</div>
-                        <div class="option-subtitle">*Open shelves only</div>
-                    </div>
-                    <div class="option-card" data-type="stainless">
-                        <div class="option-icon">
-                            <img src="stainless-shelf-icon.png" alt="Stainless Panel Shelf" />
+                        <div class="option-card" data-type="stainless">
+                            <div class="option-icon">
+                                <img src="/allside.png" alt="Stainless Panel Shelf" />
+                            </div>
+                            <div class="option-title">Stainless Panel Shelf</div>
+                            <div class="option-subtitle">*Open & closed shelves</div>
                         </div>
-                        <div class="option-title">Stainless Panel Shelf</div>
-                        <div class="option-subtitle">*Open & closed shelves</div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="section">
-                <h3 class="section-title">Structure Elements</h3>
-                <div class="options-grid" id="structure-options">
-                    <div class="option-card active" data-structure="with-panels">
-                        <div class="option-icon">
-                            <img src="with-panels-icon.png" alt="With top and bottom only" />
+                
+                <div class="section" id="structure-section">
+                    <h3 class="section-title">Structure Elements</h3>
+                    <div class="options-grid" id="structure-options">
+                        <div class="option-card active" data-structure="with-panels">
+                            <div class="option-icon">
+                                <img src="/acrylictopbottom.png" alt="With top and bottom only" />
+                            </div>
+                            <div class="option-title">With top and bottom only</div>
                         </div>
-                        <div class="option-title">With top and bottom only</div>
-                    </div>
-                    <div class="option-card" data-structure="without-shelves">
-                        <div class="option-icon">
-                            <img src="without-shelves-icon.png" alt="Without Shelves" />
+                        <div class="option-card" data-structure="without-shelves">
+                            <div class="option-icon">
+                                <img src="/nopanel.png" alt="Without Shelves" />
+                            </div>
+                            <div class="option-title">Without Shelves</div>
                         </div>
-                        <div class="option-title">Without Shelves</div>
                     </div>
+                </div>
+                
+                <div class="section" id="dimensions-section">
+                    <h3 class="section-title">Width (mm) - Selected Shelf</h3>
+                    <div class="size-options" id="width-options">
+                        <div class="size-button active" data-width="270">270</div>
+                        <div class="size-button" data-width="300">300</div>
+                        <div class="size-button" data-width="370">370</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">Depth (mm) - Selected Row</h3>
+                    <div class="size-options" id="depth-options">
+                        <div class="size-button active" data-depth="270">270</div>
+                        <div class="size-button" data-depth="300">300</div>
+                        <div class="size-button" data-depth="370">370</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3 class="section-title">Height (mm) - Selected Row</h3>
+                    <div class="height-options" id="height-options">
+                        <div class="height-button" data-height="121">121</div>
+                        <div class="height-button" data-height="180">180</div>
+                        <div class="height-button" data-height="200">200</div>
+                        <div class="height-button active" data-height="270">270</div>
+                        <div class="height-button" data-height="313">313</div>
+                        <div class="height-button" data-height="350">350</div>
+                        <div class="height-button" data-height="370">370</div>
+                        <div class="height-button" data-height="483">483</div>
+                        <div class="height-button" data-height="603">603</div>
+                    </div>
+                </div>
+                
+                <div class="section" id="color-section">
+                    <h3 class="section-title">
+                        Colour - Selected Panel/Shelf
+                        <span class="info-icon">i</span>
+                    </h3>
+                    <div class="color-options">
+                        <div class="color-option active" data-color="transparent-orange">
+                            <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,140,0,0.5));"></div>
+                            <div class="color-name">Transparent Orange</div>
+                        </div>
+                        <div class="color-option" data-color="transparent-black">
+                            <div class="color-swatch" style="background: linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5));"></div>
+                            <div class="color-name">Transparent Black</div>
+                        </div>
+                        <div class="color-option" data-color="solid-white">
+                            <div class="color-swatch" style="background: #ffffff; border: 2px solid #ddd;"></div>
+                            <div class="color-name">Solid White</div>
+                        </div>
+                        <div class="color-option" data-color="clear">
+                            <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3)); border: 2px solid #ddd;"></div>
+                            <div class="color-name">Clear</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="submit-section" id="submit-section">
+                    <div class="section-title" style="margin-bottom: 15px;">Submit the design for a quote</div>
+                    <button class="submit-button">Submit</button>
                 </div>
             </div>
             
-            <div class="section">
-                <h3 class="section-title">Width (mm) - Selected Shelf</h3>
-                <div class="size-options" id="width-options">
-                    <div class="size-button" data-width="270">270</div>
-                    <div class="size-button active" data-width="300">300</div>
-                    <div class="size-button" data-width="370">370</div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3 class="section-title">Depth (mm) - Selected Row</h3>
-                <div class="size-options" id="depth-options">
-                    <div class="size-button" data-depth="270">270</div>
-                    <div class="size-button active" data-depth="300">300</div>
-                    <div class="size-button" data-depth="370">370</div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3 class="section-title">Height (mm) - Selected Row</h3>
-                <div class="height-options" id="height-options">
-                    <div class="height-button" data-height="121">121</div>
-                    <div class="height-button" data-height="180">180</div>
-                    <div class="height-button" data-height="200">200</div>
-                    <div class="height-button" data-height="270">270</div>
-                    <div class="height-button" data-height="313">313</div>
-                    <div class="height-button active" data-height="350">350</div>
-                    <div class="height-button" data-height="370">370</div>
-                    <div class="height-button" data-height="483">483</div>
-                    <div class="height-button" data-height="603">603</div>
-                </div>
-            </div>
-            
-            <div class="section" id="color-section">
-                <h3 class="section-title">
-                    Colour - Selected Panel/Shelf
-                    <span class="info-icon">i</span>
-                </h3>
-                <div class="color-options">
-                    <div class="color-option active" data-color="transparent-orange">
-                        <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,140,0,0.5));"></div>
-                        <div class="color-name">Transparent Orange</div>
-                    </div>
-                    <div class="color-option" data-color="transparent-black">
-                        <div class="color-swatch" style="background: linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5));"></div>
-                        <div class="color-name">Transparent Black</div>
-                    </div>
-                    <div class="color-option" data-color="solid-white">
-                        <div class="color-swatch" style="background: #ffffff; border: 2px solid #ddd;"></div>
-                        <div class="color-name">Solid White</div>
-                    </div>
-                    <div class="color-option" data-color="clear">
-                        <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3)); border: 2px solid #ddd;"></div>
-                        <div class="color-name">Clear</div>
+            <!-- Mobile Configurator -->
+            <div class="mobile-configurator">
+                <!-- Type Tab Content -->
+                <div class="mobile-tab-content active" data-content="type">
+                    <h3>Choose Your Shelf Type</h3>
+                    <div class="mobile-type-options">
+                        <div class="mobile-option-card active" data-type="acrylic">
+                            <div class="mobile-option-icon">
+                                <img src="/acrylictopbottom.png" alt="Acrylic Panel Shelf" />
+                            </div>
+                            <div class="mobile-option-title">Acrylic Panel Shelf</div>
+                            <div class="mobile-option-subtitle">*Open shelves only</div>
+                        </div>
+                        <div class="mobile-option-card" data-type="stainless">
+                            <div class="mobile-option-icon">
+                                <img src="/allside.png" alt="Stainless Panel Shelf" />
+                            </div>
+                            <div class="mobile-option-title">Stainless Panel Shelf</div>
+                            <div class="mobile-option-subtitle">*Open & closed shelves</div>
+                        </div>
                     </div>
                 </div>
+                
+                <!-- Structure Tab Content -->
+                <div class="mobile-tab-content" data-content="structure">
+                    <div class="mobile-structure-scroll">
+                        <div class="mobile-structure-tab active" data-structure-tab="elements">Elements</div>
+                        <div class="mobile-structure-tab" data-structure-tab="width">Width</div>
+                        <div class="mobile-structure-tab" data-structure-tab="depth">Depth</div>
+                        <div class="mobile-structure-tab" data-structure-tab="height">Height</div>
+                    </div>
+                    
+                    <!-- Structure Elements -->
+                    <div class="mobile-structure-content active" data-structure-content="elements">
+                        <div class="mobile-structure-options" id="mobile-structure-options">
+                            <div class="mobile-option-card active" data-structure="with-panels">
+                                <div class="mobile-option-icon">
+                                    <img src="/acrylictopbottom.png" alt="With top and bottom only" />
+                                </div>
+                                <div class="mobile-option-title">With top and bottom only</div>
+                            </div>
+                            <div class="mobile-option-card" data-structure="without-shelves">
+                                <div class="mobile-option-icon">
+                                    <img src="/nopanel.png" alt="Without Shelves" />
+                                </div>
+                                <div class="mobile-option-title">Without Shelves</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Width -->
+                    <div class="mobile-structure-content" data-structure-content="width">
+                        <div class="mobile-dimension-section">
+                            <div class="mobile-dimension-title">Width (mm) - Selected Shelf</div>
+                            <div class="mobile-size-options" id="mobile-width-options">
+                                <div class="mobile-size-button active" data-width="270">270</div>
+                                <div class="mobile-size-button" data-width="300">300</div>
+                                <div class="mobile-size-button" data-width="370">370</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Depth -->
+                    <div class="mobile-structure-content" data-structure-content="depth">
+                        <div class="mobile-dimension-section">
+                            <div class="mobile-dimension-title">Depth (mm) - Selected Row</div>
+                            <div class="mobile-size-options" id="mobile-depth-options">
+                                <div class="mobile-size-button active" data-depth="270">270</div>
+                                <div class="mobile-size-button" data-depth="300">300</div>
+                                <div class="mobile-size-button" data-depth="370">370</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Height -->
+                    <div class="mobile-structure-content" data-structure-content="height">
+                        <div class="mobile-dimension-section">
+                            <div class="mobile-dimension-title">Height (mm) - Selected Row</div>
+                            <div class="mobile-size-options" id="mobile-height-options" style="grid-template-columns: repeat(3, 1fr);">
+                                <div class="mobile-size-button" data-height="121">121</div>
+                                <div class="mobile-size-button" data-height="180">180</div>
+                                <div class="mobile-size-button" data-height="200">200</div>
+                                <div class="mobile-size-button active" data-height="270">270</div>
+                                <div class="mobile-size-button" data-height="313">313</div>
+                                <div class="mobile-size-button" data-height="350">350</div>
+                                <div class="mobile-size-button" data-height="370">370</div>
+                                <div class="mobile-size-button" data-height="483">483</div>
+                                <div class="mobile-size-button" data-height="603">603</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Color Tab Content -->
+                <div class="mobile-tab-content mobile-color-section-disabled" data-content="color" id="mobile-color-section">
+                    <h3>Colour - Selected Panel/Shelf</h3>
+                    <div class="mobile-color-options">
+                        <div class="mobile-color-option active" data-color="transparent-orange">
+                            <div class="mobile-color-swatch" style="background: linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,140,0,0.5));"></div>
+                            <div class="mobile-color-name">Transparent Orange</div>
+                        </div>
+                        <div class="mobile-color-option" data-color="transparent-black">
+                            <div class="mobile-color-swatch" style="background: linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5));"></div>
+                            <div class="mobile-color-name">Transparent Black</div>
+                        </div>
+                        <div class="mobile-color-option" data-color="solid-white">
+                            <div class="mobile-color-swatch" style="background: #ffffff; border: 2px solid #ddd;"></div>
+                            <div class="mobile-color-name">Solid White</div>
+                        </div>
+                        <div class="mobile-color-option" data-color="clear">
+                            <div class="mobile-color-swatch" style="background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3)); border: 2px solid #ddd;"></div>
+                            <div class="mobile-color-name">Clear</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Section -->
+                <div class="mobile-submit-section" id="mobile-submit-section">
+                    <button class="mobile-submit-button">Submit the design for a quote</button>
+                </div>
             </div>
-            
-            <div class="submit-section">
-                <div class="section-title" style="margin-bottom: 15px;">Submit the design for a quote</div>
-                <button class="submit-button">Submit</button>
+        </div>
+    </div>
+    
+    <!-- Welcome Modal -->
+    <div class="modal-overlay" id="welcome-modal">
+        <div class="modal">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <h2 class="modal-title">Welcome to the 3D Configurator</h2>
+            <p class="modal-description">
+                Start customising your shelf in just a few easy steps.<br><br>
+                Choose your materials, adjust the dimensions, and select colours to create your perfect shelf. Once you're finished, request a quote and our team will follow up with pricing.
+            </p>
+            <div class="modal-buttons">
+                <button class="modal-button primary" id="start-tour">Start Tour</button>
+                <button class="modal-button secondary" id="get-started">Get Started</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tour Overlay -->
+    <div class="tour-overlay" id="tour-overlay">
+        <div class="tour-tooltip" id="tour-tooltip">
+            <div class="tour-step" id="tour-step">Step 1/5: Type</div>
+            <div class="tour-title" id="tour-title">Choose the base shelf type</div>
+            <div class="tour-description" id="tour-description">Choose the base shelf type to begin your configuration.</div>
+            <div class="tour-buttons">
+                <button class="tour-nav-button" id="tour-skip">Skip</button>
+                <div class="tour-button-group">
+                    <button class="tour-nav-button" id="tour-back" style="display: none;">Back</button>
+                    <button class="tour-nav-button primary" id="tour-next">Next</button>
+                </div>
             </div>
         </div>
     </div>
@@ -530,12 +1413,15 @@
         let raycaster, mouse;
         let initialCameraPosition, initialCameraTarget;
         let dimensionsVisible = false;
+        let dimensionLines = [];
         let colorSectionEnabled = false;
         let plusIndicators = [];
+        let tourActive = false;
+        let currentTourStep = 0;
+        let isMobile = window.innerWidth <= 768;
         
         // Materials cache for performance
         let materialCache = new Map();
-        let yellowEdgeMaterial;
         
         // GLB Loaders for components
         let connectorsGLB = {}, supporterGLB = null, screwLegGLB = null;
@@ -546,18 +1432,96 @@
         const BASE_SCALE = 0.01;
         const GLB_SCALE = 0.1;
         const MAX_SIZE_LIMIT = 2500; // 2.5 meters in mm
-        const SHELF_SPACING = 0.002; // Minimal gap for seamless connection
+        const SHELF_SPACING = 0; // Minimal gap for seamless connection
         
         let currentConfig = {
             type: 'acrylic',
             structure: 'with-panels',
-            width: 300,
-            depth: 300,
-            height: 350,
+            width: 270,
+            depth: 270,
+            height: 270,
             color: 'transparent-orange'
         };
 
         let selectedPanel = null; // For individual panel selection in acrylic mode
+        let panelColors = new Map(); // Store applied panel colors - THIS SHOULD NOT BE CLEARED ON TYPE SWITCH
+
+
+function scrollToElement(selector) {
+    if (isMobile) return; // Only scroll on desktop
+    
+    const element = document.querySelector(selector);
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+}
+      const tourSteps = [
+    {
+        step: "Step 1/5: Type",
+        title: "Choose the base shelf type",
+        description: "Choose the base shelf type to begin your configuration.",
+        target: isMobile ? ".mobile-tab[data-tab='type']" : "#shelf-type-section",
+        action: () => {
+            if (isMobile) {
+                switchMobileTab('type');
+            } else {
+                scrollToElement('#shelf-type-section');
+            }
+        }
+    },
+    {
+        step: "Step 2/5: Structure",
+        title: "Select structure and dimensions",
+        description: "Select the structure element and customise its dimensions to fit your needs.",
+        target: isMobile ? ".mobile-tab[data-tab='structure']" : "#structure-section, #dimensions-section",
+        action: () => {
+            if (isMobile) {
+                switchMobileTab('structure');
+            } else {
+                scrollToElement('#structure-section');
+            }
+        }
+    },
+    {
+        step: "Step 3/5: Add Elements",
+        title: "Add adjacent elements",
+        description: "Click the plus icon to add adjacent shelf elements and design your layout.",
+        target: ".plus-indicator:first-child",
+        action: () => {
+            // Select the first shelf to show plus indicators
+            if (gridManager && gridManager.grid[0] && gridManager.grid[0][0]) {
+                gridManager.selectShelf(0, 0);
+            }
+        }
+    },
+    {
+        step: "Step 4/5: Colour",
+        title: "Pick and personalise",
+        description: "Pick a panel and personalise it by selecting the desired colour.",
+        target: isMobile ? ".mobile-tab[data-tab='color']" : "#color-section",
+        action: () => {
+            if (isMobile) {
+                switchMobileTab('color');
+            } else {
+                scrollToElement('#color-section');
+            }
+        }
+    },
+    {
+        step: "Step 5/5: Quotation",
+        title: "Submit for quotation",
+        description: "Once your shelf design is complete, submit your configuration for a quotation.",
+        target: isMobile ? "#mobile-submit-section" : "#submit-section",
+        action: () => {
+            if (!isMobile) {
+                scrollToElement('#submit-section');
+            }
+        }
+    }
+];
 
         // Grid-based shelf management system
         class GridShelfManager {
@@ -570,7 +1534,7 @@
             }
             
             createShelf(config, row = 0, col = 0) {
-                // Initialize grid structure if needed
+                // Initialize grid structure if needed - ensure all intermediate positions exist
                 while (this.grid.length <= row) {
                     this.grid.push([]);
                 }
@@ -578,9 +1542,19 @@
                     this.grid[row].push(null);
                 }
                 
+                // If there's already a shelf at this position, remove it first
+                if (this.grid[row][col]) {
+                    const existingShelf = this.grid[row][col];
+                    this.mainGroup.remove(existingShelf.group);
+                    existingShelf.dispose();
+                }
+                
                 const shelf = new Shelf(this.shelfIdCounter++, config, row, col);
                 this.grid[row][col] = shelf;
                 this.mainGroup.add(shelf.group);
+                
+                console.log(`Created shelf at position (${row},${col}) - Grid dimensions: ${this.grid.length} rows`);
+                console.log('Grid state:', this.grid.map((row, i) => `Row ${i}: [${row.map(s => s ? 'X' : 'O').join(',')}]`));
                 
                 this.updateAllPositions();
                 this.updateAllConnectors();
@@ -604,6 +1578,27 @@
                 }
             }
             
+            canDeleteSelected() {
+                // Can't delete if nothing selected or if it's the initial shelf at (0,0)
+                if (!this.selectedCoords) return false;
+                const { row, col } = this.selectedCoords;
+                return !(row === 0 && col === 0);
+            }
+            
+            deleteSelected() {
+                if (!this.canDeleteSelected()) return;
+                
+                const { row, col } = this.selectedCoords;
+                this.removeShelf(row, col);
+                
+                // Clear selection
+                this.selectedCoords = null;
+                selectedPanel = null;
+                removePlusIndicators();
+                disableColorSection();
+                hideDeleteButton();
+            }
+            
             clearAll() {
                 this.grid.forEach((row, rowIndex) => {
                     row.forEach((shelf, colIndex) => {
@@ -616,9 +1611,11 @@
                 this.grid = [];
                 this.selectedCoords = null;
                 selectedPanel = null;
+                panelColors.clear();
                 this.createShelf(currentConfig, 0, 0);
                 removePlusIndicators();
                 disableColorSection(); // Reset to disabled for acrylic
+                hideDeleteButton();
             }
             
             addHorizontalShelf() {
@@ -627,12 +1624,11 @@
                 const row = this.selectedCoords.row;
                 const col = this.selectedCoords.col;
                 
-                // Check if width would exceed base row width
-                const baseRowWidth = this.getBaseRowTotalWidth();
-                const newShelfWidth = currentConfig.width;
-                const currentRowWidth = this.getRowTotalWidth(row);
+                // Check if the new position would exceed the rightmost extent of base row
+                const newCol = col + 1;
+                const baseRowMaxCol = this.getBaseRowMaxColumn();
                 
-                if (currentRowWidth + newShelfWidth > baseRowWidth && row > 0) {
+                if (newCol > baseRowMaxCol && row > 0) {
                     showWarning("Cannot exceed base row width. Expand base row first to add more shelves horizontally.");
                     return;
                 }
@@ -644,7 +1640,6 @@
                     return;
                 }
                 
-                const newCol = col + 1;
                 this.createShelf(currentConfig, row, newCol);
                 this.selectShelf(row, newCol);
             }
@@ -655,6 +1650,8 @@
                 const row = this.selectedCoords.row;
                 const col = this.selectedCoords.col;
                 
+                console.log(`Adding vertical shelf above selected position (${row},${col})`);
+                
                 // Check size limits
                 const newTotalHeight = this.calculateTotalHeight() + currentConfig.height;
                 if (newTotalHeight > MAX_SIZE_LIMIT) {
@@ -662,19 +1659,81 @@
                     return;
                 }
                 
-                // Add directly above the selected shelf at the exact same column
-                const newRow = row + 1;
+                // Place directly above the selected shelf at row+1, same column
+                const targetRow = row + 1;
                 
-                // Ensure the grid row exists and has enough columns
-                while (this.grid.length <= newRow) {
+                console.log(`Target position for new shelf: (${targetRow},${col})`);
+                
+                // Ensure the grid has enough rows
+                while (this.grid.length <= targetRow) {
                     this.grid.push([]);
-                }
-                while (this.grid[newRow].length <= col) {
-                    this.grid[newRow].push(null);
+                    console.log(`Added new row ${this.grid.length - 1} to grid`);
                 }
                 
-                this.createShelf(currentConfig, newRow, col);
-                this.selectShelf(newRow, col);
+                // Ensure the target row has enough columns
+                while (this.grid[targetRow].length <= col) {
+                    this.grid[targetRow].push(null);
+                    console.log(`Added new column ${this.grid[targetRow].length - 1} to row ${targetRow}`);
+                }
+                
+                console.log(`Grid before creating shelf:`);
+                console.log(this.grid.map((row, i) => `Row ${i}: [${row.map(s => s ? 'X' : 'O').join(',')}]`));
+                
+                this.createShelf(currentConfig, targetRow, col);
+                this.selectShelf(targetRow, col);
+            }
+            
+            addLeftShelf() {
+                if (!this.selectedCoords) return;
+                
+                const row = this.selectedCoords.row;
+                const col = this.selectedCoords.col;
+                
+                // Can only add left if not already at leftmost position and no shelf to the left
+                if (col === 0) {
+                    showWarning("Cannot add shelf to the left of the initial position.");
+                    return;
+                }
+                
+                if (this.grid[row] && this.grid[row][col - 1]) {
+                    showWarning("There's already a shelf to the left of the selected shelf.");
+                    return;
+                }
+                
+                // Check if width would exceed base row width for non-base rows
+                const baseRowWidth = this.getBaseRowTotalWidth();
+                const newShelfWidth = currentConfig.width;
+                const currentRowWidth = this.getRowTotalWidth(row);
+                
+                if (currentRowWidth + newShelfWidth > baseRowWidth && row > 0) {
+                    showWarning("Cannot exceed base row width. Expand base row first to add more shelves.");
+                    return;
+                }
+                
+                // Check size limits
+                const newTotalWidth = this.calculateTotalWidth() + currentConfig.width;
+                if (newTotalWidth > MAX_SIZE_LIMIT) {
+                    showWarning("Please note, the total height and width of the shelf unit should not exceed 2.5 meters. Kindly adjust your configuration to stay within these limits");
+                    return;
+                }
+                
+                // Add shelf to the left (col - 1)
+                const newCol = col - 1;
+                this.createShelf(currentConfig, row, newCol);
+                this.selectShelf(row, newCol);
+            }
+            
+            getBaseRowMaxColumn() {
+                // Get the rightmost column position in the base row (row 0)
+                if (!this.grid[0]) return -1;
+                
+                let maxCol = -1;
+                for (let col = 0; col < this.grid[0].length; col++) {
+                    if (this.grid[0][col]) {
+                        maxCol = col;
+                    }
+                }
+                return maxCol;
             }
             
             getBaseRowTotalWidth() {
@@ -696,77 +1755,129 @@
             }
             
             updateAllPositions() {
-                let globalOffsetY = 0;
+                // First, calculate the X positions for each column based on BASE ROW (row 0) widths
+                // This prevents gaps when adding to base row after upper shelves exceed base width
+                const columnXPositions = [];
+                let currentX = 0;
+                
+                // Find the maximum number of columns across all rows
+                let maxCols = 0;
+                for (let row = 0; row < this.grid.length; row++) {
+                    maxCols = Math.max(maxCols, this.grid[row].length);
+                }
+                
+                // Calculate X positions for each column based PRIMARILY on base row (row 0)
+                // This ensures the base row structure is maintained and no gaps are created
+                for (let col = 0; col < maxCols; col++) {
+                    columnXPositions[col] = currentX;
+                    
+                    // Prioritize base row (row 0) width for column positioning
+                    let columnWidth = 0;
+                    if (this.grid[0] && this.grid[0][col]) {
+                        // Base row shelf exists - use its width
+                        columnWidth = this.grid[0][col].config.width * BASE_SCALE;
+                    } else {
+                        // No base row shelf - find widest shelf in this column from other rows
+                        let maxWidthInColumn = 0;
+                        for (let row = 1; row < this.grid.length; row++) {
+                            if (this.grid[row] && this.grid[row][col]) {
+                                const shelfWidth = this.grid[row][col].config.width * BASE_SCALE;
+                                maxWidthInColumn = Math.max(maxWidthInColumn, shelfWidth);
+                            }
+                        }
+                        columnWidth = maxWidthInColumn;
+                    }
+                    
+                    if (columnWidth > 0) {
+                        currentX += columnWidth + SHELF_SPACING;
+                    }
+                }
+                
+                // Now position all shelves using their correct column positions
+                let currentY = 0;
                 
                 for (let row = 0; row < this.grid.length; row++) {
-                    let globalOffsetX = 0;
                     let maxHeightInRow = 0;
                     
-                    // First pass: calculate max height in row
+                    // First pass: find max height in this row
                     for (let col = 0; col < this.grid[row].length; col++) {
                         const shelf = this.grid[row][col];
                         if (shelf) {
-                            maxHeightInRow = Math.max(maxHeightInRow, shelf.config.height * BASE_SCALE);
+                            const shelfHeight = shelf.config.height * BASE_SCALE;
+                            maxHeightInRow = Math.max(maxHeightInRow, shelfHeight);
                         }
                     }
                     
-                    // Second pass: position shelves
+                    // Second pass: position shelves in this row
                     for (let col = 0; col < this.grid[row].length; col++) {
                         const shelf = this.grid[row][col];
                         if (shelf) {
                             const shelfWidth = shelf.config.width * BASE_SCALE;
                             const shelfHeight = shelf.config.height * BASE_SCALE;
                             
-                            // Position at seamless connection points
-                            const posX = globalOffsetX + shelfWidth/2;
-                            const posY = globalOffsetY + shelfHeight/2;
+                            // Use the pre-calculated column position
+                            const posX = columnXPositions[col] + shelfWidth/2;
+                            const posY = currentY + shelfHeight/2;
                             
                             shelf.group.position.set(posX, posY, 0);
                             shelf.worldPosition = { x: posX, y: posY, z: 0 };
                             
-                            globalOffsetX += shelfWidth + SHELF_SPACING;
+                            console.log(`Positioned shelf at grid(${row},${col}) to world(${posX.toFixed(2)}, ${posY.toFixed(2)})`);
                         }
                     }
                     
-                    globalOffsetY += maxHeightInRow + SHELF_SPACING;
+                    if (maxHeightInRow > 0) {
+                        currentY += maxHeightInRow + SHELF_SPACING;
+                    }
+                }
+                
+                // Update dimension lines if visible
+                if (dimensionsVisible) {
+                    updateDimensionLines();
                 }
             }
             
             updateAllConnectors() {
-                // Update connector types based on grid position
+                // First, let all shelves know about the current grid manager state
                 for (let row = 0; row < this.grid.length; row++) {
                     for (let col = 0; col < this.grid[row].length; col++) {
                         const shelf = this.grid[row][col];
                         if (shelf) {
-                            shelf.updateConnectorTypes(this.isGlobalLeftmost(row, col), this.isGlobalRightmost(row, col));
+                            shelf.gridManager = this;
                         }
                     }
                 }
+                
+                // Then update connector types based on grid position
+                for (let row = 0; row < this.grid.length; row++) {
+                    for (let col = 0; col < this.grid[row].length; col++) {
+                        const shelf = this.grid[row][col];
+                        if (shelf) {
+                            shelf.updateConnectorTypes();
+                        }
+                    }
+                }
+                
+                // Debug: Log connector placement for verification
+                // console.log('Connector update completed. Grid state:', this.getGridDebugInfo());
             }
             
-            isGlobalLeftmost(row, col) {
-                // Check if this shelf has no adjacent shelf to its left on the same row
-                // A shelf is leftmost for 3T connectors only if there's no shelf directly to its left
-                if (col === 0) return true; // Truly leftmost position
-                
-                // Check if there's a shelf immediately to the left
+            // FIXED: Corrected logic for determining structural ends
+            isStructuralLeftEnd(row, col) {
+                // A shelf is at a structural left end if there's no shelf immediately to its left
+                if (col === 0) return true; // Leftmost column
                 if (this.grid[row] && this.grid[row][col - 1]) {
-                    return false; // There's an adjacent shelf, so this creates a joint
+                    return false; // There's a shelf to the left
                 }
-                
-                return true; // No adjacent shelf to the left
+                return true; // No shelf to the left
             }
             
-            isGlobalRightmost(row, col) {
-                // Check if this shelf has no adjacent shelf to its right on the same row
-                // A shelf is rightmost for 3T connectors only if there's no shelf directly to its right
-                
-                // Check if there's a shelf immediately to the right
+            isStructuralRightEnd(row, col) {
+                // A shelf is at a structural right end if there's no shelf immediately to its right
                 if (this.grid[row] && col + 1 < this.grid[row].length && this.grid[row][col + 1]) {
-                    return false; // There's an adjacent shelf, so this creates a joint
+                    return false; // There's a shelf to the right
                 }
-                
-                return true; // No adjacent shelf to the right
+                return true; // No shelf to the right
             }
             
             selectShelf(row, col) {
@@ -792,6 +1903,13 @@
                         enableColorSection();
                     }
                     
+                    // Show delete button if not initial shelf
+                    if (this.canDeleteSelected()) {
+                        showDeleteButton();
+                    } else {
+                        hideDeleteButton();
+                    }
+                    
                     this.updateShelfInfo();
                 }
             }
@@ -803,32 +1921,39 @@
             }
             
             updateSelectedShelfWidth(newWidth) {
-                const shelf = this.getSelectedShelf();
-                if (!shelf) return;
+                if (!this.selectedCoords) return;
                 
-                shelf.config.width = newWidth;
-                shelf.regenerate();
+                const { row, col } = this.selectedCoords;
+                
+                // Update ALL shelves in the same column, not just the selected shelf
+                for (let r = 0; r < this.grid.length; r++) {
+                    if (this.grid[r] && this.grid[r][col]) {
+                        this.grid[r][col].config.width = newWidth;
+                        this.grid[r][col].regenerate();
+                    }
+                }
+                
                 this.updateAllPositions();
+                this.updateAllConnectors(); // Add this line
                 this.updateCameraForGrid();
                 this.updateShelfInfo();
                 this.checkSizeLimits();
             }
             
             updateRowDepth(newDepth) {
-                if (!this.selectedCoords) return;
-                const selectedRow = this.selectedCoords.row;
-                
-                // Update all shelves in the row
-                if (this.grid[selectedRow]) {
-                    this.grid[selectedRow].forEach(shelf => {
+                // Update ALL shelves in the entire grid when depth changes
+                this.grid.forEach(row => {
+                    row.forEach(shelf => {
                         if (shelf) {
                             shelf.config.depth = newDepth;
                             shelf.regenerate();
                         }
                     });
-                }
+                });
                 
                 this.updateAllPositions();
+                updateWallPosition();
+                this.updateAllConnectors(); // Add this line
                 this.updateShelfInfo();
             }
             
@@ -847,6 +1972,7 @@
                 }
                 
                 this.updateAllPositions();
+                this.updateAllConnectors(); // Add this line
                 this.updateCameraForGrid();
                 this.updateShelfInfo();
                 this.checkSizeLimits();
@@ -857,6 +1983,35 @@
                 if (shelf) {
                     Object.assign(currentConfig, shelf.config);
                     updateUIFromConfig();
+                }
+            }
+            
+            updateAllShelvesStructure(newStructure) {
+                // Update ALL shelves in the entire grid when structure changes
+                this.grid.forEach(row => {
+                    row.forEach(shelf => {
+                        if (shelf) {
+                            shelf.config.structure = newStructure;
+                            shelf.regenerate();
+                        }
+                    });
+                });
+                
+                // IMPORTANT: Update connectors after structure change
+                this.updateAllConnectors();
+            }
+            
+            updateAllShelvesColor(newColor) {
+                // For stainless type, update ALL shelves in the entire grid
+                if (currentConfig.type === 'stainless') {
+                    this.grid.forEach(row => {
+                        row.forEach(shelf => {
+                            if (shelf) {
+                                shelf.config.color = newColor;
+                                shelf.regenerate();
+                            }
+                        });
+                    });
                 }
             }
             
@@ -926,9 +2081,10 @@
                 }
                 
                 const shelf = this.getSelectedShelf();
-                const totalSize = `${this.calculateTotalWidth()}x${this.calculateTotalHeight()}x${shelf ? shelf.config.depth : 300}mm`;
+                const totalSize = `${this.calculateTotalWidth()}x${this.calculateTotalHeight()}x${shelf ? shelf.config.depth : 270}mm`;
                 
-                document.getElementById('shelf-info').textContent = `Grid: ${gridSize} | Selected: ${selectedInfo} | Total Size: ${totalSize}`;
+                const displayText = `Grid: ${gridSize} | Selected: ${selectedInfo} | Total Size: ${totalSize}`;
+                document.getElementById('dimensions-display').innerHTML = `${displayText}<br>W:<span id="dim-width">${shelf ? shelf.config.width : 270}</span>mm H:<span id="dim-height">${shelf ? shelf.config.height : 270}</span>mm D:<span id="dim-depth">${shelf ? shelf.config.depth : 270}</span>mm`;
             }
             
             getIntersectedShelf(intersects) {
@@ -968,7 +2124,7 @@
                 this.originalMaterials = new Map();
                 this.isSelected = false;
                 this.worldPosition = { x: 0, y: 0, z: 0 };
-                
+                this.gridManager = window.gridManager;
                 this.generate();
             }
             
@@ -985,6 +2141,7 @@
                 this.placeScrewLegsAndSpacers(width, height, depth);
                 this.generatePanels(width, height, depth);
                 this.updatePanelVisibility();
+                this.restoreAppliedColors();
             }
             
             regenerate() {
@@ -1000,6 +2157,21 @@
                 this.screwLegs = [];
                 this.spacers = [];
             }
+            hasVerticalShelfAbove() {
+    // Check if there's a shelf directly above this one in the grid
+    if (!this.gridManager) return false;
+    
+    // Check if there's a shelf in the row above at the same column
+    const rowAbove = this.row + 1;
+    if (rowAbove < this.gridManager.grid.length &&
+        this.gridManager.grid[rowAbove] && 
+        this.col < this.gridManager.grid[rowAbove].length &&
+        this.gridManager.grid[rowAbove][this.col]) {
+        return true;
+    }
+    
+    return false;
+}
             
             generatePipeFrame(width, height, depth) {
                 const corners = [
@@ -1049,8 +2221,9 @@
                 // Will be updated by grid manager with correct types
                 this.connectors = [];
             }
-            
-            updateConnectorTypes(isLeftmost, isRightmost) {
+
+            // FIXED: Completely rewritten connector logic
+            updateConnectorTypes() {
                 // Clear existing connectors
                 this.connectors.forEach(connector => {
                     this.group.remove(connector);
@@ -1061,66 +2234,161 @@
                 const height = this.config.height * BASE_SCALE;
                 const depth = this.config.depth * BASE_SCALE;
                 
-                // Top corners - 3T only if global leftmost or rightmost
-                const topPositions = [
-                    { pos: [-width/2, height/2, -depth/2], rot: [0, -Math.PI/2, 0], isLeft: true },
-                    { pos: [width/2, height/2, -depth/2], rot: [0, Math.PI, 0], isLeft: false },
-                    { pos: [width/2, height/2, depth/2], rot: [0, Math.PI/2, 0], isLeft: false },
-                    { pos: [-width/2, height/2, depth/2], rot: [0, 0, 0], isLeft: true }
+                // Determine structural positions
+                const isLeftEnd = this.gridManager.isStructuralLeftEnd(this.row, this.col);
+                const isRightEnd = this.gridManager.isStructuralRightEnd(this.row, this.col);
+                const hasVerticalAbove = this.hasVerticalShelfAbove();
+                
+                // Define all corner positions
+                const cornerPositions = [
+                    // Top corners
+                    { pos: [-width/2, height/2, -depth/2], level: 'top', side: 'left', corner: 'front' },
+                    { pos: [width/2, height/2, -depth/2], level: 'top', side: 'right', corner: 'front' },
+                    { pos: [width/2, height/2, depth/2], level: 'top', side: 'right', corner: 'back' },
+                    { pos: [-width/2, height/2, depth/2], level: 'top', side: 'left', corner: 'back' },
+                    // Bottom corners
+                    { pos: [-width/2, -height/2, -depth/2], level: 'bottom', side: 'left', corner: 'front' },
+                    { pos: [width/2, -height/2, -depth/2], level: 'bottom', side: 'right', corner: 'front' },
+                    { pos: [width/2, -height/2, depth/2], level: 'bottom', side: 'right', corner: 'back' },
+                    { pos: [-width/2, -height/2, depth/2], level: 'bottom', side: 'left', corner: 'back' }
                 ];
                 
-                topPositions.forEach(connector => {
-                    let connectorType = '4T'; // Default
-                    
-                    // Only use 3T for global leftmost and rightmost positions
-                    if ((connector.isLeft && isLeftmost) || (!connector.isLeft && isRightmost)) {
-                        connectorType = '3T';
-                    }
-                    
-                    if (connectorsGLB[connectorType]) {
-                        const connectorObj = connectorsGLB[connectorType].clone();
-                        connectorObj.position.set(...connector.pos);
-                        connectorObj.rotation.set(...connector.rot);
-                        connectorObj.scale.setScalar(GLB_SCALE);
-                        connectorObj.userData.objectType = 'structural';
-                        connectorObj.userData.shelfId = this.id;
-                        this.connectors.push(connectorObj);
-                        this.group.add(connectorObj);
-                    }
-                });
+// Replace the connector type determination logic in updateConnectorTypes()
+// Find this section and replace it:
+
+cornerPositions.forEach(corner => {
+    let connectorType = '4T'; // Default
+    let rotation = [0, 0, 0]; // Default rotation
+    
+    // Check vertical continuity for proper connector selection
+    const hasVerticalAbove = this.hasVerticalShelfAbove();
+    const hasVerticalBelow = this.hasVerticalShelfBelow();
+    
+    if (corner.level === 'top') {
+        if (hasVerticalAbove) {
+            // Continuous joint - shelf above exists, use 4T
+            connectorType = '4T';
+            
+            // Check if this is an internal horizontal joint for rotation
+            const isLeftEnd = this.gridManager.isStructuralLeftEnd(this.row, this.col);
+            const isRightEnd = this.gridManager.isStructuralRightEnd(this.row, this.col);
+            const hasHorizontalNeighbor = !isLeftEnd || !isRightEnd;
+            
+            if (hasHorizontalNeighbor) {
+                // Internal horizontal joint rotation
+                if (corner.corner === 'front') rotation = [0, Math.PI, 0];
+                else rotation = [0, 0, 0];
+            } else {
+                // Exposed horizontal end rotation
+                if (corner.side === 'left') {
+                    if (corner.corner === 'front') rotation = [0, -Math.PI/2, 0];
+                    else rotation = [0, 0, 0];
+                } else if (corner.side === 'right') {
+                    if (corner.corner === 'front') rotation = [0, -Math.PI, 0];
+                    else rotation = [0, Math.PI/2, 0];
+                }
+            }
+        } else {
+            // Structural end - no shelf above, use 3T
+            connectorType = '3T';
+            
+            // Standard 3T rotations based on corner position
+            if (corner.side === 'left' && corner.corner === 'front') rotation = [0, -Math.PI/2, 0];
+            else if (corner.side === 'left' && corner.corner === 'back') rotation = [0, 0, 0];
+            else if (corner.side === 'right' && corner.corner === 'front') rotation = [0, Math.PI, 0];
+            else if (corner.side === 'right' && corner.corner === 'back') rotation = [0, Math.PI/2, 0];
+        }
+    } else {
+        // Bottom corners
+        if (hasVerticalBelow && this.row > 0) {
+            // Continuous joint - shelf below exists (non-base row), use 4T
+            connectorType = '4T';
+            
+            // Similar rotation logic as top corners for horizontal joints
+            const isLeftEnd = this.gridManager.isStructuralLeftEnd(this.row, this.col);
+            const isRightEnd = this.gridManager.isStructuralRightEnd(this.row, this.col);
+            const hasHorizontalNeighbor = !isLeftEnd || !isRightEnd;
+            
+            if (hasHorizontalNeighbor) {
+                if (corner.corner === 'front') rotation = [0, Math.PI, 0];
+                else rotation = [0, 0, 0];
+            } else {
+                if (corner.side === 'left') {
+                    if (corner.corner === 'front') rotation = [0, -Math.PI/2, 0];
+                    else rotation = [0, 0, 0];
+                } else if (corner.side === 'right') {
+                    if (corner.corner === 'front') rotation = [0, -Math.PI, 0];
+                    else rotation = [0, Math.PI/2, 0];
+                }
+            }
+        } else {
+            // Base row OR structural end - use 4T for structural integrity at base
+            // or 3T if there's a gap below (non-base with no shelf below)
+            if (this.row === 0) {
+                // Base row always uses 4T for foundation support
+                connectorType = '4T';
+            } else {
+                // Gap below - use 3T
+                connectorType = '3T';
                 
-                // Bottom corners - always 4T
-                const bottomPositions = [
-                    { pos: [-width/2, -height/2, -depth/2], rot: [0, -Math.PI/2, 0] },
-                    { pos: [width/2, -height/2, -depth/2], rot:[0, Math.PI, 0] },
-                    { pos: [width/2, -height/2, depth/2], rot: [0, Math.PI/2, 0] },
-                    { pos: [-width/2, -height/2, depth/2], rot: [0, 0, 0] }
-                ];
-                
-                bottomPositions.forEach(connector => {
-                    if (connectorsGLB['4T']) {
-                        const connectorObj = connectorsGLB['4T'].clone();
-                        connectorObj.position.set(...connector.pos);
-                        connectorObj.rotation.set(...connector.rot);
-                        connectorObj.scale.setScalar(GLB_SCALE);
-                        connectorObj.userData.objectType = 'structural';
-                        connectorObj.userData.shelfId = this.id;
-                        this.connectors.push(connectorObj);
-                        this.group.add(connectorObj);
-                    }
-                });
+                // 3T rotations for bottom structural ends
+                if (corner.side === 'left' && corner.corner === 'front') rotation = [0, -Math.PI/2, 0];
+                else if (corner.side === 'left' && corner.corner === 'back') rotation = [0, 0, 0];
+                else if (corner.side === 'right' && corner.corner === 'front') rotation = [0, Math.PI, 0];
+                else if (corner.side === 'right' && corner.corner === 'back') rotation = [0, Math.PI/2, 0];
             }
             
+            // Standard 4T rotations for base row
+            if (this.row === 0) {
+                const isLeftEnd = this.gridManager.isStructuralLeftEnd(this.row, this.col);
+                const isRightEnd = this.gridManager.isStructuralRightEnd(this.row, this.col);
+                const hasHorizontalNeighbor = !isLeftEnd || !isRightEnd;
+                
+                if (hasHorizontalNeighbor) {
+                    if (corner.corner === 'front') rotation = [0, Math.PI, 0];
+                    else rotation = [0, 0, 0];
+                } else {
+                    if (corner.side === 'left') {
+                        if (corner.corner === 'front') rotation = [0, -Math.PI/2, 0];
+                        else rotation = [0, 0, 0];
+                    } else if (corner.side === 'right') {
+                        if (corner.corner === 'front') rotation = [0, -Math.PI, 0];
+                        else rotation = [0, Math.PI/2, 0];
+                    }
+                }
+            }
+        }
+        
+    }
+    
+    // Create and place the connector
+    if (connectorsGLB[connectorType]) {
+        const connectorObj = connectorsGLB[connectorType].clone();
+        connectorObj.position.set(...corner.pos);
+        connectorObj.rotation.set(...rotation);
+        connectorObj.scale.setScalar(GLB_SCALE);
+        connectorObj.userData.objectType = 'structural';
+        connectorObj.userData.shelfId = this.id;
+        this.connectors.push(connectorObj);
+        this.group.add(connectorObj);
+    }
+});
+            }
+
             placeSupporters(width, height, depth) {
+                // Updated inward offset and scale values
+                const SUPPORTER_INWARD_OFFSET = PIPE_RADIUS * 2.8; // Move them further inward
+                const SUPPORTER_SCALE = GLB_SCALE * 1.18; // Make them larger
+                
                 const supporterConfigs = [
-                    { pos: [-width/2 + PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS], rot: [0, Math.PI*1.5, 0] },
-                    { pos: [width/2 - PIPE_RADIUS, height/2, -depth/2 + PIPE_RADIUS], rot: [0, 0, 0] },
-                    { pos: [width/2 - PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI*0.5, 0] },
-                    { pos: [-width/2 + PIPE_RADIUS, height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI, 0] },
-                    { pos: [-width/2 + PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS], rot: [0, Math.PI*1.5, 0] },
-                    { pos: [width/2 - PIPE_RADIUS, -height/2, -depth/2 + PIPE_RADIUS], rot: [0, 0, 0] },
-                    { pos: [width/2 - PIPE_RADIUS, -height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI*0.5, 0] },
-                    { pos: [-width/2 + PIPE_RADIUS, -height/2, depth/2 - PIPE_RADIUS], rot: [0, Math.PI, 0] }
+                    { pos: [-width/2 + SUPPORTER_INWARD_OFFSET, height/2, -depth/2 + SUPPORTER_INWARD_OFFSET], rot: [0, Math.PI*1.5, 0] },
+                    { pos: [width/2 - SUPPORTER_INWARD_OFFSET, height/2, -depth/2 + SUPPORTER_INWARD_OFFSET], rot: [0, Math.PI, 0] },
+                    { pos: [width/2 - SUPPORTER_INWARD_OFFSET, height/2, depth/2 - SUPPORTER_INWARD_OFFSET], rot: [0, Math.PI*0.5, 0] },
+                    { pos: [-width/2 + SUPPORTER_INWARD_OFFSET, height/2, depth/2 - SUPPORTER_INWARD_OFFSET], rot: [0, 0, 0] },
+                    { pos: [-width/2 + SUPPORTER_INWARD_OFFSET, -height/2, -depth/2 + SUPPORTER_INWARD_OFFSET], rot: [0, Math.PI*1.5, 0] },
+                    { pos: [width/2 - SUPPORTER_INWARD_OFFSET, -height/2, -depth/2 + SUPPORTER_INWARD_OFFSET], rot: [0, Math.PI, 0] },
+                    { pos: [width/2 - SUPPORTER_INWARD_OFFSET, -height/2, depth/2 - SUPPORTER_INWARD_OFFSET], rot: [0, Math.PI*0.5, 0] },
+                    { pos: [-width/2 + SUPPORTER_INWARD_OFFSET, -height/2, depth/2 - SUPPORTER_INWARD_OFFSET], rot: [0, 0, 0] }
                 ];
                 
                 supporterConfigs.forEach(config => {
@@ -1128,7 +2396,7 @@
                         const supporter = supporterGLB.clone();
                         supporter.position.set(...config.pos);
                         supporter.rotation.set(...config.rot);
-                        supporter.scale.setScalar(GLB_SCALE);
+                        supporter.scale.setScalar(SUPPORTER_SCALE);
                         supporter.userData.objectType = 'structural';
                         supporter.userData.shelfId = this.id;
                         this.supporters.push(supporter);
@@ -1138,6 +2406,11 @@
             }
             
             placeScrewLegsAndSpacers(width, height, depth) {
+                // Only place screw legs and spacers for the base row (row 0)
+                if (this.row !== 0) {
+                    return;
+                }
+                
                 const bottomPositions = [
                     [-width/2, -height/2, -depth/2], [width/2, -height/2, -depth/2],
                     [width/2, -height/2, depth/2], [-width/2, -height/2, depth/2]
@@ -1168,63 +2441,121 @@
                 });
             }
             
-            generatePanels(width, height, depth) {
-                const panelConfigs = {
-                    'panel': { size: [width, depth], position: [0, height/2, 0], rotation: [-Math.PI/2, 0, 0] },
-                    'panel2': { size: [width, depth], position: [0, -height/2, 0], rotation: [-Math.PI/2, 0, 0] },
-                    'panelleft': { size: [depth, height], position: [-width/2, 0, 0], rotation: [0, Math.PI/2, 0] },
-                    'panelright': { size: [depth, height], position: [width/2, 0, 0], rotation: [0, -Math.PI/2, 0] },
-                    'panelback': { size: [width, height], position: [0, 0, -depth/2], rotation: [0, 0, 0] }
-                };
-                
-                Object.entries(panelConfigs).forEach(([name, config]) => {
-                    const geometry = new THREE.PlaneGeometry(config.size[0], config.size[1]);
-                    const material = this.getMaterial('panel');
-                    const panel = new THREE.Mesh(geometry, material);
-                    
-                    panel.position.set(...config.position);
-                    panel.rotation.set(...config.rotation);
-                    panel.name = name;
-                    panel.userData.objectType = 'panel';
-                    panel.userData.shelfId = this.id;
-                    panel.castShadow = true;
-                    panel.receiveShadow = true;
-                    
-                    // Make panels interactive only for acrylic type
-                    if (this.config.type === 'acrylic') {
-                        panel.userData.interactive = 'panel';
-                    }
-                    
-                    this.originalMaterials.set(panel, material.clone());
-                    this.panels[name] = panel;
-                    this.group.add(panel);
-                });
-            }
+           generatePanels(width, height, depth) {
+    // Add small random offsets to prevent z-fighting between adjacent panels
+    const zOffset = (Math.random() - 0.5) * 0.001; // Very small random offset
+    
+    const panelConfigs = {
+        'panel': { size: [width, depth], position: [0, height/2, zOffset], rotation: [-Math.PI/2, 0, 0] },
+        'panel2': { size: [width, depth], position: [0, -height/2, zOffset], rotation: [-Math.PI/2, 0, 0] },
+        'panelleft': { size: [depth, height], position: [-width/2 - 0.0005, 0, zOffset], rotation: [0, Math.PI/2, 0] },
+        'panelright': { size: [depth, height], position: [width/2 + 0.0005, 0, zOffset], rotation: [0, -Math.PI/2, 0] },
+        'panelback': { size: [width, height], position: [zOffset, 0, -depth/2 - 0.0005], rotation: [0, 0, 0] }
+    };
+    
+    Object.entries(panelConfigs).forEach(([name, config]) => {
+        const geometry = new THREE.PlaneGeometry(config.size[0], config.size[1]);
+        const material = this.getMaterial('panel');
+        const panel = new THREE.Mesh(geometry, material);
+        
+        panel.position.set(...config.position);
+        panel.rotation.set(...config.rotation);
+        panel.name = name;
+        panel.userData.objectType = 'panel';
+        panel.userData.shelfId = this.id;
+        panel.userData.panelKey = `${this.id}-${name}`;
+        panel.castShadow = true;
+        panel.receiveShadow = true;
+        
+        // Add a unique render order to prevent flickering
+        panel.renderOrder = this.id * 10 + Object.keys(this.panels).length;
+        
+        // Make panels interactive for acrylic type AND make them visible to raycaster
+        if (this.config.type === 'acrylic') {
+            panel.userData.interactive = 'panel';
+            panel.material.transparent = true; // Ensure raycaster can detect them
+            // Ensure transparent panels don't cause z-fighting
+            panel.material.depthWrite = false;
+        }
+        
+        this.originalMaterials.set(panel, material.clone());
+        this.panels[name] = panel;
+        this.group.add(panel);
+    });
+}
             
             updatePanelVisibility() {
-                Object.values(this.panels).forEach(panel => panel.visible = false);
+                // First hide all panels
+                Object.values(this.panels).forEach(panel => {
+                    panel.visible = false;
+                    // Reset interactive flag
+                    if (panel.userData.interactive) {
+                        delete panel.userData.interactive;
+                    }
+                });
                 
                 const { type, structure } = this.config;
                 
                 if (type === 'acrylic') {
                     if (structure === 'with-panels') {
-                        if (this.panels.panel) this.panels.panel.visible = true;
-                        if (this.panels.panel2) this.panels.panel2.visible = true;
+                        if (this.panels.panel) {
+                            this.panels.panel.visible = true;
+                            this.panels.panel.userData.interactive = 'panel';
+                        }
+                        if (this.panels.panel2) {
+                            this.panels.panel2.visible = true;
+                            this.panels.panel2.userData.interactive = 'panel';
+                        }
                     }
                 } else if (type === 'stainless') {
                     if (structure === 'all-no-front') {
                         ['panelback', 'panelleft', 'panelright', 'panel', 'panel2'].forEach(name => {
-                            if (this.panels[name]) this.panels[name].visible = true;
+                            if (this.panels[name]) {
+                                this.panels[name].visible = true;
+                                // Stainless panels are not individually selectable
+                            }
                         });
                     } else if (structure === 'without-back') {
                         ['panelleft', 'panelright', 'panel', 'panel2'].forEach(name => {
-                            if (this.panels[name]) this.panels[name].visible = true;
+                            if (this.panels[name]) {
+                                this.panels[name].visible = true;
+                            }
                         });
                     } else if (structure === 'with-panels') {
                         if (this.panels.panel) this.panels.panel.visible = true;
                         if (this.panels.panel2) this.panels.panel2.visible = true;
                     }
                 }
+                
+                console.log('Panel visibility updated for', type, structure, 'Visible panels:', 
+                    Object.entries(this.panels).filter(([name, panel]) => panel.visible).map(([name]) => name));
+            }
+            
+            restoreAppliedColors() {
+                // Restore any previously applied panel colors from the panelColors map
+                // But only for acrylic type - stainless should never have transparency
+                if (this.config.type !== 'acrylic') {
+                    return; // Don't restore colors for non-acrylic types
+                }
+                
+                Object.values(this.panels).forEach(panel => {
+                    const panelKey = panel.userData.panelKey;
+                    if (panelColors.has(panelKey)) {
+                        const colorConfig = panelColors.get(panelKey);
+                 const material = new THREE.MeshPhysicalMaterial({
+    color: colorConfig.color,
+    transparent: colorConfig.opacity < 1.0,
+    opacity: colorConfig.opacity,
+    side: THREE.DoubleSide,
+    roughness: 0.1,
+    metalness: 0.0,
+    depthWrite: colorConfig.opacity < 1.0 ? false : true,
+    alphaTest: colorConfig.opacity < 0.1 ? 0.1 : 0
+});
+                        panel.material = material;
+                        console.log('Restored color for panel:', panel.name, 'Color:', colorConfig);
+                    }
+                });
             }
             
             getMaterial(type) {
@@ -1245,25 +2576,42 @@
                         clearcoatRoughness: 0.1
                     });
                 } else if (type === 'panel') {
-                    if (this.config.type === 'acrylic') {
-                        const colorMap = {
-                            'transparent-orange': { color: 0xff8c00, opacity: 0.6 },
-                            'transparent-black': { color: 0x333333, opacity: 0.7 },
-                            'solid-white': { color: 0xffffff, opacity: 1.0 },
-                            'clear': { color: 0xffffff, opacity: 0.2 }
-                        };
-                        
-                        const colorConfig = colorMap[this.config.color] || colorMap['transparent-orange'];
-                        
-                        material = new THREE.MeshPhysicalMaterial({
-                            color: colorConfig.color,
-                            transparent: colorConfig.opacity < 1.0,
-                            opacity: colorConfig.opacity,
-                            side: THREE.DoubleSide,
-                            roughness: 0.1,
-                            metalness: 0.0
-                        });
-                    } else {
+                  // Inside getMaterial method, replace the acrylic material creation:
+if (this.config.type === 'acrylic') {
+    const colorMap = {
+        'transparent-orange': { color: 0xff8c00, opacity: 0.6 },
+        'transparent-black': { color: 0x333333, opacity: 0.7 },
+        'solid-white': { color: 0xffffff, opacity: 1.0 },
+        'clear': { color: 0xffffff, opacity: 0.2 }
+    };
+    
+    const colorConfig = colorMap[this.config.color] || colorMap['transparent-orange'];
+    
+// Inside restoreAppliedColors method, replace the material creation:
+// Inside getMaterial method, replace the acrylic material creation:
+if (this.config.type === 'acrylic') {
+    const colorMap = {
+        'transparent-orange': { color: 0xff8c00, opacity: 0.6 },
+        'transparent-black': { color: 0x333333, opacity: 0.7 },
+        'solid-white': { color: 0xffffff, opacity: 1.0 },
+        'clear': { color: 0xffffff, opacity: 0.2 }
+    };
+    
+    const colorConfig = colorMap[this.config.color] || colorMap['transparent-orange'];
+    
+    material = new THREE.MeshPhysicalMaterial({
+        color: colorConfig.color,
+        transparent: colorConfig.opacity < 1.0,
+        opacity: colorConfig.opacity,
+        side: THREE.DoubleSide,
+        roughness: 0.1,
+        metalness: 0.0,
+        depthWrite: colorConfig.opacity < 1.0 ? false : true, // Prevent z-fighting for transparent materials
+        alphaTest: colorConfig.opacity < 0.1 ? 0.1 : 0 // Improve transparent rendering
+    });
+}
+} else {
+                        // Stainless steel materials - never transparent
                         const colorMap = {
                             'orange': 0xff8c00,
                             'yellow': 0xffff00,
@@ -1279,7 +2627,8 @@
                         
                         material = new THREE.MeshPhysicalMaterial({
                             color: materialColor,
-                            transparent: false,
+                            transparent: false, // Stainless is never transparent
+                            opacity: 1.0, // Always fully opaque
                             roughness: isMatte ? 0.8 : 0.1,
                             metalness: isMatte ? 0.0 : 0.7,
                             clearcoat: isMatte ? 0.0 : 1.0,
@@ -1310,27 +2659,52 @@
                 });
             }
             
+   hasVerticalShelfBelow() {
+    // Check if there's a shelf directly below this one in the grid
+    if (!this.gridManager || this.row === 0) return false; // Base row has no shelf below
+    
+    // Check if there's a shelf in the row below at the same column
+    const rowBelow = this.row - 1;
+    if (this.gridManager.grid[rowBelow] && 
+        this.col < this.gridManager.grid[rowBelow].length &&
+        this.gridManager.grid[rowBelow][this.col]) {
+        return true;
+    }
+    
+    return false;
+}
+            
             dispose() {
                 this.group.clear();
             }
         }
         
         let gridManager;
-
+let wallPlane = null;
         function init() {
+            // Detect mobile
+            isMobile = window.innerWidth <= 768;
+            
             // Scene setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf0f0f0);
+            scene.background = new THREE.Color(0xf2f2f2);
 
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, (window.innerWidth * 0.7) / window.innerHeight, 0.1, 1000);
-            camera.position.set(2, 0, 0);
-            initialCameraPosition = new THREE.Vector3(2, 0, 0);
+            // Camera - positioned to face the model from front
+            const aspectRatio = isMobile ? 
+                window.innerWidth / (window.innerHeight * 0.75) : 
+                (window.innerWidth * 0.7) / window.innerHeight;
+                
+            camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
+       camera.position.set(0, 1, 6); // Better initial position - higher and further back
+initialCameraPosition = new THREE.Vector3(0, 1, 6);
             initialCameraTarget = new THREE.Vector3(0, 0, 0);
 
             // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth * 0.7, window.innerHeight);
+            const canvasWidth = isMobile ? window.innerWidth : window.innerWidth * 0.7;
+            const canvasHeight = isMobile ? window.innerHeight * 0.75 : window.innerHeight;
+            
+            renderer.setSize(canvasWidth, canvasHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1339,24 +2713,22 @@
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             // Controls
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.target.copy(initialCameraTarget);
-            controls.minPolarAngle = 0;
-            controls.maxPolarAngle = Math.PI / 2;
-            controls.minAzimuthAngle = -Math.PI / 2;
-            controls.maxAzimuthAngle = Math.PI / 2;
+        controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.target.copy(initialCameraTarget);
 
+// Camera restrictions (adjusted for floor at y = -0.5)
+controls.minPolarAngle = 0; // Prevent going below horizon
+controls.maxPolarAngle = Math.PI * 0.45; // Prevent going under floor (more restrictive)
+controls.minAzimuthAngle = -Math.PI * 0.5; // Half circle left limit
+controls.maxAzimuthAngle = Math.PI * 0.5; // Half circle right limit
+controls.enablePan = false; // Disable panning
+controls.minDistance = 3; // Minimum zoom distance
+controls.maxDistance = 15; // Maximum zoom distance
             // Raycaster
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
-            
-            // Create edge highlight material for panels
-            yellowEdgeMaterial = new THREE.LineBasicMaterial({ 
-                color: 0xffff00,
-                linewidth: 3
-            });
 
             // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -1371,30 +2743,80 @@
 
             // HDR environment
             const rgbeLoader = new RGBELoader();
-            rgbeLoader.load('https://threejs.org/examples/textures/equirectangular/venice_sunset_1k.hdr', function(texture) {
+            rgbeLoader.load('/neon_photostudio_1k.hdr', function(texture) {
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 scene.environment = texture;
             });
+              // Create wall plane behind shelves
+            const wallGeometry = new THREE.PlaneGeometry(15, 15);
+            const wallMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xffffff,
+                side: THREE.FrontSide 
+            });
+            wallPlane = new THREE.Mesh(wallGeometry, wallMaterial);
+            wallPlane.position.set(0, 0, -1.5); // Start position behind shelves
+            scene.add(wallPlane);
+
+             const floorGeometry = new THREE.PlaneGeometry(20, 20);
+            const floorMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xffffff,
+                side: THREE.DoubleSide 
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+            floor.position.y = -.5; // Position below shelves
+            floor.receiveShadow = false; // As requested, no shadow receiving
+            scene.add(floor);
 
             // Initialize grid manager
             gridManager = new GridShelfManager();
+            window.gridManager = gridManager; 
 
             // Load components and create initial shelf
             loadComponentsAndGenerate();
             setupEventListeners();
             
             disableColorSection(); // Start disabled for acrylic
+            
+            // Show welcome modal after everything is loaded
+            setTimeout(showWelcomeModal, 1000);
         }
+        // Function to update wall position based on current shelf depths
+function updateWallPosition() {
+    if (!wallPlane || !gridManager) return;
+    
+    // Find the maximum depth among all shelves
+    let maxDepth = 270; // Default minimum depth
+    
+    for (let row = 0; row < gridManager.grid.length; row++) {
+        for (let col = 0; col < gridManager.grid[row].length; col++) {
+            const shelf = gridManager.grid[row][col];
+            if (shelf) {
+                maxDepth = Math.max(maxDepth, shelf.config.depth);
+            }
+        }
+    }
+    
+    // Position wall behind the deepest part of shelves
+    // Convert mm to scene units and add padding
+    const depthInScene = (maxDepth * BASE_SCALE) / 2;
+    const wallPosition = -depthInScene - 0.3; // Behind + padding
+    
+    wallPlane.position.z = wallPosition;
+    
+    console.log(`Wall moved to Z: ${wallPosition} (max depth: ${maxDepth}mm)`);
+}
 
         function loadComponentsAndGenerate() {
             const loader = new GLTFLoader();
             let loadedComponents = 0;
-            const totalComponents = 4;
+            const totalComponents = 5;
             
             const componentsToLoad = [
-                { url: '/3TConnector.glb', key: '3T' },
-                { url: '/4TConnector.glb', key: '4T' },
-                { url: '/Suppoter.1.glb', type: 'supporter' },
+                { url: '/3t.glb', key: '3T' },
+                { url: '/4t.glb', key: '4T' },
+                { url: '/Sp.glb', type: 'supporter' },
+                   { url: '/4t2.glb', key: '4T2' },  
                 { url: '/screwlegs.glb', type: 'screwleg' }
             ];
             
@@ -1432,6 +2854,211 @@
             // Don't auto-select the initial shelf
             document.getElementById('loading').style.display = 'none';
             gridManager.updateShelfInfo();
+            updateWallPosition();
+        }
+
+        // Mobile functionality
+        function switchMobileTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.mobile-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.mobile-tab-content').forEach(content => {
+                content.classList.toggle('active', content.dataset.content === tabName);
+            });
+        }
+
+        function switchMobileStructureTab(tabName) {
+            // Update structure tab buttons
+            document.querySelectorAll('.mobile-structure-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.structureTab === tabName);
+            });
+            
+            // Update structure content
+            document.querySelectorAll('.mobile-structure-content').forEach(content => {
+                content.classList.toggle('active', content.dataset.structureContent === tabName);
+            });
+        }
+
+        // Modal and Tour Functions
+        function showWelcomeModal() {
+            const modal = document.getElementById('welcome-modal');
+            modal.classList.add('show');
+        }
+
+        function hideWelcomeModal() {
+            const modal = document.getElementById('welcome-modal');
+            modal.classList.remove('show');
+        }
+
+        function startTour() {
+            hideWelcomeModal();
+            tourActive = true;
+            currentTourStep = 0;
+            showTourStep(0);
+        }
+
+        function showTourStep(stepIndex) {
+            if (stepIndex >= tourSteps.length) {
+                endTour();
+                return;
+            }
+            
+            const step = tourSteps[stepIndex];
+            const overlay = document.getElementById('tour-overlay');
+            const tooltip = document.getElementById('tour-tooltip');
+            
+            // Execute step action if available
+            if (step.action) {
+                step.action();
+            }
+            
+            // Update tour content
+            document.getElementById('tour-step').textContent = step.step;
+            document.getElementById('tour-title').textContent = step.title;
+            document.getElementById('tour-description').textContent = step.description;
+            
+            // Update navigation buttons
+            document.getElementById('tour-back').style.display = stepIndex > 0 ? 'inline-block' : 'none';
+            document.getElementById('tour-next').textContent = stepIndex === tourSteps.length - 1 ? 'Finish' : 'Next';
+            
+            // Clear previous highlights
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.classList.remove('tour-highlight');
+            });
+            
+            // Highlight target elements
+            const targets = step.target.split(', ');
+            targets.forEach(target => {
+                const element = document.querySelector(target);
+                if (element) {
+                    element.classList.add('tour-highlight');
+                    
+                    // For plus indicators, make sure they are visible and highlighted
+                    if (element.classList.contains('plus-indicator')) {
+                        element.style.display = 'flex';
+                    }
+                }
+            });
+            
+            // Position tooltip based on target (desktop only)
+            if (!isMobile) {
+                const mainTarget = document.querySelector(targets[0]);
+                if (mainTarget) {
+                    const rect = mainTarget.getBoundingClientRect();
+                    let top = rect.top + rect.height + 20;
+                    let left = rect.left + rect.width / 2 - 160;
+                    
+                    // Adjust if tooltip would go off screen
+                    if (left + 320 > window.innerWidth) {
+                        left = window.innerWidth - 340;
+                    }
+                    if (left < 20) {
+                        left = 20;
+                    }
+                    if (top + 200 > window.innerHeight) {
+                        top = rect.top - 220;
+                    }
+                    
+                    tooltip.style.top = top + 'px';
+                    tooltip.style.left = left + 'px';
+                }
+            }
+            
+            overlay.classList.add('show');
+        }
+
+        function nextTourStep() {
+            currentTourStep++;
+            showTourStep(currentTourStep);
+        }
+
+        function prevTourStep() {
+            currentTourStep--;
+            showTourStep(currentTourStep);
+        }
+
+        function endTour() {
+            tourActive = false;
+            const overlay = document.getElementById('tour-overlay');
+            overlay.classList.remove('show');
+            
+            // Clear highlights
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.classList.remove('tour-highlight');
+            });
+        }
+
+        // Delete functionality
+        function showDeleteButton() {
+            document.getElementById('delete-button').style.display = 'flex';
+        }
+
+        function hideDeleteButton() {
+            document.getElementById('delete-button').style.display = 'none';
+        }
+
+        // Dimension visualization
+        function createDimensionLines() {
+            clearDimensionLines();
+            
+            const selectedShelf = gridManager.getSelectedShelf();
+            if (!selectedShelf) return;
+            
+            const width = selectedShelf.config.width * BASE_SCALE;
+            const height = selectedShelf.config.height * BASE_SCALE;
+            const depth = selectedShelf.config.depth * BASE_SCALE;
+            
+            const position = selectedShelf.group.position;
+            
+            // Create dimension lines and labels
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff6b35 });
+            const textColor = '#ff6b35';
+            
+            // Width dimension (horizontal)
+            const widthGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(position.x - width/2, position.y - height/2 - 0.3, position.z + depth/2 + 0.2),
+                new THREE.Vector3(position.x + width/2, position.y - height/2 - 0.3, position.z + depth/2 + 0.2)
+            ]);
+            const widthLine = new THREE.Line(widthGeometry, lineMaterial);
+            dimensionLines.push(widthLine);
+            scene.add(widthLine);
+            
+            // Height dimension (vertical)
+            const heightGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(position.x - width/2 - 0.3, position.y - height/2, position.z + depth/2 + 0.2),
+                new THREE.Vector3(position.x - width/2 - 0.3, position.y + height/2, position.z + depth/2 + 0.2)
+            ]);
+            const heightLine = new THREE.Line(heightGeometry, lineMaterial);
+            dimensionLines.push(heightLine);
+            scene.add(heightLine);
+            
+            // Depth dimension (into screen)
+            const depthGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(position.x + width/2 + 0.2, position.y - height/2 - 0.3, position.z - depth/2),
+                new THREE.Vector3(position.x + width/2 + 0.2, position.y - height/2 - 0.3, position.z + depth/2)
+            ]);
+            const depthLine = new THREE.Line(depthGeometry, lineMaterial);
+            dimensionLines.push(depthLine);
+            scene.add(depthLine);
+            
+            // Add dimension labels (simplified - in real app you'd use HTML/CSS labels)
+            // For now, just the lines will indicate the dimensions
+        }
+
+        function clearDimensionLines() {
+            dimensionLines.forEach(line => {
+                scene.remove(line);
+            });
+            dimensionLines = [];
+        }
+
+        function updateDimensionLines() {
+            if (dimensionsVisible) {
+                createDimensionLines();
+            }
         }
 
         function onMouseMove(event) {
@@ -1453,12 +3080,6 @@
                 });
             });
             
-            // Remove panel edge highlights if any
-            const existingEdge = gridManager.mainGroup.getObjectByName('edge-highlight');
-            if (existingEdge) {
-                gridManager.mainGroup.remove(existingEdge);
-            }
-            
             if (intersects.length > 0) {
                 const result = gridManager.getIntersectedShelf(intersects);
                 if (result) {
@@ -1466,8 +3087,7 @@
                     const isAcrylic = result.shelf.config.type === 'acrylic';
                     
                     if (isPanel && isAcrylic && result.object.userData.interactive === 'panel') {
-                        // Panel hover for acrylic - show edge highlight
-                        applyPanelEdgeHighlight(result.object);
+                        // Panel hover for acrylic - just show cursor change
                         renderer.domElement.style.cursor = 'pointer';
                     } else if (!result.shelf.isSelected) {
                         // Shelf hover - highlight all pipes
@@ -1506,54 +3126,134 @@
                     
                     if (isPanel && isAcrylic && result.object.userData.interactive === 'panel') {
                         // Panel clicked for acrylic - select individual panel
+                        
+                        // Clear previous panel selection highlighting but preserve colors
+                        if (selectedPanel && selectedPanel !== result.object) {
+                            const prevPanelKey = selectedPanel.userData.panelKey;
+                            if (panelColors.has(prevPanelKey)) {
+                                // Restore to applied color
+                                const colorConfig = panelColors.get(prevPanelKey);
+                                const material = new THREE.MeshPhysicalMaterial({
+                                    color: colorConfig.color,
+                                    transparent: colorConfig.opacity < 1.0,
+                                    opacity: colorConfig.opacity,
+                                    side: THREE.DoubleSide,
+                                    roughness: 0.1,
+                                    metalness: 0.0
+                                });
+                                selectedPanel.material = material;
+                            } else {
+                                // Restore to original material
+                                const selectedShelf = gridManager.getSelectedShelf();
+                                if (selectedShelf && selectedShelf.originalMaterials.has(selectedPanel)) {
+                                    selectedPanel.material = selectedShelf.originalMaterials.get(selectedPanel).clone();
+                                }
+                            }
+                        }
+                        
                         selectedPanel = result.object;
                         
                         // Apply yellow highlight to selected panel
-                        const vividYellowMaterial = new THREE.MeshBasicMaterial({ 
+                        const highlightMaterial = new THREE.MeshBasicMaterial({ 
                             color: 0xffd700,
                             transparent: true,
                             opacity: 0.8,
                             side: THREE.DoubleSide
                         });
-                        result.object.material = vividYellowMaterial;
+                        result.object.material = highlightMaterial;
                         
+                        // Enable color section for panel selection
                         enableColorSection();
                         
                         // Also select the shelf
-                        gridManager.selectShelf(result.row, result.col);
+                        const prevShelf = gridManager.getSelectedShelf();
+                        if (!prevShelf || prevShelf.id !== result.shelf.id) {
+                            if (prevShelf) prevShelf.setSelected(false);
+                            gridManager.selectedCoords = { row: result.row, col: result.col };
+                            result.shelf.setSelected(true);
+                            gridManager.updateConfigFromSelected();
+                        }
+                        
+                        gridManager.updateShelfInfo();
+                        
+                        // Show delete button if not initial shelf
+                        if (gridManager.canDeleteSelected()) {
+                            showDeleteButton();
+                        } else {
+                            hideDeleteButton();
+                        }
+                        
+                        console.log('Panel selected:', result.object.name, 'Key:', result.object.userData.panelKey);
                         
                     } else {
-                        // Shelf clicked - select entire shelf
-                        selectedPanel = null;
+                        // Shelf clicked (non-panel or non-acrylic) - select entire shelf
+                        
+                        // Clear panel selection but preserve applied colors
+                        if (selectedPanel) {
+                            const panelKey = selectedPanel.userData.panelKey;
+                            if (panelColors.has(panelKey)) {
+                                // Restore to applied color
+                                const colorConfig = panelColors.get(panelKey);
+                                const material = new THREE.MeshPhysicalMaterial({
+                                    color: colorConfig.color,
+                                    transparent: colorConfig.opacity < 1.0,
+                                    opacity: colorConfig.opacity,
+                                    side: THREE.DoubleSide,
+                                    roughness: 0.1,
+                                    metalness: 0.0
+                                });
+                                selectedPanel.material = material;
+                            } else {
+                                // Restore to original
+                                const selectedShelf = gridManager.getSelectedShelf();
+                                if (selectedShelf && selectedShelf.originalMaterials.has(selectedPanel)) {
+                                    selectedPanel.material = selectedShelf.originalMaterials.get(selectedPanel).clone();
+                                }
+                            }
+                            selectedPanel = null;
+                        }
+                        
+                        // Select shelf
                         gridManager.selectShelf(result.row, result.col);
                     }
                 }
             } else {
-                // Clicked empty space - deselect all
+                // Clicked empty space - preserve applied colors but clear selection
+                if (selectedPanel) {
+                    const panelKey = selectedPanel.userData.panelKey;
+                    if (panelColors.has(panelKey)) {
+                        // Restore to applied color
+                        const colorConfig = panelColors.get(panelKey);
+                        const material = new THREE.MeshPhysicalMaterial({
+                            color: colorConfig.color,
+                            transparent: colorConfig.opacity < 1.0,
+                            opacity: colorConfig.opacity,
+                            side: THREE.DoubleSide,
+                            roughness: 0.1,
+                            metalness: 0.0
+                        });
+                        selectedPanel.material = material;
+                    } else {
+                        // Restore to original
+                        const selectedShelf = gridManager.getSelectedShelf();
+                        if (selectedShelf && selectedShelf.originalMaterials.has(selectedPanel)) {
+                            selectedPanel.material = selectedShelf.originalMaterials.get(selectedPanel).clone();
+                        }
+                    }
+                    selectedPanel = null;
+                }
+                
                 const prevShelf = gridManager.getSelectedShelf();
                 if (prevShelf) {
                     prevShelf.setSelected(false);
                 }
+                
                 gridManager.selectedCoords = null;
-                selectedPanel = null;
                 removePlusIndicators();
                 disableColorSection();
+                hideDeleteButton();
                 gridManager.updateShelfInfo();
             }
-        }
-
-        function applyPanelEdgeHighlight(panel) {
-            // Create edge highlight without making panel transparent
-            const edges = new THREE.EdgesGeometry(panel.geometry);
-            const edgeLines = new THREE.LineSegments(edges, yellowEdgeMaterial);
-            
-            // Position edge lines to match panel
-            edgeLines.position.copy(panel.position);
-            edgeLines.rotation.copy(panel.rotation);
-            edgeLines.scale.copy(panel.scale);
-            edgeLines.name = 'edge-highlight';
-            
-            gridManager.mainGroup.add(edgeLines);
         }
 
         function createPlusIndicators() {
@@ -1562,15 +3262,32 @@
             const selectedShelf = gridManager.getSelectedShelf();
             if (!selectedShelf) return;
             
-            // Create horizontal plus indicator
-            const horizontalPlus = document.createElement('div');
-            horizontalPlus.className = 'plus-indicator horizontal';
-            horizontalPlus.setAttribute('title', 'Add shelf horizontally');
-            horizontalPlus.addEventListener('click', (e) => {
+            const { row, col } = gridManager.selectedCoords;
+            
+            // Create left plus indicator ONLY if col > 0 (not at initial position) and no shelf to the left
+            const canAddLeft = col > 0 && (!gridManager.grid[row][col - 1]);
+            if (canAddLeft) {
+                const leftPlus = document.createElement('div');
+                leftPlus.className = 'plus-indicator left';
+                leftPlus.setAttribute('title', 'Add shelf to the left');
+                leftPlus.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    gridManager.addLeftShelf();
+                });
+                document.body.appendChild(leftPlus);
+                plusIndicators.push(leftPlus);
+            }
+            
+            // Create right plus indicator (always available)
+            const rightPlus = document.createElement('div');
+            rightPlus.className = 'plus-indicator right';
+            rightPlus.setAttribute('title', 'Add shelf to the right');
+            rightPlus.addEventListener('click', (e) => {
                 e.stopPropagation();
                 gridManager.addHorizontalShelf();
             });
-            document.body.appendChild(horizontalPlus);
+            document.body.appendChild(rightPlus);
+            plusIndicators.push(rightPlus);
             
             // Create vertical plus indicator
             const verticalPlus = document.createElement('div');
@@ -1581,8 +3298,7 @@
                 gridManager.addVerticalShelf();
             });
             document.body.appendChild(verticalPlus);
-            
-            plusIndicators.push(horizontalPlus, verticalPlus);
+            plusIndicators.push(verticalPlus);
         }
 
         function updatePlusIndicatorPositions() {
@@ -1596,40 +3312,45 @@
             const size = bbox.getSize(new THREE.Vector3());
             const center = bbox.getCenter(new THREE.Vector3());
             
-            // Position indicators relative to shelf bounds
-            const horizontalWorldPos = new THREE.Vector3(
-                center.x + size.x/2 + 0.2, 
-                center.y, 
-                center.z
-            );
-            const verticalWorldPos = new THREE.Vector3(
-                center.x, 
-                center.y + size.y/2 + 0.2, 
-                center.z
-            );
-            
-            // Project to screen coordinates
-            horizontalWorldPos.project(camera);
-            verticalWorldPos.project(camera);
-            
-            // Convert to pixel positions
             const canvasRect = renderer.domElement.getBoundingClientRect();
             
-            if (plusIndicators[0]) {
-                const x = (horizontalWorldPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const y = (-horizontalWorldPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                plusIndicators[0].style.left = (x - 18) + 'px';
-                plusIndicators[0].style.top = (y - 18) + 'px';
-                plusIndicators[0].style.display = (x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight) ? 'flex' : 'none';
-            }
-            
-            if (plusIndicators[1]) {
-                const x = (verticalWorldPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
-                const y = (-verticalWorldPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
-                plusIndicators[1].style.left = (x - 18) + 'px';
-                plusIndicators[1].style.top = (y - 18) + 'px';
-                plusIndicators[1].style.display = (x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight) ? 'flex' : 'none';
-            }
+            plusIndicators.forEach(indicator => {
+                let worldPos = new THREE.Vector3();
+                
+                if (indicator.classList.contains('left')) {
+                    // Position left indicator
+                    worldPos.set(
+                        center.x - size.x/2 - 0.2, 
+                        center.y, 
+                        center.z
+                    );
+                } else if (indicator.classList.contains('right')) {
+                    // Position right indicator  
+                    worldPos.set(
+                        center.x + size.x/2 + 0.2, 
+                        center.y, 
+                        center.z
+                    );
+                } else if (indicator.classList.contains('vertical')) {
+                    // Position vertical indicator
+                    worldPos.set(
+                        center.x, 
+                        center.y + size.y/2 + 0.2, 
+                        center.z
+                    );
+                }
+                
+                // Project to screen coordinates
+                worldPos.project(camera);
+                
+                // Convert to pixel positions
+                const x = (worldPos.x * 0.5 + 0.5) * canvasRect.width + canvasRect.left;
+                const y = (-worldPos.y * 0.5 + 0.5) * canvasRect.height + canvasRect.top;
+                
+                indicator.style.left = (x - 18) + 'px';
+                indicator.style.top = (y - 18) + 'px';
+                indicator.style.display = (x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight) ? 'flex' : 'none';
+            });
         }
 
         function removePlusIndicators() {
@@ -1654,17 +3375,23 @@
         function enableColorSection() {
             colorSectionEnabled = true;
             const colorSection = document.getElementById('color-section');
-            colorSection.classList.remove('color-section-disabled');
+            const mobileColorSection = document.getElementById('mobile-color-section');
+            
+            if (colorSection) colorSection.classList.remove('color-section-disabled');
+            if (mobileColorSection) mobileColorSection.classList.remove('mobile-color-section-disabled');
         }
 
         function disableColorSection() {
             colorSectionEnabled = false;
             const colorSection = document.getElementById('color-section');
-            colorSection.classList.add('color-section-disabled');
+            const mobileColorSection = document.getElementById('mobile-color-section');
+            
+            if (colorSection) colorSection.classList.add('color-section-disabled');
+            if (mobileColorSection) mobileColorSection.classList.add('mobile-color-section-disabled');
         }
 
         function updateUIFromConfig() {
-            // Update UI elements to reflect current config
+            // Update desktop UI elements
             document.querySelectorAll('[data-width]').forEach(el => {
                 el.classList.toggle('active', parseInt(el.dataset.width) === currentConfig.width);
             });
@@ -1684,56 +3411,112 @@
             updateDimensionsDisplay();
         }
 
+        // FIXED: Don't clear panelColors when switching types - this preserves colors
         function updateShelfTypeOptions() {
             const structureOptions = document.getElementById('structure-options');
+            const mobileStructureOptions = document.getElementById('mobile-structure-options');
             const widthOptions = document.getElementById('width-options');
+            const mobileWidthOptions = document.getElementById('mobile-width-options');
             const depthOptions = document.getElementById('depth-options');
+            const mobileDepthOptions = document.getElementById('mobile-depth-options');
             const heightOptions = document.getElementById('height-options');
+            const mobileHeightOptions = document.getElementById('mobile-height-options');
             const colorSection = document.getElementById('color-section');
+            const mobileColorSection = document.getElementById('mobile-color-section');
             
             // Clear material cache when switching types
             materialCache.clear();
             
+            // REMOVED: Don't clear panel colors when switching types
+            // panelColors.clear(); // THIS LINE WAS CAUSING COLOR LOSS
+            selectedPanel = null;
+            
             if (currentConfig.type === 'acrylic') {
-                structureOptions.innerHTML = `
+                const structureHTML = `
                     <div class="option-card active" data-structure="with-panels">
                         <div class="option-icon">
-                            <img src="with-panels-icon.png" alt="With top and bottom only" />
+                            <img src="/acrylictopbottom.png" alt="With top and bottom only" />
                         </div>
                         <div class="option-title">With top and bottom only</div>
                     </div>
                     <div class="option-card" data-structure="without-shelves">
                         <div class="option-icon">
-                            <img src="without-shelves-icon.png" alt="Without Shelves" />
+                            <img src="/nopanel.png" alt="Without Shelves" />
                         </div>
                         <div class="option-title">Without Shelves</div>
                     </div>
                 `;
                 
-                widthOptions.innerHTML = `
-                    <div class="size-button" data-width="270">270</div>
-                    <div class="size-button active" data-width="300">300</div>
-                    <div class="size-button" data-width="370">370</div>
-                `;
-                depthOptions.innerHTML = `
-                    <div class="size-button" data-depth="270">270</div>
-                    <div class="size-button active" data-depth="300">300</div>
-                    <div class="size-button" data-depth="370">370</div>
+                const mobileStructureHTML = `
+                    <div class="mobile-option-card active" data-structure="with-panels">
+                        <div class="mobile-option-icon">
+                            <img src="/acrylictopbottom.png" alt="With top and bottom only" />
+                        </div>
+                        <div class="mobile-option-title">With top and bottom only</div>
+                    </div>
+                    <div class="mobile-option-card" data-structure="without-shelves">
+                        <div class="mobile-option-icon">
+                            <img src="/nopanel.png" alt="Without Shelves" />
+                        </div>
+                        <div class="mobile-option-title">Without Shelves</div>
+                    </div>
                 `;
                 
-                heightOptions.innerHTML = `
+                if (structureOptions) structureOptions.innerHTML = structureHTML;
+                if (mobileStructureOptions) mobileStructureOptions.innerHTML = mobileStructureHTML;
+                
+                const widthHTML = `
+                    <div class="size-button active" data-width="270">270</div>
+                    <div class="size-button" data-width="300">300</div>
+                    <div class="size-button" data-width="370">370</div>
+                `;
+                const mobileWidthHTML = `
+                    <div class="mobile-size-button active" data-width="270">270</div>
+                    <div class="mobile-size-button" data-width="300">300</div>
+                    <div class="mobile-size-button" data-width="370">370</div>
+                `;
+                if (widthOptions) widthOptions.innerHTML = widthHTML;
+                if (mobileWidthOptions) mobileWidthOptions.innerHTML = mobileWidthHTML;
+                
+                const depthHTML = `
+                    <div class="size-button active" data-depth="270">270</div>
+                    <div class="size-button" data-depth="300">300</div>
+                    <div class="size-button" data-depth="370">370</div>
+                `;
+                const mobileDepthHTML = `
+                    <div class="mobile-size-button active" data-depth="270">270</div>
+                    <div class="mobile-size-button" data-depth="300">300</div>
+                    <div class="mobile-size-button" data-depth="370">370</div>
+                `;
+                if (depthOptions) depthOptions.innerHTML = depthHTML;
+                if (mobileDepthOptions) mobileDepthOptions.innerHTML = mobileDepthHTML;
+                
+                const heightHTML = `
                     <div class="height-button" data-height="121">121</div>
                     <div class="height-button" data-height="180">180</div>
                     <div class="height-button" data-height="200">200</div>
-                    <div class="height-button" data-height="270">270</div>
+                    <div class="height-button active" data-height="270">270</div>
                     <div class="height-button" data-height="313">313</div>
-                    <div class="height-button active" data-height="350">350</div>
+                    <div class="height-button" data-height="350">350</div>
                     <div class="height-button" data-height="370">370</div>
                     <div class="height-button" data-height="483">483</div>
                     <div class="height-button" data-height="603">603</div>
                 `;
+                const mobileHeightHTML = `
+                    <div class="mobile-size-button" data-height="121">121</div>
+                    <div class="mobile-size-button" data-height="180">180</div>
+                    <div class="mobile-size-button" data-height="200">200</div>
+                    <div class="mobile-size-button active" data-height="270">270</div>
+                    <div class="mobile-size-button" data-height="313">313</div>
+                    <div class="mobile-size-button" data-height="350">350</div>
+                    <div class="mobile-size-button" data-height="370">370</div>
+                    <div class="mobile-size-button" data-height="483">483</div>
+                    <div class="mobile-size-button" data-height="603">603</div>
+                `;
+                if (heightOptions) heightOptions.innerHTML = heightHTML;
+                if (mobileHeightOptions) mobileHeightOptions.innerHTML = mobileHeightHTML;
                 
-                colorSection.querySelector('.color-options').innerHTML = `
+                const colorHTML = `
                     <div class="color-option active" data-color="transparent-orange">
                         <div class="color-swatch" style="background: linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,140,0,0.5));"></div>
                         <div class="color-name">Transparent Orange</div>
@@ -1751,53 +3534,120 @@
                         <div class="color-name">Clear</div>
                     </div>
                 `;
+                const mobileColorHTML = `
+                    <div class="mobile-color-option active" data-color="transparent-orange">
+                        <div class="mobile-color-swatch" style="background: linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,140,0,0.5));"></div>
+                        <div class="mobile-color-name">Transparent Orange</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="transparent-black">
+                        <div class="mobile-color-swatch" style="background: linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5));"></div>
+                        <div class="mobile-color-name">Transparent Black</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="solid-white">
+                        <div class="mobile-color-swatch" style="background: #ffffff; border: 2px solid #ddd;"></div>
+                        <div class="mobile-color-name">Solid White</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="clear">
+                        <div class="mobile-color-swatch" style="background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.3)); border: 2px solid #ddd;"></div>
+                        <div class="mobile-color-name">Clear</div>
+                    </div>
+                `;
+                
+                if (colorSection) colorSection.querySelector('.color-options').innerHTML = colorHTML;
+                if (mobileColorSection) mobileColorSection.querySelector('.mobile-color-options').innerHTML = mobileColorHTML;
                 
                 Object.assign(currentConfig, {
-                    width: 300, depth: 300, height: 350,
+                    width: 270, depth: 270, height: 270,
                     structure: 'with-panels', color: 'transparent-orange'
                 });
                 
                 disableColorSection(); // Disabled until panel selected
             } else if (currentConfig.type === 'stainless') {
-                structureOptions.innerHTML = `
+                const structureHTML = `
                     <div class="option-card active" data-structure="all-no-front">
                         <div class="option-icon">
-                            <img src="all-no-front-icon.png" alt="All (no front)" />
+                            <img src="/allside.png" alt="All (no front)" />
                         </div>
                         <div class="option-title">All (no front)</div>
                     </div>
                     <div class="option-card" data-structure="without-back">
                         <div class="option-icon">
-                            <img src="without-back-icon.png" alt="Without Back" />
+                            <img src="/stainlessnoback.png" alt="Without Back" />
                         </div>
                         <div class="option-title">Without Back</div>
                     </div>
                     <div class="option-card" data-structure="with-panels">
                         <div class="option-icon">
-                            <img src="with-panels-icon.png" alt="With top and bottom only" />
+                            <img src="/stainlessnoside.png" alt="With top and bottom only" />
                         </div>
                         <div class="option-title">With top and bottom only</div>
                     </div>
                 `;
                 
-                widthOptions.innerHTML = `
+                const mobileStructureHTML = `
+                    <div class="mobile-option-card active" data-structure="all-no-front">
+                        <div class="mobile-option-icon">
+                            <img src="/allside.png" alt="All (no front)" />
+                        </div>
+                        <div class="mobile-option-title">All (no front)</div>
+                    </div>
+                    <div class="mobile-option-card" data-structure="without-back">
+                        <div class="mobile-option-icon">
+                            <img src="/stainlessnoback.png" alt="Without Back" />
+                        </div>
+                        <div class="mobile-option-title">Without Back</div>
+                    </div>
+                    <div class="mobile-option-card" data-structure="with-panels">
+                        <div class="mobile-option-icon">
+                            <img src="/stainlessnoside.png" alt="With top and bottom only" />
+                        </div>
+                        <div class="mobile-option-title">With top and bottom only</div>
+                    </div>
+                `;
+                
+                if (structureOptions) structureOptions.innerHTML = structureHTML;
+                if (mobileStructureOptions) mobileStructureOptions.innerHTML = mobileStructureHTML;
+                
+                const widthHTML = `
                     <div class="size-button" data-width="121">121</div>
                     <div class="size-button active" data-width="313">313</div>
                     <div class="size-button" data-width="483">483</div>
                     <div class="size-button" data-width="603">603</div>
                 `;
-                depthOptions.innerHTML = `
+                const mobileWidthHTML = `
+                    <div class="mobile-size-button" data-width="121">121</div>
+                    <div class="mobile-size-button active" data-width="313">313</div>
+                    <div class="mobile-size-button" data-width="483">483</div>
+                    <div class="mobile-size-button" data-width="603">603</div>
+                `;
+                if (widthOptions) widthOptions.innerHTML = widthHTML;
+                if (mobileWidthOptions) mobileWidthOptions.innerHTML = mobileWidthHTML;
+                
+                const depthHTML = `
                     <div class="size-button" data-depth="121">121</div>
                     <div class="size-button active" data-depth="313">313</div>
                     <div class="size-button" data-depth="483">483</div>
                     <div class="size-button" data-depth="603">603</div>
                 `;
+                const mobileDepthHTML = `
+                    <div class="mobile-size-button" data-depth="121">121</div>
+                    <div class="mobile-size-button active" data-depth="313">313</div>
+                    <div class="mobile-size-button" data-depth="483">483</div>
+                    <div class="mobile-size-button" data-depth="603">603</div>
+                `;
+                if (depthOptions) depthOptions.innerHTML = depthHTML;
+                if (mobileDepthOptions) mobileDepthOptions.innerHTML = mobileDepthHTML;
                 
-                heightOptions.innerHTML = `
+                const heightHTML = `
                     <div class="height-button active" data-height="313">313</div>
                 `;
+                const mobileHeightHTML = `
+                    <div class="mobile-size-button active" data-height="313">313</div>
+                `;
+                if (heightOptions) heightOptions.innerHTML = heightHTML;
+                if (mobileHeightOptions) mobileHeightOptions.innerHTML = mobileHeightHTML;
                 
-                colorSection.querySelector('.color-options').innerHTML = `
+                const colorHTML = `
                     <div class="color-option active" data-color="orange">
                         <div class="color-swatch" style="background: #ff8c00;"></div>
                         <div class="color-name">Orange</div>
@@ -1827,6 +3677,39 @@
                         <div class="color-name">Matt Olive</div>
                     </div>
                 `;
+                const mobileColorHTML = `
+                    <div class="mobile-color-option active" data-color="orange">
+                        <div class="mobile-color-swatch" style="background: #ff8c00;"></div>
+                        <div class="mobile-color-name">Orange</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="yellow">
+                        <div class="mobile-color-swatch" style="background: #ffff00;"></div>
+                        <div class="mobile-color-name">Yellow</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="white">
+                        <div class="mobile-color-swatch" style="background: #ffffff; border: 2px solid #ddd;"></div>
+                        <div class="mobile-color-name">White</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="black">
+                        <div class="mobile-color-swatch" style="background: #000000;"></div>
+                        <div class="mobile-color-name">Black</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="pink">
+                        <div class="mobile-color-swatch" style="background: #ff69b4;"></div>
+                        <div class="mobile-color-name">Pink</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="sky">
+                        <div class="mobile-color-swatch" style="background: #87ceeb;"></div>
+                        <div class="mobile-color-name">Sky</div>
+                    </div>
+                    <div class="mobile-color-option" data-color="matt-olive">
+                        <div class="mobile-color-swatch" style="background: #808000;"></div>
+                        <div class="mobile-color-name">Matt Olive</div>
+                    </div>
+                `;
+                
+                if (colorSection) colorSection.querySelector('.color-options').innerHTML = colorHTML;
+                if (mobileColorSection) mobileColorSection.querySelector('.mobile-color-options').innerHTML = mobileColorHTML;
                 
                 Object.assign(currentConfig, {
                     width: 313, depth: 313, height: 313,
@@ -1847,14 +3730,18 @@
                 });
             });
             
+            // IMPORTANT: Update connectors after type change
             gridManager.updateAllConnectors();
             setupEventListeners();
         }
 
         function updateDimensionsDisplay() {
-            document.getElementById('dim-width').textContent = currentConfig.width;
-            document.getElementById('dim-height').textContent = currentConfig.height;
-            document.getElementById('dim-depth').textContent = currentConfig.depth;
+            const selectedShelf = gridManager.getSelectedShelf();
+            if (selectedShelf) {
+                document.getElementById('dim-width').textContent = selectedShelf.config.width;
+                document.getElementById('dim-height').textContent = selectedShelf.config.height;
+                document.getElementById('dim-depth').textContent = selectedShelf.config.depth;
+            }
         }
 
         function resetCamera() {
@@ -1871,16 +3758,24 @@
             if (dimensionsVisible) {
                 dimensionsDisplay.style.display = 'block';
                 button.classList.add('active');
+                createDimensionLines();
             } else {
                 dimensionsDisplay.style.display = 'none';
                 button.classList.remove('active');
+                clearDimensionLines();
             }
         }
 
         function setupEventListeners() {
             // Clear existing to avoid duplicates
-            const newElements = ['structure-options', 'width-options', 'depth-options', 'height-options'];
-            newElements.forEach(id => {
+            const elementsToReset = [
+                'structure-options', 'mobile-structure-options',
+                'width-options', 'mobile-width-options',
+                'depth-options', 'mobile-depth-options', 
+                'height-options', 'mobile-height-options'
+            ];
+            
+            elementsToReset.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
                     element.replaceWith(element.cloneNode(true));
@@ -1897,7 +3792,8 @@
             // UI Controls
             const toggleBtn = document.getElementById('toggle-dimensions');
             const resetBtn = document.getElementById('reset-camera');
-            const clearBtn = document.getElementById('clear-shelves');
+            const deleteBtn = document.getElementById('delete-button');
+            const tourBtn = document.getElementById('tour-button');
             
             if (toggleBtn && !toggleBtn.hasClickListener) {
                 toggleBtn.addEventListener('click', toggleDimensions);
@@ -1907,14 +3803,44 @@
                 resetBtn.addEventListener('click', resetCamera);
                 resetBtn.hasClickListener = true;
             }
-            if (clearBtn && !clearBtn.hasClickListener) {
-                clearBtn.addEventListener('click', () => {
-                    gridManager.clearAll();
+            if (deleteBtn && !deleteBtn.hasClickListener) {
+                deleteBtn.addEventListener('click', () => {
+                    gridManager.deleteSelected();
                 });
-                clearBtn.hasClickListener = true;
+                deleteBtn.hasClickListener = true;
+            }
+            if (tourBtn && !tourBtn.hasClickListener) {
+                tourBtn.addEventListener('click', () => {
+                    startTour();
+                });
+                tourBtn.hasClickListener = true;
             }
 
-            // Configuration controls
+            // Modal events
+            document.getElementById('modal-close').addEventListener('click', hideWelcomeModal);
+            document.getElementById('get-started').addEventListener('click', hideWelcomeModal);
+            document.getElementById('start-tour').addEventListener('click', startTour);
+            
+            // Tour events
+            document.getElementById('tour-skip').addEventListener('click', endTour);
+            document.getElementById('tour-back').addEventListener('click', prevTourStep);
+            document.getElementById('tour-next').addEventListener('click', nextTourStep);
+
+            // Mobile tab events
+            document.querySelectorAll('.mobile-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchMobileTab(tab.dataset.tab);
+                });
+            });
+            
+            // Mobile structure tab events
+            document.querySelectorAll('.mobile-structure-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchMobileStructureTab(tab.dataset.structureTab);
+                });
+            });
+
+            // Configuration controls for desktop
             document.querySelectorAll('[data-type]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-type]').forEach(item => item.classList.remove('active'));
@@ -1929,14 +3855,11 @@
                     document.querySelectorAll('[data-structure]').forEach(item => item.classList.remove('active'));
                     el.classList.add('active');
                     currentConfig.structure = el.dataset.structure;
-                    const selectedShelf = gridManager.getSelectedShelf();
-                    if (selectedShelf) {
-                        selectedShelf.config.structure = currentConfig.structure;
-                        selectedShelf.regenerate();
-                    }
+                    gridManager.updateAllShelvesStructure(currentConfig.structure);
                 });
             });
 
+            // Width controls
             document.querySelectorAll('[data-width]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-width]').forEach(item => item.classList.remove('active'));
@@ -1947,6 +3870,7 @@
                 });
             });
 
+            // Depth controls
             document.querySelectorAll('[data-depth]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-depth]').forEach(item => item.classList.remove('active'));
@@ -1957,6 +3881,7 @@
                 });
             });
 
+            // Height controls
             document.querySelectorAll('[data-height]').forEach(el => {
                 el.addEventListener('click', () => {
                     document.querySelectorAll('[data-height]').forEach(item => item.classList.remove('active'));
@@ -1967,6 +3892,7 @@
                 });
             });
 
+            // Color controls
             document.querySelectorAll('[data-color]').forEach(el => {
                 el.addEventListener('click', () => {
                     if (!colorSectionEnabled) return;
@@ -1976,7 +3902,7 @@
                     currentConfig.color = el.dataset.color;
                     
                     if (currentConfig.type === 'acrylic' && selectedPanel) {
-                        // Apply color to selected panel only
+                        // Apply color to selected panel only and store it
                         const colorMap = {
                             'transparent-orange': { color: 0xff8c00, opacity: 0.6 },
                             'transparent-black': { color: 0x333333, opacity: 0.7 },
@@ -1985,47 +3911,66 @@
                         };
                         
                         const colorConfig = colorMap[currentConfig.color] || colorMap['transparent-orange'];
-                        const material = new THREE.MeshPhysicalMaterial({
-                            color: colorConfig.color,
-                            transparent: colorConfig.opacity < 1.0,
-                            opacity: colorConfig.opacity,
-                            side: THREE.DoubleSide,
-                            roughness: 0.1,
-                            metalness: 0.0
-                        });
+                       // Inside the color controls event listener, replace the material creation:
+const material = new THREE.MeshPhysicalMaterial({
+    color: colorConfig.color,
+    transparent: colorConfig.opacity < 1.0,
+    opacity: colorConfig.opacity,
+    side: THREE.DoubleSide,
+    roughness: 0.1,
+    metalness: 0.0,
+    depthWrite: colorConfig.opacity < 1.0 ? false : true,
+    alphaTest: colorConfig.opacity < 0.1 ? 0.1 : 0
+});
                         
                         selectedPanel.material = material;
+                        
+                        // Store the applied color in panelColors map
+                        const panelKey = selectedPanel.userData.panelKey;
+                        panelColors.set(panelKey, colorConfig);
+                        
+                        console.log('Applied color to panel:', selectedPanel.name, 'Color:', currentConfig.color);
+                        
                     } else if (currentConfig.type === 'stainless') {
-                        // Apply color to entire selected shelf
-                        const selectedShelf = gridManager.getSelectedShelf();
-                        if (selectedShelf) {
-                            selectedShelf.config.color = currentConfig.color;
-                            selectedShelf.regenerate();
-                        }
+                        // Apply color to ALL shelves in the grid for stainless type
+                        gridManager.updateAllShelvesColor(currentConfig.color);
                     }
                 });
             });
 
-            const submitBtn = document.querySelector('.submit-button');
-            if (submitBtn && !submitBtn.hasClickListener) {
-                submitBtn.addEventListener('click', () => {
-                    const configs = [];
-                    gridManager.grid.forEach((row, rowIndex) => {
-                        row.forEach((shelf, colIndex) => {
-                            if (shelf) {
-                                configs.push({
-                                    position: { row: rowIndex, col: colIndex },
-                                    config: shelf.config,
-                                    worldPosition: shelf.worldPosition
-                                });
-                            }
+            // Submit buttons
+            document.querySelectorAll('.submit-button, .mobile-submit-button').forEach(btn => {
+                if (!btn.hasClickListener) {
+                    btn.addEventListener('click', () => {
+                        const configs = [];
+                        gridManager.grid.forEach((row, rowIndex) => {
+                            row.forEach((shelf, colIndex) => {
+                                if (shelf) {
+                                    // Collect applied panel colors for each shelf
+                                    const shelfPanelColors = {};
+                                    Object.entries(shelf.panels).forEach(([panelName, panel]) => {
+                                        const panelKey = panel.userData.panelKey;
+                                        if (panelColors.has(panelKey)) {
+                                            shelfPanelColors[panelName] = panelColors.get(panelKey);
+                                        }
+                                    });
+                                    
+                                    configs.push({
+                                        position: { row: rowIndex, col: colIndex },
+                                        config: shelf.config,
+                                        worldPosition: shelf.worldPosition,
+                                        panelColors: shelfPanelColors
+                                    });
+                                }
+                            });
                         });
+                        alert('Configuration submitted:\n' + JSON.stringify(configs, null, 2));
                     });
-                    alert('Configuration submitted:\n' + JSON.stringify(configs, null, 2));
-                });
-                submitBtn.hasClickListener = true;
-            }
+                    btn.hasClickListener = true;
+                }
+            });
 
+            // Window resize
             if (!window.hasResizeListener) {
                 window.addEventListener('resize', onWindowResize);
                 window.hasResizeListener = true;
@@ -2033,8 +3978,10 @@
         }
 
         function onWindowResize() {
-            const width = window.innerWidth * 0.7;
-            const height = window.innerHeight;
+            isMobile = window.innerWidth <= 768;
+            
+            const width = isMobile ? window.innerWidth : window.innerWidth * 0.7;
+            const height = isMobile ? window.innerHeight * 0.75 : window.innerHeight;
             
             camera.aspect = width / height;
             camera.updateProjectionMatrix();

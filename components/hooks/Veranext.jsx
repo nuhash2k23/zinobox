@@ -3103,7 +3103,7 @@ const TouchDisclaimer = ({ isVisible, message, onClose }) => {
   return (
     <Html
       center
-      position={[0, -3, 0]}
+      position={[6,1,3]}
       style={{
         transform: 'translate3d(-50%, 0, 0)',
         pointerEvents: 'auto'
@@ -3248,7 +3248,7 @@ const ClickableVeranda = ({
               whiteSpace: 'nowrap',
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}>
-              Double-click to {hasContent ? 'change' : 'add'} content
+              Double-click to {hasContent ? 'modify' : 'modify'} 
             </div>
           </Html>
         )}
@@ -3258,7 +3258,7 @@ const ClickableVeranda = ({
       {mobile && (
         <TouchDisclaimer
           isVisible={showTouchDisclaimer}
-          message={`Tap again quickly to ${hasContent ? 'change' : 'add'} content in Space ${verandaNumber}`}
+          message={`Double click ${hasContent ? 'modify' : 'modify'} `}
           onClose={handleDisclaimerClose}
         />
       )}
